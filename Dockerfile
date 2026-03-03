@@ -13,8 +13,8 @@ COPY tool_definition.json ./
 # Create data directory
 RUN mkdir -p /root/.renoun
 
-# Default port
-ENV RENOUN_API_PORT=8080
+# Default port (Railway overrides PORT at runtime)
+ENV PORT=8080
 EXPOSE 8080
 
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD uvicorn api:app --host 0.0.0.0 --port $PORT
