@@ -1,0 +1,28 @@
+# Proprietary engine (patent pending #63/923,592)
+core.py
+novelty_dual_pass.py
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Local history storage
+.renoun/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db

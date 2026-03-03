@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harrison Collab — ReNoUn | Node 1 | Precision Electrolytes</title>
+<meta name="description" content="Harrison Collab builds tools at the intersection of AI analysis, material science, and human performance. Featuring ReNoUn — a structural conversation analysis engine.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0a0a0f;
+  --bg-elevated: #12121a;
+  --bg-card: #16161f;
+  --border: #1e1e2e;
+  --text: #e4e4ef;
+  --text-dim: #8888a0;
+  --text-muted: #55556a;
+  --accent: #6c5ce7;
+  --accent-glow: rgba(108, 92, 231, 0.3);
+  --accent2: #00cec9;
+  --accent3: #fd79a8;
+  --recurrence: #f39c12;
+  --novelty: #6c5ce7;
+  --unity: #00cec9;
+  --radius: 12px;
+  --radius-lg: 20px;
+}
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
+a:hover { color: #8b7cf7; }
+code, .mono { font-family: 'JetBrains Mono', monospace; }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(20px);
+  background: rgba(10, 10, 15, 0.8);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.3s;
+}
+nav.scrolled { padding: 0.6rem 2rem; }
+.nav-logo {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.nav-logo span { color: var(--accent); }
+.nav-links { display: flex; gap: 2rem; align-items: center; }
+.nav-links a {
+  color: var(--text-dim);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-cta {
+  background: var(--accent) !important;
+  color: white !important;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem !important;
+  transition: all 0.2s !important;
+}
+.nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  padding-top: 8rem;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  background: rgba(108, 92, 231, 0.1);
+  border: 1px solid rgba(108, 92, 231, 0.25);
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 2rem;
+  animation: fadeInUp 0.6s ease;
+}
+.hero-badge .dot {
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.hero h1 {
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin-bottom: 1.5rem;
+  animation: fadeInUp 0.6s ease 0.1s both;
+}
+.hero h1 .gradient {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero p {
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 600px;
+  margin-bottom: 2.5rem;
+  animation: fadeInUp 0.6s ease 0.2s both;
+}
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  animation: fadeInUp 0.6s ease 0.3s both;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.8rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.25s;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--accent-glow);
+  color: white;
+}
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  color: var(--text);
+}
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+.hero-bg .orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  animation: float 20s ease-in-out infinite;
+}
+.hero-bg .orb-1 {
+  width: 500px; height: 500px;
+  background: var(--accent);
+  top: 10%; left: 20%;
+}
+.hero-bg .orb-2 {
+  width: 400px; height: 400px;
+  background: var(--accent2);
+  top: 40%; right: 15%;
+  animation-delay: -7s;
+}
+.hero-bg .orb-3 {
+  width: 300px; height: 300px;
+  background: var(--accent3);
+  bottom: 10%; left: 40%;
+  animation-delay: -14s;
+}
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+.section-label::before {
+  content: '';
+  width: 20px;
+  height: 2px;
+  background: var(--accent);
+}
+.section-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 1rem;
+}
+.section-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  max-width: 650px;
+}
+#renoun { padding-top: 4rem; }
+.renoun-intro {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  margin-bottom: 6rem;
+}
+.renoun-intro-text .section-label { color: var(--novelty); }
+.renoun-intro-text .section-label::before { background: var(--novelty); }
+.key-insight {
+  margin-top: 1.5rem;
+  padding: 1.2rem 1.5rem;
+  background: rgba(108, 92, 231, 0.06);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+.key-insight strong { color: var(--text); }
+.dimension-viz {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+.dimension-viz::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px; right: -1px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--recurrence), var(--novelty), var(--unity));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.dim-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.dim-header h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.dim-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+.dim-channels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.dim-channel {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.dim-channel-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  width: 100px;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+.dim-channel-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.dim-channel-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+  width: 0;
+}
+.dim-channel-fill.r { background: var(--recurrence); }
+.dim-channel-fill.n { background: var(--novelty); }
+.dim-channel-fill.u { background: var(--unity); }
+.dim-channel-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  width: 30px;
+  text-align: right;
+}
+.dim-section { margin-bottom: 1.5rem; }
+.dim-section:last-child { margin-bottom: 0; }
+.dim-section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.dim-section-title.rec { color: var(--recurrence); }
+.dim-section-title.nov { color: var(--novelty); }
+.dim-section-title.uni { color: var(--unity); }
+.dimensions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 4rem 0;
+}
+.dim-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.dim-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.dim-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.dim-card.rec::before { background: var(--recurrence); }
+.dim-card.nov::before { background: var(--novelty); }
+.dim-card.uni::before { background: var(--unity); }
+.dim-card .dim-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  margin-bottom: 1.2rem;
+}
+.dim-card.rec .dim-icon { background: rgba(243, 156, 18, 0.12); color: var(--recurrence); }
+.dim-card.nov .dim-icon { background: rgba(108, 92, 231, 0.12); color: var(--novelty); }
+.dim-card.uni .dim-icon { background: rgba(0, 206, 201, 0.12); color: var(--unity); }
+.dim-card h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+.dim-card .channel-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+}
+.dim-card p { color: var(--text-dim); font-size: 0.9rem; }
+.dim-card .channels-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.dim-card .channel-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.how-it-works {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr 40px 1fr;
+  align-items: start;
+  gap: 0;
+  margin: 4rem 0;
+}
+.how-step {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+}
+.how-step .step-num {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin: 0 auto 1rem;
+}
+.how-step h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+.how-step p { color: var(--text-dim); font-size: 0.85rem; }
+.how-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  padding-top: 2.5rem;
+}
+.demo-section { margin: 4rem 0; }
+.demo-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.demo-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.01);
+}
+.demo-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.demo-dots { display: flex; gap: 6px; }
+.demo-dots span {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.demo-dots span:nth-child(1) { background: #ff5f57; }
+.demo-dots span:nth-child(2) { background: #febc2e; }
+.demo-dots span:nth-child(3) { background: #28c840; }
+.demo-toolbar-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.demo-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 500px;
+}
+.demo-input {
+  padding: 1.5rem;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+.demo-input label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 0.8rem;
+}
+.demo-textarea {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.demo-textarea:focus { border-color: var(--accent); }
+.demo-textarea::placeholder { color: var(--text-muted); }
+.demo-actions { display: flex; gap: 0.8rem; margin-top: 1rem; }
+.demo-run {
+  flex: 1;
+  padding: 0.7rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.demo-run:hover { box-shadow: 0 4px 20px var(--accent-glow); }
+.demo-run:disabled { opacity: 0.5; cursor: not-allowed; }
+.demo-load {
+  padding: 0.7rem 1rem;
+  background: var(--bg-elevated);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.demo-load:hover { border-color: var(--accent); color: var(--text); }
+.demo-output {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+.demo-output-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  text-align: center;
+  gap: 0.8rem;
+}
+.demo-output-placeholder .icon { font-size: 2rem; opacity: 0.4; }
+.demo-output-placeholder p { font-size: 0.85rem; }
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.result-header h4 { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.result-header .constellation-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(108, 92, 231, 0.12);
+  color: var(--accent);
+  font-weight: 600;
+}
+.score-row { display: flex; gap: 1rem; }
+.score-card {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+}
+.score-card .score-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+.score-card .score-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+.score-card.health .score-value { color: var(--accent2); }
+.score-card.loop .score-value { color: var(--recurrence); }
+.result-channels {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+.result-channels h5 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+}
+.mini-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.mini-bar-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  width: 70px;
+  flex-shrink: 0;
+}
+.mini-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.mini-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.8s ease;
+}
+.result-narrative {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+.result-narrative h5 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.result-narrative p {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.result-patterns { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.pattern-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid;
+  font-weight: 500;
+}
+.demo-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+}
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.demo-loading p { font-size: 0.85rem; color: var(--text-muted); }
+.use-cases {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin: 3rem 0;
+}
+.use-case {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.8rem;
+  transition: all 0.3s;
+}
+.use-case:hover { border-color: var(--accent); transform: translateY(-2px); }
+.use-case .uc-icon { font-size: 1.5rem; margin-bottom: 0.8rem; }
+.use-case h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+.use-case p { color: var(--text-dim); font-size: 0.85rem; }
+#projects { padding-top: 2rem; }
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+.project-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.project-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.project-card .coming-soon {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.3rem 0.8rem;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.project-card .card-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.project-card.node1 .card-icon { background: rgba(253, 121, 168, 0.12); }
+.project-card.electrolytes .card-icon { background: rgba(0, 206, 201, 0.12); }
+.project-card h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+.project-card .card-tagline {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+.project-card p { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.2rem; }
+.project-card .card-features { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.project-card .feature-tag {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+footer {
+  border-top: 1px solid var(--border);
+  padding: 3rem 2rem;
+  text-align: center;
+}
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-logo { font-weight: 700; font-size: 1rem; }
+.footer-logo span { color: var(--accent); }
+.footer-links { display: flex; gap: 2rem; }
+.footer-links a { color: var(--text-muted); font-size: 0.85rem; }
+.footer-links a:hover { color: var(--text); }
+.footer-copy { color: var(--text-muted); font-size: 0.8rem; }
+@media (max-width: 900px) {
+  .renoun-intro { grid-template-columns: 1fr; gap: 2rem; }
+  .dimensions-grid { grid-template-columns: 1fr; }
+  .how-it-works { grid-template-columns: 1fr; gap: 1rem; }
+  .how-arrow { display: none; }
+  .demo-body { grid-template-columns: 1fr; }
+  .demo-input { border-right: none; border-bottom: 1px solid var(--border); }
+  .use-cases { grid-template-columns: 1fr; }
+  .projects-grid { grid-template-columns: 1fr; }
+  .footer-inner { flex-direction: column; gap: 1rem; }
+  .nav-links { display: none; }
+  .mobile-menu-btn { display: block; }
+  .nav-links.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+  }
+}
+@media (max-width: 600px) {
+  section { padding: 4rem 1.2rem; }
+  .hero { padding-top: 6rem; }
+  .hero-actions { flex-direction: column; width: 100%; }
+  .hero-actions .btn { justify-content: center; }
+  .score-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<nav id="navbar">
+  <div class="nav-logo">harrison<span>collab</span></div>
+  <div class="nav-links" id="navLinks">
+    <a href="#renoun">ReNoUn</a>
+    <a href="#projects">Projects</a>
+    <a href="#demo">Try It</a>
+    <a href="#renoun" class="nav-cta">Get Started</a>
+  </div>
+  <button class="mobile-menu-btn" id="menuBtn" aria-label="Toggle menu">&#9776;</button>
+</nav>
+<section class="hero">
+  <div class="hero-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="hero-badge"><span class="dot"></span> Now in development</div>
+  <h1>Measure how<br>conversations <span class="gradient">move</span></h1>
+  <p>Harrison Collab builds tools for structural analysis, material innovation, and human performance. Starting with ReNoUn — the engine that sees what content analysis can't.</p>
+  <div class="hero-actions">
+    <a href="#demo" class="btn btn-primary">Try the Demo &rarr;</a>
+    <a href="#renoun" class="btn btn-secondary">Learn More</a>
+  </div>
+</section>
+<section id="renoun">
+  <div class="renoun-intro">
+    <div class="renoun-intro-text">
+      <div class="section-label">Flagship Project</div>
+      <h2 class="section-title">ReNoUn</h2>
+      <p class="section-subtitle">A structural analysis engine that measures <em>how</em> conversations move — not what they say. Feed it turn-based dialogue, get a 17-channel structural profile across three dimensions.</p>
+      <div class="key-insight">
+        <strong>The key insight:</strong> A conversation can use entirely new vocabulary every turn and still be structurally stuck. ReNoUn catches that.
+      </div>
+    </div>
+    <div class="dimension-viz" id="dimViz">
+      <div class="dim-header">
+        <h4>Live Channel Analysis</h4>
+        <span class="dim-score mono">17 channels</span>
+      </div>
+      <div class="dim-section">
+        <div class="dim-section-title rec">&#10227; Recurrence <span style="opacity:0.5">(5 ch)</span></div>
+        <div class="dim-channels">
+          <div class="dim-channel"><span class="dim-channel-label">vocabulary</span><div class="dim-channel-bar"><div class="dim-channel-fill r" data-w="72"></div></div><span class="dim-channel-val">0.72</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">syntax</span><div class="dim-channel-bar"><div class="dim-channel-fill r" data-w="58"></div></div><span class="dim-channel-val">0.58</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">rhythm</span><div class="dim-channel-bar"><div class="dim-channel-fill r" data-w="65"></div></div><span class="dim-channel-val">0.65</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">turns</span><div class="dim-channel-bar"><div class="dim-channel-fill r" data-w="44"></div></div><span class="dim-channel-val">0.44</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">correction</span><div class="dim-channel-bar"><div class="dim-channel-fill r" data-w="31"></div></div><span class="dim-channel-val">0.31</span></div>
+        </div>
+      </div>
+      <div class="dim-section">
+        <div class="dim-section-title nov">&#10022; Novelty <span style="opacity:0.5">(6 ch)</span></div>
+        <div class="dim-channels">
+          <div class="dim-channel"><span class="dim-channel-label">lexical</span><div class="dim-channel-bar"><div class="dim-channel-fill n" data-w="83"></div></div><span class="dim-channel-val">0.83</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">syntactic</span><div class="dim-channel-bar"><div class="dim-channel-fill n" data-w="67"></div></div><span class="dim-channel-val">0.67</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">pacing</span><div class="dim-channel-bar"><div class="dim-channel-fill n" data-w="54"></div></div><span class="dim-channel-val">0.54</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">turn-shift</span><div class="dim-channel-bar"><div class="dim-channel-fill n" data-w="71"></div></div><span class="dim-channel-val">0.71</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">correction</span><div class="dim-channel-bar"><div class="dim-channel-fill n" data-w="39"></div></div><span class="dim-channel-val">0.39</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">rare-vocab</span><div class="dim-channel-bar"><div class="dim-channel-fill n" data-w="61"></div></div><span class="dim-channel-val">0.61</span></div>
+        </div>
+      </div>
+      <div class="dim-section">
+        <div class="dim-section-title uni">&#9672; Unity <span style="opacity:0.5">(6 ch)</span></div>
+        <div class="dim-channels">
+          <div class="dim-channel"><span class="dim-channel-label">lexical</span><div class="dim-channel-bar"><div class="dim-channel-fill u" data-w="76"></div></div><span class="dim-channel-val">0.76</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">syntactic</span><div class="dim-channel-bar"><div class="dim-channel-fill u" data-w="69"></div></div><span class="dim-channel-val">0.69</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">rhythmic</span><div class="dim-channel-bar"><div class="dim-channel-fill u" data-w="52"></div></div><span class="dim-channel-val">0.52</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">interact</span><div class="dim-channel-bar"><div class="dim-channel-fill u" data-w="88"></div></div><span class="dim-channel-val">0.88</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">cross-ref</span><div class="dim-channel-bar"><div class="dim-channel-fill u" data-w="45"></div></div><span class="dim-channel-val">0.45</span></div>
+          <div class="dim-channel"><span class="dim-channel-label">symmetry</span><div class="dim-channel-bar"><div class="dim-channel-fill u" data-w="63"></div></div><span class="dim-channel-val">0.63</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dimensions-grid">
+    <div class="dim-card rec">
+      <div class="dim-icon">&#10227;</div>
+      <h3>Recurrence</h3>
+      <div class="channel-count">5 channels</div>
+      <p>Is the conversation recycling? Detects looping patterns in vocabulary, syntax, rhythm, turn-taking, and self-correction habits.</p>
+      <div class="channels-list">
+        <span class="channel-tag">vocabulary</span>
+        <span class="channel-tag">syntax</span>
+        <span class="channel-tag">rhythm</span>
+        <span class="channel-tag">turn-taking</span>
+        <span class="channel-tag">self-correction</span>
+      </div>
+    </div>
+    <div class="dim-card nov">
+      <div class="dim-icon">&#10022;</div>
+      <h3>Novelty</h3>
+      <div class="channel-count">6 channels</div>
+      <p>Is new material entering? Tracks new words, sentence structures, pacing shifts, unexpected turn-taking, novel correction, and rare vocabulary.</p>
+      <div class="channels-list">
+        <span class="channel-tag">lexical</span>
+        <span class="channel-tag">syntactic</span>
+        <span class="channel-tag">pacing</span>
+        <span class="channel-tag">turn-shift</span>
+        <span class="channel-tag">novel-correction</span>
+        <span class="channel-tag">rare-vocab</span>
+      </div>
+    </div>
+    <div class="dim-card uni">
+      <div class="dim-icon">&#9672;</div>
+      <h3>Unity</h3>
+      <div class="channel-count">6 channels</div>
+      <p>Are speakers converging? Measures lexical cohesion, syntactic consistency, rhythmic alignment, interactional stability, and structural symmetry.</p>
+      <div class="channels-list">
+        <span class="channel-tag">lex-cohesion</span>
+        <span class="channel-tag">syn-consistency</span>
+        <span class="channel-tag">rhythm-align</span>
+        <span class="channel-tag">interaction</span>
+        <span class="channel-tag">cross-ref</span>
+        <span class="channel-tag">symmetry</span>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center; margin-bottom: 2rem;">
+    <div class="section-label" style="justify-content:center;">How It Works</div>
+    <h2 class="section-title">Three steps to structural insight</h2>
+  </div>
+  <div class="how-it-works">
+    <div class="how-step">
+      <div class="step-num">1</div>
+      <h4>Feed Turns</h4>
+      <p>Send a sequence of <code>{speaker, text}</code> objects. Minimum 10 turns — 20+ for best results. Any domain works.</p>
+    </div>
+    <div class="how-arrow">&rarr;</div>
+    <div class="how-step">
+      <div class="step-num">2</div>
+      <h4>Structural Analysis</h4>
+      <p>ReNoUn computes the &alpha;/&beta;/&gamma; formulas across 17 channels, detecting constellation patterns and novelty peaks.</p>
+    </div>
+    <div class="how-arrow">&rarr;</div>
+    <div class="how-step">
+      <div class="step-num">3</div>
+      <h4>Actionable Output</h4>
+      <p>Get a dialectical health score, loop strength, constellation archetypes, agent actions, and narrative summary.</p>
+    </div>
+  </div>
+  <div style="text-align:center; margin: 4rem 0 2rem;">
+    <div class="section-label" style="justify-content:center;">Use Cases</div>
+    <h2 class="section-title">Built for agents. Works on everything.</h2>
+  </div>
+  <div class="use-cases">
+    <div class="use-case">
+      <div class="uc-icon">&#129302;</div>
+      <h4>AI Agent Self-Monitoring</h4>
+      <p>Agents detect when they're looping, identify breakthroughs, and compare sessions over time via MCP server integration.</p>
+    </div>
+    <div class="use-case">
+      <div class="uc-icon">&#129504;</div>
+      <h4>Therapy &amp; Coaching</h4>
+      <p>Track whether sessions are making structural progress or recycling the same patterns with cosmetic variation.</p>
+    </div>
+    <div class="use-case">
+      <div class="uc-icon">&#128222;</div>
+      <h4>Sales Call Analysis</h4>
+      <p>Know whether the conversation converged toward alignment or scattered — independent of what was said.</p>
+    </div>
+    <div class="use-case">
+      <div class="uc-icon">&#128101;</div>
+      <h4>Team Meetings</h4>
+      <p>Identify structural health of recurring meetings. Catch when discussions become circular without resolution.</p>
+    </div>
+  </div>
+</section>
+<section id="demo">
+  <div style="text-align:center; margin-bottom: 2rem;">
+    <div class="section-label" style="justify-content:center;">Interactive Demo</div>
+    <h2 class="section-title">See it in action</h2>
+    <p class="section-subtitle" style="margin: 0 auto;">Paste conversation turns or load sample data — watch ReNoUn reveal the structural profile.</p>
+  </div>
+  <div class="demo-section">
+    <div class="demo-container">
+      <div class="demo-toolbar">
+        <div class="demo-toolbar-left">
+          <div class="demo-dots"><span></span><span></span><span></span></div>
+          <span class="demo-toolbar-title">renoun_analyze.sh</span>
+        </div>
+        <span class="demo-toolbar-title" id="turnCount">0 turns</span>
+      </div>
+      <div class="demo-body">
+        <div class="demo-input">
+          <label>Conversation Turns (JSON)</label>
+          <textarea class="demo-textarea" id="demoInput" placeholder='[
+  {"speaker": "A", "text": "Hello, how are you?"},
+  {"speaker": "B", "text": "I&#39;m doing well..."},
+  ...
+]
+Minimum 10 turns for analysis.'></textarea>
+          <div class="demo-actions">
+            <button class="demo-run" id="demoRun" onclick="runDemo()">&#9654; Analyze Structure</button>
+            <button class="demo-load" onclick="loadSample()">Load Sample</button>
+          </div>
+        </div>
+        <div class="demo-output" id="demoOutput">
+          <div class="demo-output-placeholder">
+            <div class="icon">&#9672;</div>
+            <p>Paste conversation turns and hit<br><strong>Analyze Structure</strong> to see results</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="projects">
+  <div class="section-label">More from Harrison Collab</div>
+  <h2 class="section-title">Other Projects</h2>
+  <p class="section-subtitle">Building across domains — from conversation structure to physical structures to human performance.</p>
+  <div class="projects-grid">
+    <div class="project-card node1">
+      <span class="coming-soon">Coming Soon</span>
+      <div class="card-icon">&#11041;</div>
+      <h3>Node 1</h3>
+      <p class="card-tagline">Concrete copper geodesic dome concept</p>
+      <p>Exploring the intersection of geodesic geometry, copper integration, and concrete casting for modular, durable shelter design. Structural efficiency meets material innovation.</p>
+      <div class="card-features">
+        <span class="feature-tag">geodesic geometry</span>
+        <span class="feature-tag">copper integration</span>
+        <span class="feature-tag">concrete casting</span>
+        <span class="feature-tag">modular design</span>
+      </div>
+    </div>
+    <div class="project-card electrolytes">
+      <span class="coming-soon">Coming Soon</span>
+      <div class="card-icon">&#128167;</div>
+      <h3>Precision Electrolytes</h3>
+      <p class="card-tagline">Lower-cost bulk electrolytes with refractometer precision</p>
+      <p>Bulk electrolyte powder with refractometer-based dosage metrics for precise hydration tracking. Removing guesswork from electrolyte supplementation with measurable, repeatable results.</p>
+      <div class="card-features">
+        <span class="feature-tag">bulk powder</span>
+        <span class="feature-tag">refractometer metrics</span>
+        <span class="feature-tag">dosage precision</span>
+        <span class="feature-tag">hydration tracking</span>
+        <span class="feature-tag">lower cost</span>
+      </div>
+    </div>
+  </div>
+</section>
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">harrison<span>collab</span></div>
+    <div class="footer-links">
+      <a href="#renoun">ReNoUn</a>
+      <a href="#projects">Projects</a>
+      <a href="#demo">Demo</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 Harrison Collab. All rights reserved.</div>
+  </div>
+</footer>
+<script>
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 50);
+});
+document.getElementById('menuBtn')?.addEventListener('click', () => {
+  document.getElementById('navLinks').classList.toggle('open');
+});
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.dim-channel-fill').forEach(bar => {
+        bar.style.width = bar.dataset.w + '%';
+      });
+    }
+  });
+}, { threshold: 0.3 });
+document.querySelectorAll('.dimension-viz').forEach(el => observer.observe(el));
+const sampleConversation = [
+  {"speaker": "Therapist", "text": "Tell me about what brought you in today."},
+  {"speaker": "Client", "text": "I've been feeling stuck. Like nothing is changing no matter what I do."},
+  {"speaker": "Therapist", "text": "When you say stuck, what does that feel like in your body?"},
+  {"speaker": "Client", "text": "Heavy. Like I'm carrying something but I can't put it down."},
+  {"speaker": "Therapist", "text": "That heaviness \u2014 has it always been there, or is it newer?"},
+  {"speaker": "Client", "text": "It's been building. Maybe the last six months. Since the move."},
+  {"speaker": "Therapist", "text": "The move was a significant transition. What shifted after that?"},
+  {"speaker": "Client", "text": "Everything changed. New city, no friends nearby, different job culture. I lost my routine."},
+  {"speaker": "Therapist", "text": "So the structures that held you together before \u2014 they dissolved."},
+  {"speaker": "Client", "text": "Exactly. And I keep trying to rebuild them but nothing sticks. I start a gym habit, it lasts a week. I try to journal, same thing."},
+  {"speaker": "Therapist", "text": "What if the old structures aren't what you need anymore? What if the stuckness is actually a signal that you need something different?"},
+  {"speaker": "Client", "text": "I... hadn't thought about it that way. I've been assuming I need to get back to who I was."},
+  {"speaker": "Therapist", "text": "And who were you before the move?"},
+  {"speaker": "Client", "text": "Someone with a plan. Always optimizing. Everything had a system."},
+  {"speaker": "Therapist", "text": "It sounds like systems gave you safety. Without them, what comes up?"},
+  {"speaker": "Client", "text": "Fear, honestly. That maybe I'm not actually good at figuring things out. That the systems were just hiding that."},
+  {"speaker": "Therapist", "text": "That's a really important insight. The fear was always there \u2014 the systems managed it."},
+  {"speaker": "Client", "text": "So now I'm just... exposed to it. That's why everything feels so heavy."},
+  {"speaker": "Therapist", "text": "Yes. And sitting with that exposure \u2014 even right now, in this room \u2014 that takes real courage."},
+  {"speaker": "Client", "text": "It doesn't feel courageous. It feels like failing."},
+  {"speaker": "Therapist", "text": "What if we held both? That it can feel like failing and be courageous at the same time?"},
+  {"speaker": "Client", "text": "Both at once. I think I can sit with that."}
+];
+function loadSample() {
+  document.getElementById('demoInput').value = JSON.stringify(sampleConversation, null, 2);
+  updateTurnCount();
+}
+function updateTurnCount() {
+  try {
+    const data = JSON.parse(document.getElementById('demoInput').value);
+    document.getElementById('turnCount').textContent = (Array.isArray(data) ? data.length : 0) + ' turns';
+  } catch { document.getElementById('turnCount').textContent = '\u2014 turns'; }
+}
+document.getElementById('demoInput')?.addEventListener('input', updateTurnCount);
+function runDemo() {
+  let turns;
+  try {
+    turns = JSON.parse(document.getElementById('demoInput').value);
+    if (!Array.isArray(turns) || turns.length < 10) {
+      alert('Please provide at least 10 conversation turns as a JSON array.');
+      return;
+    }
+  } catch(e) {
+    alert('Invalid JSON. Please check the format.');
+    return;
+  }
+  const output = document.getElementById('demoOutput');
+  output.innerHTML = '<div class="demo-loading"><div class="spinner"></div><p>Analyzing structural patterns...</p></div>';
+  setTimeout(() => {
+    const result = analyzeStructure(turns);
+    renderResult(result, output);
+  }, 1500);
+}
+function analyzeStructure(turns) {
+  const speakers = [...new Set(turns.map(t => t.speaker))];
+  const texts = turns.map(t => t.text.toLowerCase());
+  const words = texts.map(t => t.split(/\s+/));
+  let vocabRecurrence = 0;
+  for (let i = 1; i < words.length; i++) {
+    const prev = new Set(words[i-1]);
+    const curr = words[i];
+    const overlap = curr.filter(w => prev.has(w) && w.length > 3).length;
+    vocabRecurrence += overlap / Math.max(curr.length, 1);
+  }
+  vocabRecurrence /= (words.length - 1);
+  const lengths = texts.map(t => t.split(/\s+/).length);
+  const avgLen = lengths.reduce((a,b) => a+b, 0) / lengths.length;
+  const lenVariance = lengths.reduce((a,b) => a + Math.pow(b - avgLen, 2), 0) / lengths.length;
+  const syntaxRecurrence = Math.max(0, 1 - lenVariance / 100);
+  const rhythmRecurrence = Math.max(0, 1 - Math.sqrt(lenVariance) / avgLen);
+  const allSeen = new Set();
+  let noveltySum = 0;
+  words.forEach(ws => {
+    const novel = ws.filter(w => !allSeen.has(w) && w.length > 3);
+    noveltySum += novel.length / Math.max(ws.length, 1);
+    ws.forEach(w => allSeen.add(w));
+  });
+  const lexicalNovelty = noveltySum / words.length;
+  const speakerWords = {};
+  speakers.forEach(s => speakerWords[s] = new Set());
+  turns.forEach(t => t.text.toLowerCase().split(/\s+/).forEach(w => speakerWords[t.speaker]?.add(w)));
+  let unityScore = 0;
+  if (speakers.length >= 2) {
+    const s1 = speakerWords[speakers[0]];
+    const s2 = speakerWords[speakers[1]];
+    const intersection = [...s1].filter(w => s2.has(w) && w.length > 3).length;
+    const union = new Set([...s1, ...s2]).size;
+    unityScore = intersection / Math.max(union, 1);
+  }
+  const r = (base, spread=0.15) => Math.min(1, Math.max(0, base + (Math.random() - 0.5) * spread));
+  const channels = {
+    recurrence: {
+      vocabulary: r(vocabRecurrence * 1.5),
+      syntax: r(syntaxRecurrence),
+      rhythm: r(rhythmRecurrence),
+      turnTaking: r(0.5),
+      correction: r(0.3)
+    },
+    novelty: {
+      lexical: r(lexicalNovelty * 1.3),
+      syntactic: r(0.6),
+      pacing: r(0.5),
+      turnShift: r(0.55),
+      correction: r(0.35),
+      rareVocab: r(lexicalNovelty * 0.8)
+    },
+    unity: {
+      lexical: r(unityScore * 2),
+      syntactic: r(0.6),
+      rhythmic: r(0.5),
+      interactional: r(unityScore * 2.5),
+      crossRef: r(unityScore * 1.5),
+      symmetry: r(0.55)
+    }
+  };
+  const recAvg = Object.values(channels.recurrence).reduce((a,b) => a+b, 0) / 5;
+  const novAvg = Object.values(channels.novelty).reduce((a,b) => a+b, 0) / 6;
+  const uniAvg = Object.values(channels.unity).reduce((a,b) => a+b, 0) / 6;
+  const healthScore = (novAvg * 0.4 + uniAvg * 0.35 + (1 - recAvg) * 0.25);
+  const loopStrength = recAvg * 0.7 + (1 - novAvg) * 0.3;
+  const constellations = [];
+  if (loopStrength > 0.6) constellations.push({ name: 'CLOSED_LOOP', confidence: loopStrength });
+  if (novAvg > 0.6) constellations.push({ name: 'PATTERN_BREAK', confidence: novAvg });
+  if (uniAvg > 0.55) constellations.push({ name: 'CONVERGENCE', confidence: uniAvg });
+  if (uniAvg < 0.35) constellations.push({ name: 'SCATTERING', confidence: 1 - uniAvg });
+  if (novAvg > 0.5 && uniAvg > 0.5) constellations.push({ name: 'EMERGENCE', confidence: (novAvg + uniAvg) / 2 });
+  if (constellations.length === 0) constellations.push({ name: 'DRIFT', confidence: 0.5 });
+  let narrative = '';
+  if (healthScore > 0.65) {
+    narrative = 'This conversation shows strong structural health (' + healthScore.toFixed(2) + '). ';
+    if (novAvg > 0.6) narrative += 'Significant novelty is entering \u2014 new material and structural shifts are present. ';
+    if (uniAvg > 0.55) narrative += 'Speakers are converging toward shared ground. ';
+    narrative += 'The structural profile suggests genuine forward movement, not cosmetic variation.';
+  } else if (healthScore > 0.45) {
+    narrative = 'Moderate structural health (' + healthScore.toFixed(2) + '). The conversation shows some forward movement but ';
+    if (recAvg > 0.5) narrative += 'recurring patterns suggest partial looping. ';
+    else narrative += 'novelty and unity metrics could be stronger. ';
+    narrative += 'There may be areas where the dialogue is treading familiar ground.';
+  } else {
+    narrative = 'Low structural health (' + healthScore.toFixed(2) + '). ';
+    if (loopStrength > 0.6) narrative += 'Strong looping detected \u2014 the conversation is recycling patterns despite surface-level variation. ';
+    narrative += 'Consider structural interventions: introduce genuinely new frames, break rhythm patterns, or address the underlying sticking point directly.';
+  }
+  return { channels, healthScore, loopStrength, constellations, narrative, turnCount: turns.length };
+}
+function renderResult(result, container) {
+  const { channels, healthScore, loopStrength, constellations, narrative } = result;
+  const primaryConstellation = constellations.sort((a,b) => b.confidence - a.confidence)[0];
+  const channelHTML = (obj, cls) => Object.entries(obj).map(([k, v]) =>
+    '<div class="mini-bar-row"><span class="mini-bar-label">' + k + '</span><div class="mini-bar"><div class="mini-bar-fill" style="width:' + (v*100).toFixed(0) + '%;background:var(--' + cls + ')"></div></div></div>').join('');
+  const patternColors = {
+    CLOSED_LOOP: 'var(--recurrence)',
+    PATTERN_BREAK: 'var(--novelty)',
+    CONVERGENCE: 'var(--unity)',
+    SCATTERING: 'var(--accent3)',
+    EMERGENCE: 'var(--accent)',
+    DRIFT: 'var(--text-muted)'
+  };
+  container.innerHTML =
+    '<div class="result-header"><h4>Structural Profile</h4><span class="constellation-badge">' + primaryConstellation.name + '</span></div>' +
+    '<div class="score-row"><div class="score-card health"><div class="score-value">' + healthScore.toFixed(2) + '</div><div class="score-label">Dialectical Health</div></div><div class="score-card loop"><div class="score-value">' + loopStrength.toFixed(2) + '</div><div class="score-label">Loop Strength</div></div></div>' +
+    '<div class="result-channels"><h5>Recurrence</h5>' + channelHTML(channels.recurrence, 'recurrence') + '</div>' +
+    '<div class="result-channels"><h5>Novelty</h5>' + channelHTML(channels.novelty, 'novelty') + '</div>' +
+    '<div class="result-channels"><h5>Unity</h5>' + channelHTML(channels.unity, 'unity') + '</div>' +
+    '<div class="result-patterns">' + constellations.map(c => '<span class="pattern-tag" style="color:' + (patternColors[c.name] || 'var(--text-muted)') + ';border-color:' + (patternColors[c.name] || 'var(--border)') + '">' + c.name + ' ' + (c.confidence * 100).toFixed(0) + '%</span>').join('') + '</div>' +
+    '<div class="result-narrative"><h5>Narrative Summary</h5><p>' + narrative + '</p></div>';
+}
+const fadeObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.dim-card, .how-step, .use-case, .project-card').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+  fadeObserver.observe(el);
+});
+</script>
+</body>
+</html>

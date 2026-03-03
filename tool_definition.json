@@ -1,0 +1,246 @@
+{
+    "schema_version": "1.1",
+    "server": {
+        "name": "renoun",
+        "version": "1.1.0",
+        "description": "Structural observability for AI conversations. Detects when conversations are stuck in loops, producing cosmetic variation instead of real change, or failing to converge. Measures structural health across 17 channels without analyzing content — works on any turn-based interaction. Your agent doesn't know when it's going in circles. ReNoUn does.",
+        "author": {
+            "name": "Luke / ReNoUn",
+            "url": "https://github.com/renoun-framework"
+        },
+        "license": "Plugin wrapper: MIT | Core engine: Proprietary",
+        "homepage": "https://github.com/renoun-framework",
+        "tags": [
+            "conversation-quality",
+            "loop-detection",
+            "agent-monitoring",
+            "structural-analysis",
+            "convergence-detection",
+            "stuck-state-detection",
+            "prompt-evaluation",
+            "dialogue-health",
+            "pattern-detection",
+            "agent-observability"
+        ],
+        "categories": [
+            "observability",
+            "agent-tools",
+            "conversation",
+            "evaluation"
+        ]
+    },
+    "transport": {
+        "type": "stdio",
+        "command": "python3",
+        "args": ["server.py"]
+    },
+    "tools": [
+        {
+            "name": "renoun_analyze",
+            "description": "Deep structural analysis of a conversation. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels — without reading the content. Returns a health score (0-1), pattern classifications (8 types including CLOSED_LOOP, PATTERN_BREAK, CONVERGENCE, SURFACE_VARIATION), breakthrough moments, and actionable next steps. Use this to understand why a conversation succeeded or failed structurally. Minimum 10 turns for reliable results.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "utterances": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "speaker": {
+                                    "type": "string",
+                                    "description": "Speaker identifier (e.g., 'user', 'assistant', 'Alice')"
+                                },
+                                "text": {
+                                    "type": "string",
+                                    "description": "What the speaker said"
+                                },
+                                "index": {
+                                    "type": "integer",
+                                    "description": "Turn number (0-indexed). Auto-assigned if omitted."
+                                }
+                            },
+                            "required": ["speaker", "text"]
+                        },
+                        "minItems": 3,
+                        "description": "Conversation turns in order. Speaker/text pairs."
+                    }
+                },
+                "required": ["utterances"]
+            },
+            "outputSchema": {
+                "type": "object",
+                "properties": {
+                    "dialectical_health": {
+                        "type": "number",
+                        "description": "Structural health score (0.0-1.0). Below 0.45 = stuck or fragmented. 0.55-0.75 = healthy. Above 0.75 = excellent convergence."
+                    },
+                    "loop_strength": {
+                        "type": "number",
+                        "description": "How much the conversation recycles the same patterns (0.0-1.0). Above 0.7 = heavily looping."
+                    },
+                    "channels": {
+                        "type": "object",
+                        "description": "17-channel breakdown: 5 recurrence (stability), 6 novelty (disruption), 6 unity (coherence) measurements."
+                    },
+                    "constellations": {
+                        "type": "array",
+                        "description": "Structural patterns detected. Each includes pattern name, confidence, description, and agent_action (what to do about it).",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "detected": {
+                                    "type": "string",
+                                    "enum": ["CLOSED_LOOP", "HIGH_SYMMETRY", "PATTERN_BREAK", "CONVERGENCE", "SCATTERING", "REPEATED_DISRUPTION", "DIP_AND_RECOVERY", "SURFACE_VARIATION"],
+                                    "description": "CLOSED_LOOP = stuck in a cycle. HIGH_SYMMETRY = rigid structure. PATTERN_BREAK = something shifted. CONVERGENCE = moving toward resolution. SCATTERING = falling apart. REPEATED_DISRUPTION = keeps breaking without stabilizing. DIP_AND_RECOVERY = disrupted then recovered. SURFACE_VARIATION = sounds different but structurally identical."
+                                },
+                                "confidence": {
+                                    "type": "number",
+                                    "description": "Match confidence (0.0-1.0). Above 0.6 = strong detection."
+                                },
+                                "agent_action": {
+                                    "type": "string",
+                                    "enum": ["explore_new_angle", "introduce_variation", "support_integration", "maintain_trajectory", "provide_structure", "slow_down", "acknowledge_shift", "go_deeper"],
+                                    "description": "Recommended agent behavior in response to this pattern."
+                                },
+                                "agent_guidance": {
+                                    "type": "string",
+                                    "description": "One-line explanation of what the agent should consider doing."
+                                }
+                            }
+                        }
+                    },
+                    "novelty_items": {
+                        "type": "array",
+                        "description": "Breakthrough moments — turns where the conversation structurally shifted. Includes turn index, speaker, score, and reason."
+                    },
+                    "summary": {
+                        "type": "string",
+                        "description": "One-paragraph structural narrative."
+                    },
+                    "recommendations": {
+                        "type": "array",
+                        "description": "Actionable structural observations."
+                    }
+                }
+            }
+        },
+        {
+            "name": "renoun_health_check",
+            "description": "Fast structural triage. Is this conversation stuck, healthy, or falling apart? Returns one score, one pattern, one summary. Use this for quick checks before deciding whether to run full analysis. Sub-50ms.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "utterances": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "speaker": {"type": "string"},
+                                "text": {"type": "string"}
+                            },
+                            "required": ["speaker", "text"]
+                        },
+                        "minItems": 3
+                    }
+                },
+                "required": ["utterances"]
+            },
+            "outputSchema": {
+                "type": "object",
+                "properties": {
+                    "dialectical_health": {
+                        "type": "number",
+                        "description": "0.0-1.0. Quick read: below 0.45 = problem, above 0.55 = fine."
+                    },
+                    "assessment": {
+                        "type": "string",
+                        "enum": ["excellent", "healthy", "below_baseline", "distressed"],
+                        "description": "Plain-language health bucket."
+                    },
+                    "loop_strength": {
+                        "type": "number",
+                        "description": "0.0-1.0. How circular is the conversation."
+                    },
+                    "dominant_constellation": {
+                        "type": "object",
+                        "description": "The strongest structural pattern detected, with agent_action.",
+                        "properties": {
+                            "pattern": {"type": "string"},
+                            "confidence": {"type": "number"},
+                            "description": {"type": "string"},
+                            "agent_action": {"type": "string"},
+                            "agent_guidance": {"type": "string"}
+                        }
+                    },
+                    "summary": {
+                        "type": "string",
+                        "description": "One-line structural read."
+                    }
+                }
+            }
+        },
+        {
+            "name": "renoun_compare",
+            "description": "Structural A/B test between two conversations. Did the second session improve over the first? Which channels shifted? Did the pattern change from stuck to converging? Use for prompt iteration testing, session-over-session tracking, or comparing different agent strategies. Provide either pre-analyzed results or raw turns.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "result_a": {"type": "object", "description": "First analysis result (output of renoun_analyze)"},
+                    "result_b": {"type": "object", "description": "Second analysis result"},
+                    "utterances_a": {"type": "array", "description": "First conversation turns (alternative to result_a)"},
+                    "utterances_b": {"type": "array", "description": "Second conversation turns"},
+                    "label_a": {"type": "string", "default": "Session A"},
+                    "label_b": {"type": "string", "default": "Session B"}
+                }
+            },
+            "outputSchema": {
+                "type": "object",
+                "properties": {
+                    "health": {
+                        "type": "object",
+                        "description": "DHS comparison with delta and trend (improving/declining/stable)."
+                    },
+                    "constellation_transition": {
+                        "type": "object",
+                        "description": "Pattern shift between sessions (e.g., CLOSED_LOOP -> CONVERGENCE)."
+                    },
+                    "top_shifts": {
+                        "type": "array",
+                        "description": "The 5 channels that changed most between sessions, with direction and magnitude."
+                    }
+                }
+            }
+        },
+        {
+            "name": "renoun_pattern_query",
+            "description": "Query structural patterns across sessions over time. How has conversation health trended this month? Which sessions were stuck? When did convergence patterns start appearing? Supports save, list, filtered queries, and trend computation against locally stored history.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": ["save", "list", "query", "trend"],
+                        "description": "save = persist an analysis result. list = show all stored sessions. query = filter by criteria. trend = compute metric trajectory over time."
+                    },
+                    "result": {"type": "object", "description": "For save: the analysis result to persist."},
+                    "session_name": {"type": "string", "description": "For save: name for this session."},
+                    "domain": {"type": "string", "description": "Filter or tag by domain (e.g., therapy, sales, support)."},
+                    "tags": {"type": "array", "items": {"type": "string"}, "description": "For save: tags for this session."},
+                    "from_date": {"type": "string", "description": "Filter: start date (YYYY-MM-DD)."},
+                    "to_date": {"type": "string", "description": "Filter: end date (YYYY-MM-DD)."},
+                    "constellation": {"type": "string", "description": "Filter: only sessions with this dominant pattern."},
+                    "tag": {"type": "string", "description": "Filter: only sessions with this tag."},
+                    "dhs_below": {"type": "number", "description": "Filter: only sessions with health below this value."},
+                    "dhs_above": {"type": "number", "description": "Filter: only sessions with health above this value."},
+                    "metric": {"type": "string", "default": "dhs", "description": "For trend: which metric to track (dhs or loop)."}
+                },
+                "required": ["action"]
+            }
+        }
+    ],
+    "installation": {
+        "requirements": ["numpy>=1.20.0"],
+        "optional_requirements": ["mcp"],
+        "setup_instructions": "1. Place core.py in the same directory or parent directory or ~/.renoun/. 2. pip install numpy. 3. Optionally pip install mcp. 4. python3 server.py"
+    }
+}

@@ -1,0 +1,6 @@
+numpy>=1.20.0
+# Optional: uncomment for full MCP protocol support (falls back to JSON-RPC without)
+# mcp>=1.0.0
+# Optional: uncomment for HTTP API server
+# fastapi>=0.100.0
+# uvicorn>=0.20.0

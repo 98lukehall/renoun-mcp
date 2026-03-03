@@ -1,0 +1,19 @@
+# Smithery configuration for ReNoUn MCP Server
+# https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      corePath:
+        type: string
+        description: "Absolute path to ReNoUn core.py engine file. If omitted, searches standard locations (~/.renoun/core.py, parent directories)."
+    description: "ReNoUn structural observability server. Optional: set corePath if core.py is not in a standard location."
+  commandFunction: |-
+    (config) => ({
+      command: 'python3',
+      args: ['server.py'],
+      env: config.corePath ? { RENOUN_CORE_PATH: config.corePath } : {}
+    })
+  exampleConfig: {}
