@@ -30,9 +30,13 @@ from pathlib import Path
 from typing import Any
 from datetime import datetime
 
-TOOL_VERSION = "1.1.0"
+TOOL_VERSION = "1.2.0"
 ENGINE_VERSION = "4.1"
 SCHEMA_VERSION = "1.1"
+
+# Tracks whether we're using local engine or remote API
+_USE_REMOTE_API = False
+_remote_client = None
 
 # ---------------------------------------------------------------------------
 # Engine import
@@ -125,9 +129,35 @@ except ImportError:
 
 
 def create_engine():
-    """Create a ReNoUn engine instance."""
-    EngineClass = find_and_import_core()
-    return EngineClass()
+    """Create a ReNoUn engine instance.
+
+    Tries local core.py first. If not found, checks for remote API config
+    and returns None (tool handlers use _remote_client instead).
+    """
+    global _USE_REMOTE_API, _remote_client
+
+    try:
+        EngineClass = find_and_import_core()
+        return EngineClass()
+    except ImportError:
+        # No local engine — try remote API fallback
+        from api_client import is_api_configured, RemoteAPIClient
+
+        if is_api_configured():
+            if _remote_client is None:
+                _remote_client = RemoteAPIClient()
+                _USE_REMOTE_API = True
+                print("ReNoUn: Using remote API (core.py not found locally)", file=sys.stderr)
+            return None  # Signal to tool handlers to use _remote_client
+        else:
+            raise ImportError(
+                "ReNoUn core engine (core.py) not found locally, and no API key configured.\n\n"
+                "Option 1 — Local engine:\n"
+                "  Set RENOUN_CORE_PATH=/path/to/core.py\n\n"
+                "Option 2 — Remote API (subscription required):\n"
+                "  Set RENOUN_API_KEY=rn_live_your_key_here\n"
+                "  Get your key at https://harrisoncollab.com\n"
+            )
 
 
 def normalize_utterances(data: Any) -> list:
@@ -250,7 +280,7 @@ def tool_analyze(arguments: dict) -> dict:
     try:
         engine = create_engine()
     except ImportError as e:
-        return _structured_error("engine_not_found", str(e), "Place core.py in same directory or ~/.renoun/")
+        return _structured_error("engine_not_found", str(e), "Set RENOUN_CORE_PATH or RENOUN_API_KEY")
 
     try:
         utterances = normalize_utterances(arguments.get("utterances", []))
@@ -259,6 +289,13 @@ def tool_analyze(arguments: dict) -> dict:
 
     if len(utterances) < 3:
         return _structured_error("insufficient_data", f"Only {len(utterances)} turns provided.", "Minimum 3 turns required. 10+ recommended for reliable results.")
+
+    # Remote API fallback
+    if engine is None and _remote_client is not None:
+        try:
+            return _remote_client.analyze(utterances)
+        except Exception as e:
+            return _structured_error("api_error", str(e), "Check your API key and network connection.")
 
     result = engine.score(utterances)
     output = result.to_dict()
@@ -295,7 +332,7 @@ def tool_health_check(arguments: dict) -> dict:
     try:
         engine = create_engine()
     except ImportError as e:
-        return _structured_error("engine_not_found", str(e), "Place core.py in same directory or ~/.renoun/")
+        return _structured_error("engine_not_found", str(e), "Set RENOUN_CORE_PATH or RENOUN_API_KEY")
 
     try:
         utterances = normalize_utterances(arguments.get("utterances", []))
@@ -304,6 +341,13 @@ def tool_health_check(arguments: dict) -> dict:
 
     if len(utterances) < 3:
         return _structured_error("insufficient_data", f"Only {len(utterances)} turns provided.", "Minimum 3 turns required. 10+ recommended.")
+
+    # Remote API fallback
+    if engine is None and _remote_client is not None:
+        try:
+            return _remote_client.health_check(utterances)
+        except Exception as e:
+            return _structured_error("api_error", str(e), "Check your API key and network connection.")
 
     result = engine.score(utterances)
     turn_count = len(utterances)
@@ -339,6 +383,13 @@ def tool_health_check(arguments: dict) -> dict:
 
 def tool_compare(arguments: dict) -> dict:
     """Compare two analysis results structurally."""
+    # Remote API fallback — send the whole request to the API
+    if _USE_REMOTE_API and _remote_client is not None:
+        try:
+            return _remote_client.compare(arguments)
+        except Exception as e:
+            return _structured_error("api_error", str(e), "Check your API key and network connection.")
+
     result_a = arguments.get("result_a")
     result_b = arguments.get("result_b")
     utts_a = arguments.get("utterances_a")
@@ -391,6 +442,14 @@ def tool_compare(arguments: dict) -> dict:
 
 def tool_pattern_query(arguments: dict) -> dict:
     """Query and manage longitudinal pattern history."""
+    # Remote API fallback
+    if _USE_REMOTE_API and _remote_client is not None:
+        action = arguments.get("action", "list")
+        try:
+            return _remote_client.pattern_query(action, arguments)
+        except Exception as e:
+            return _structured_error("api_error", str(e), "Check your API key and network connection.")
+
     try:
         from renoun_store import query_sessions, compute_trend, list_sessions, save_result, ensure_history_dir
 
@@ -738,5 +797,10 @@ async def main():
         await standalone_server()
 
 
-if __name__ == "__main__":
+def main_sync():
+    """Synchronous entry point for CLI (used by pyproject.toml console_scripts)."""
     asyncio.run(main())
+
+
+if __name__ == "__main__":
+    main_sync()
