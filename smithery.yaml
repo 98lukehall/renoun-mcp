@@ -5,15 +5,18 @@ startCommand:
   type: stdio
   configSchema:
     type: object
+    required:
+      - apiKey
     properties:
-      corePath:
+      apiKey:
         type: string
-        description: "Absolute path to ReNoUn core.py engine file. If omitted, searches standard locations (~/.renoun/core.py, parent directories)."
-    description: "ReNoUn structural observability server. Optional: set corePath if core.py is not in a standard location."
+        description: "Your ReNoUn API key (starts with rn_live_). Get one at https://harrisoncollab.com"
+    description: "Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels."
   commandFunction: |-
     (config) => ({
       command: 'python3',
-      args: ['server.py'],
-      env: config.corePath ? { RENOUN_CORE_PATH: config.corePath } : {}
+      args: ['-m', 'server'],
+      env: { RENOUN_API_KEY: config.apiKey }
     })
-  exampleConfig: {}
+  exampleConfig:
+    apiKey: "rn_live_your_key_here"
