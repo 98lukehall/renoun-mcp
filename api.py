@@ -326,7 +326,8 @@ async def patterns(action: str, body: PatternQueryRequest, key_info: dict = Depe
 # Billing Endpoints
 # ---------------------------------------------------------------------------
 
-from stripe_billing import create_checkout_session, handle_webhook, create_portal_session
+from stripe_billing import create_checkout_session, handle_webhook, create_portal_session, get_provisioned_key
+from fastapi.responses import HTMLResponse
 
 
 class CheckoutRequest(BaseModel):
@@ -412,6 +413,132 @@ async def billing_portal(body: PortalRequest):
     if "error" in result:
         raise HTTPException(status_code=500, detail={"error": {"type": "billing_error", "message": result["error"]}})
     return result
+
+
+# ---------------------------------------------------------------------------
+# Success / Welcome Page
+# ---------------------------------------------------------------------------
+
+WELCOME_PAGE_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to ReNoUn Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after {{ margin: 0; padding: 0; box-sizing: border-box; }}
+:root {{
+  --bg: #FFFFF0; --bg-card: #FFFFFF; --border: #E8E5DC;
+  --text: #0B1D3A; --text-dim: #4A5568; --text-muted: #8B92A0;
+  --accent: #7C9A6E; --radius: 12px;
+}}
+body {{ font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }}
+a {{ color: var(--accent); text-decoration: none; }}
+code {{ font-family: 'JetBrains Mono', monospace; }}
+.card {{ background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); max-width: 600px; width: 100%; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }}
+.header {{ background: #0B1D3A; padding: 32px 40px; text-align: center; }}
+.header h1 {{ color: #FFFFF0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }}
+.header p {{ color: #8B92A0; font-size: 14px; margin-top: 8px; }}
+.body {{ padding: 40px; }}
+.body h2 {{ font-size: 20px; font-weight: 600; margin-bottom: 16px; }}
+.body p {{ color: var(--text-dim); font-size: 15px; margin-bottom: 20px; }}
+.key-box {{ background: #F8F7F0; border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; position: relative; }}
+.key-box label {{ display: block; color: var(--text-muted); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }}
+.key-box code {{ font-size: 13px; word-break: break-all; line-height: 1.5; }}
+.key-box .copy-btn {{ position: absolute; top: 12px; right: 12px; background: var(--accent); color: white; border: none; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 500; cursor: pointer; }}
+.key-box .copy-btn:hover {{ background: #6A8A5E; }}
+.tier-badge {{ display: inline-block; background: #F0F7ED; border: 1px solid #D4E5CC; border-radius: 8px; padding: 12px 20px; margin-bottom: 24px; color: var(--text-dim); font-size: 14px; }}
+.tier-badge strong {{ color: var(--accent); }}
+.code-block {{ background: #1a1a2e; border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; overflow-x: auto; }}
+.code-block pre {{ color: #e0e0e0; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.6; white-space: pre-wrap; margin: 0; }}
+.links {{ font-size: 14px; color: var(--text-dim); }}
+.links a {{ margin-right: 20px; }}
+.footer {{ padding: 20px 40px; border-top: 1px solid var(--border); text-align: center; }}
+.footer p {{ color: var(--text-muted); font-size: 12px; }}
+.error-msg {{ text-align: center; padding: 60px 40px; }}
+.error-msg h2 {{ color: var(--text-dim); font-weight: 500; }}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="header">
+  <h1>ReNoUn</h1>
+  <p>Structural Observability for AI Conversations</p>
+</div>
+{content}
+<div class="footer">
+  <p>Harrison Collab &bull; <a href="https://harrisoncollab.com">harrisoncollab.com</a> &bull; Patent Pending #63/923,592</p>
+</div>
+</div>
+<script>
+function copyKey() {{
+  const key = document.getElementById('api-key').textContent;
+  navigator.clipboard.writeText(key).then(() => {{
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  }});
+}}
+</script>
+</body>
+</html>"""
+
+
+def _welcome_content(raw_key: str, tier: str) -> str:
+    return f"""<div class="body">
+  <h2>&#10003; Welcome to ReNoUn Pro</h2>
+  <p>Your subscription is active. Here's your API key &mdash; store it securely, as it cannot be recovered.</p>
+  <div class="key-box">
+    <label>Your API Key</label>
+    <code id="api-key">{raw_key}</code>
+    <button class="copy-btn" onclick="copyKey()">Copy</button>
+  </div>
+  <div class="tier-badge">
+    <strong>&#10003; {tier.title()} Tier</strong> &mdash; Full access to analyze, health_check, compare, and pattern_query. 1,000 req/day.
+  </div>
+  <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">Quick Start</h3>
+  <div class="code-block"><pre>curl -X POST https://web-production-817e2.up.railway.app/v1/health-check \\
+  -H "Authorization: Bearer {raw_key}" \\
+  -H "Content-Type: application/json" \\
+  -d '{{"utterances": [
+    {{"speaker": "user", "text": "Hello"}},
+    {{"speaker": "assistant", "text": "Hi there"}},
+    {{"speaker": "user", "text": "How are you?"}}
+  ]}}'</pre></div>
+  <div class="links">
+    <a href="https://web-production-817e2.up.railway.app/docs">API Docs</a>
+    <a href="https://pypi.org/project/renoun-mcp/">pip install renoun-mcp</a>
+    <a href="https://github.com/98lukehall/renoun-mcp">GitHub</a>
+  </div>
+</div>"""
+
+
+def _error_content(message: str) -> str:
+    return f"""<div class="error-msg">
+  <h2>{message}</h2>
+  <p style="color:#8B92A0;margin-top:16px;">If you just completed checkout, your API key has been emailed to you.<br>
+  You can also contact <a href="mailto:98lukehall@gmail.com">support</a> for help.</p>
+</div>"""
+
+
+@app.get("/welcome", response_class=HTMLResponse)
+async def welcome_page(session_id: str = ""):
+    """Success page after Stripe checkout. Displays the provisioned API key."""
+    if not session_id:
+        content = _error_content("Missing session ID")
+        return HTMLResponse(WELCOME_PAGE_HTML.format(content=content))
+
+    key_data = get_provisioned_key(session_id)
+
+    if key_data:
+        content = _welcome_content(key_data["raw_key"], key_data["tier"])
+    else:
+        # Key might have been provisioned but server restarted, or session_id is invalid
+        content = _error_content("Session not found or expired")
+
+    return HTMLResponse(WELCOME_PAGE_HTML.format(content=content))
 
 
 # ---------------------------------------------------------------------------

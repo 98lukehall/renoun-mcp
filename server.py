@@ -27,7 +27,7 @@ import json
 import hashlib
 import asyncio
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 from datetime import datetime
 
 TOOL_VERSION = "1.2.0"
@@ -202,7 +202,7 @@ def _compute_result_hash(output: dict) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def _reliability_note(turn_count: int) -> str | None:
+def _reliability_note(turn_count: int) -> Optional[str]:
     """Return reliability assessment based on turn count."""
     if turn_count < 10:
         return (

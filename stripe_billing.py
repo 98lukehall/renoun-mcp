@@ -31,6 +31,20 @@ from auth import create_key, revoke_key, list_keys, _load_keys, _save_keys, vali
 
 
 # ---------------------------------------------------------------------------
+# Temporary key store (checkout session_id → raw_key)
+# Keys are stored briefly so the success page can display them.
+# In production, use Redis or a DB. This dict is fine for single-instance.
+# ---------------------------------------------------------------------------
+
+_provisioned_keys: dict = {}  # session_id → {"raw_key": ..., "key_id": ..., "email": ...}
+
+
+def get_provisioned_key(session_id: str) -> dict:
+    """Retrieve a provisioned key by checkout session ID (one-time read)."""
+    return _provisioned_keys.get(session_id, {})
+
+
+# ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
@@ -50,7 +64,7 @@ def _load_stripe_config() -> dict:
         "secret_key": os.environ.get("STRIPE_SECRET_KEY", file_config.get("stripe_secret_key", "")),
         "webhook_secret": os.environ.get("STRIPE_WEBHOOK_SECRET", file_config.get("stripe_webhook_secret", "")),
         "price_id": os.environ.get("STRIPE_PRICE_ID", file_config.get("stripe_price_id", "")),
-        "success_url": os.environ.get("STRIPE_SUCCESS_URL", file_config.get("stripe_success_url", "https://renoun.dev/welcome?session_id={CHECKOUT_SESSION_ID}")),
+        "success_url": os.environ.get("STRIPE_SUCCESS_URL", file_config.get("stripe_success_url", "https://web-production-817e2.up.railway.app/welcome?session_id={CHECKOUT_SESSION_ID}")),
         "cancel_url": os.environ.get("STRIPE_CANCEL_URL", file_config.get("stripe_cancel_url", "https://renoun.dev/pricing")),
     }
 
@@ -194,6 +208,7 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
 
 def _handle_checkout_completed(session: dict) -> dict:
     """New subscription: create a pro API key and link it to the customer."""
+    checkout_session_id = session.get("id", "")
     customer_id = session.get("customer", "")
     customer_email = session.get("customer_email", session.get("customer_details", {}).get("email", ""))
     subscription_id = session.get("subscription", "")
@@ -210,9 +225,26 @@ def _handle_checkout_completed(session: dict) -> dict:
     # Create new pro key
     result = create_key(tier="pro", owner=customer_email)
     key_id = result["key_id"]
+    raw_key = result["raw_key"]
 
     # Link to Stripe
     _link_key_to_stripe(key_id, customer_id, subscription_id)
+
+    # Store for success page retrieval
+    if checkout_session_id:
+        _provisioned_keys[checkout_session_id] = {
+            "raw_key": raw_key,
+            "key_id": key_id,
+            "email": customer_email,
+            "tier": "pro",
+        }
+
+    # Send welcome email with API key
+    try:
+        from email_sender import send_welcome_email
+        email_result = send_welcome_email(to=customer_email, raw_key=raw_key, tier="pro")
+    except Exception as e:
+        email_result = {"success": False, "error": str(e)}
 
     return {
         "action": "key_provisioned",
@@ -220,8 +252,8 @@ def _handle_checkout_completed(session: dict) -> dict:
         "tier": "pro",
         "customer_id": customer_id,
         "customer_email": customer_email,
-        "note": "API key created. Deliver raw_key to customer via email or success page.",
-        "raw_key": result["raw_key"],
+        "email_sent": email_result.get("success", False),
+        "raw_key": raw_key,
     }
 
 

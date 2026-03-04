@@ -9,7 +9,7 @@ Target: zero sales effort, discovery-only distribution.
 
 Before submitting anywhere:
 
-- [ ] GitHub repo created at `github.com/renoun-framework/renoun-mcp`
+- [ ] GitHub repo created at `github.com/98lukehall/renoun-mcp`
 - [ ] `server.py`, `tool_definition.json`, `smithery.yaml`, `pyproject.toml` committed
 - [ ] `README.md` is registry-ready (config examples, tool table, constellation table)
 - [ ] `tests/test_integration.py` passes (23/23)
@@ -27,7 +27,7 @@ cd renoun-mcp
 git init
 git add server.py tool_definition.json smithery.yaml pyproject.toml README.md tests/
 git commit -m "ReNoUn MCP Server v1.1.0 — structural observability for AI conversations"
-git remote add origin git@github.com:renoun-framework/renoun-mcp.git
+git remote add origin git@github.com:98lukehall/renoun-mcp.git
 git push -u origin main
 ```
 
@@ -49,7 +49,7 @@ The `smithery.yaml` is already in the repo root. Smithery auto-indexes GitHub re
 To submit manually:
 1. Go to https://smithery.ai
 2. Click "Add Server" or submit via their GitHub integration
-3. Point to `github.com/renoun-framework/renoun-mcp`
+3. Point to `github.com/98lukehall/renoun-mcp`
 4. Smithery reads `smithery.yaml` and indexes the server automatically
 
 The `configSchema` exposes one optional field (`corePath`) for users who don't have `core.py` in a standard location.
@@ -64,7 +64,7 @@ The `configSchema` exposes one optional field (`corePath`) for users who don't h
 2. Edit `README.md`, add entry under **Monitoring** category (alphabetical):
 
 ```markdown
-- [renoun-framework/renoun-mcp](https://github.com/renoun-framework/renoun-mcp) 🐍 🏠 🍎 🪟 🐧 - Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels without analyzing content.
+- [98lukehall/renoun-mcp](https://github.com/98lukehall/renoun-mcp) 🐍 🏠 🍎 🪟 🐧 - Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels without analyzing content.
 ```
 
 Emoji key: 🐍 = Python, 🏠 = Local, 🍎🪟🐧 = All OS
@@ -79,7 +79,7 @@ Adds ReNoUn MCP Server — structural pattern detection for conversations.
 - Agent action mappings (tells agents what to do about detected patterns)
 - Patent pending #63/923,592
 
-Repo: https://github.com/renoun-framework/renoun-mcp
+Repo: https://github.com/98lukehall/renoun-mcp
 ```
 
 ### wong2/awesome-mcp-servers (Secondary)
@@ -96,7 +96,7 @@ Same process, different repo. Check their category structure — likely "Analysi
 2. Click "Submit" in the nav bar (or go to their GitHub issues)
 3. Create an issue with:
    - **Server Name**: ReNoUn MCP Server
-   - **URL**: `https://github.com/renoun-framework/renoun-mcp`
+   - **URL**: `https://github.com/98lukehall/renoun-mcp`
    - **Description**: Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels without analyzing content. 4 tools with agent action mappings.
    - **Category**: Observability / Analysis
    - **Language**: Python

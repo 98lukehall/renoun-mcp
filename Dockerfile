@@ -6,8 +6,9 @@ WORKDIR /app
 COPY requirements-api.txt .
 RUN pip install --no-cache-dir -r requirements-api.txt
 
-# Copy application code (core.py must be present on the server)
+# Copy application code
 COPY api.py api_config.py auth.py rate_limiter.py usage.py stripe_billing.py server.py ./
+COPY core.py novelty_dual_pass.py api_client.py email_sender.py ./
 COPY tool_definition.json ./
 
 # Create data directory

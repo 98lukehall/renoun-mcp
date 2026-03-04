@@ -11,20 +11,20 @@
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --bg: #0a0a0f;
-  --bg-elevated: #12121a;
-  --bg-card: #16161f;
-  --border: #1e1e2e;
-  --text: #e4e4ef;
-  --text-dim: #8888a0;
-  --text-muted: #55556a;
-  --accent: #6c5ce7;
-  --accent-glow: rgba(108, 92, 231, 0.3);
-  --accent2: #00cec9;
-  --accent3: #fd79a8;
-  --recurrence: #f39c12;
-  --novelty: #6c5ce7;
-  --unity: #00cec9;
+  --bg: #FFFFF0;
+  --bg-elevated: #F8F7F0;
+  --bg-card: #FFFFFF;
+  --border: #E8E5DC;
+  --text: #0B1D3A;
+  --text-dim: #4A5568;
+  --text-muted: #8B92A0;
+  --accent: #7C9A6E;
+  --accent-glow: rgba(124, 154, 110, 0.3);
+  --accent2: #5B7B9E;
+  --accent3: #B8A89C;
+  --recurrence: #C9956F;
+  --novelty: #7C9A6E;
+  --unity: #5B7B9E;
   --radius: 12px;
   --radius-lg: 20px;
 }
@@ -37,7 +37,7 @@ body {
   overflow-x: hidden;
 }
 a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
-a:hover { color: #8b7cf7; }
+a:hover { color: #6A8A5E; }
 code, .mono { font-family: 'JetBrains Mono', monospace; }
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -46,7 +46,7 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.01'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 9999;
 }
@@ -61,16 +61,24 @@ nav {
   align-items: center;
   justify-content: space-between;
   backdrop-filter: blur(20px);
-  background: rgba(10, 10, 15, 0.8);
+  background: rgba(255, 255, 240, 0.9);
   border-bottom: 1px solid var(--border);
   transition: all 0.3s;
 }
 nav.scrolled { padding: 0.6rem 2rem; }
 .nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
   font-weight: 700;
   font-size: 1.1rem;
   letter-spacing: -0.02em;
   color: var(--text);
+}
+.nav-logo img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
 }
 .nav-logo span { color: var(--accent); }
 .nav-links { display: flex; gap: 2rem; align-items: center; }
@@ -115,8 +123,8 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 1rem;
-  background: rgba(108, 92, 231, 0.1);
-  border: 1px solid rgba(108, 92, 231, 0.25);
+  background: rgba(124, 154, 110, 0.1);
+  border: 1px solid rgba(124, 154, 110, 0.25);
   border-radius: 100px;
   font-size: 0.8rem;
   font-weight: 500;
@@ -185,12 +193,12 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
 .btn-secondary {
   background: var(--bg-elevated);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 2px solid var(--accent);
 }
 .btn-secondary:hover {
-  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
   transform: translateY(-2px);
-  color: var(--text);
 }
 .hero-bg {
   position: absolute;
@@ -202,7 +210,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.15;
+  opacity: 0.08;
   animation: float 20s ease-in-out infinite;
 }
 .hero-bg .orb-1 {
@@ -253,6 +261,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   font-weight: 800;
   letter-spacing: -0.03em;
   margin-bottom: 1rem;
+  color: var(--text);
 }
 .section-subtitle {
   font-size: 1.1rem;
@@ -272,7 +281,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
 .key-insight {
   margin-top: 1.5rem;
   padding: 1.2rem 1.5rem;
-  background: rgba(108, 92, 231, 0.06);
+  background: rgba(124, 154, 110, 0.06);
   border-left: 3px solid var(--accent);
   border-radius: 0 var(--radius) var(--radius) 0;
   color: var(--text-dim);
@@ -333,7 +342,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
 .dim-channel-bar {
   flex: 1;
   height: 6px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(11, 29, 58, 0.05);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -386,7 +395,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
 .dim-card:hover {
   border-color: var(--accent);
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.1);
 }
 .dim-card::before {
   content: '';
@@ -406,14 +415,15 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   font-size: 1.3rem;
   margin-bottom: 1.2rem;
 }
-.dim-card.rec .dim-icon { background: rgba(243, 156, 18, 0.12); color: var(--recurrence); }
-.dim-card.nov .dim-icon { background: rgba(108, 92, 231, 0.12); color: var(--novelty); }
-.dim-card.uni .dim-icon { background: rgba(0, 206, 201, 0.12); color: var(--unity); }
+.dim-card.rec .dim-icon { background: rgba(201, 149, 111, 0.12); color: var(--recurrence); }
+.dim-card.nov .dim-icon { background: rgba(124, 154, 110, 0.12); color: var(--novelty); }
+.dim-card.uni .dim-icon { background: rgba(91, 123, 158, 0.12); color: var(--unity); }
 .dim-card h3 {
   font-size: 1.3rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
   letter-spacing: -0.02em;
+  color: var(--text);
 }
 .dim-card .channel-count {
   font-family: 'JetBrains Mono', monospace;
@@ -433,9 +443,9 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   font-size: 0.65rem;
   padding: 0.25rem 0.6rem;
   border-radius: 4px;
-  background: rgba(255,255,255,0.04);
+  background: rgba(11, 29, 58, 0.04);
   color: var(--text-muted);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(11, 29, 58, 0.06);
 }
 .how-it-works {
   display: grid;
@@ -463,7 +473,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   font-size: 0.85rem;
   margin: 0 auto 1rem;
 }
-.how-step h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+.how-step h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
 .how-step p { color: var(--text-dim); font-size: 0.85rem; }
 .how-arrow {
   display: flex;
@@ -486,7 +496,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   justify-content: space-between;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--border);
-  background: rgba(255,255,255,0.01);
+  background: rgba(11, 29, 58, 0.01);
 }
 .demo-toolbar-left {
   display: flex;
@@ -528,7 +538,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
 }
 .demo-textarea {
   flex: 1;
-  background: var(--bg);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1rem;
@@ -601,14 +611,14 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   font-size: 0.7rem;
   padding: 0.3rem 0.6rem;
   border-radius: 4px;
-  background: rgba(108, 92, 231, 0.12);
+  background: rgba(124, 154, 110, 0.12);
   color: var(--accent);
   font-weight: 600;
 }
 .score-row { display: flex; gap: 1rem; }
 .score-card {
   flex: 1;
-  background: var(--bg);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1rem;
@@ -626,10 +636,10 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   color: var(--text-muted);
   margin-top: 0.2rem;
 }
-.score-card.health .score-value { color: var(--accent2); }
+.score-card.health .score-value { color: var(--unity); }
 .score-card.loop .score-value { color: var(--recurrence); }
 .result-channels {
-  background: var(--bg);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1rem;
@@ -657,7 +667,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
 .mini-bar {
   flex: 1;
   height: 4px;
-  background: rgba(255,255,255,0.04);
+  background: rgba(11, 29, 58, 0.05);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -667,7 +677,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   transition: width 0.8s ease;
 }
 .result-narrative {
-  background: var(--bg);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1rem;
@@ -725,7 +735,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
 }
 .use-case:hover { border-color: var(--accent); transform: translateY(-2px); }
 .use-case .uc-icon { font-size: 1.5rem; margin-bottom: 0.8rem; }
-.use-case h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+.use-case h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
 .use-case p { color: var(--text-dim); font-size: 0.85rem; }
 #projects { padding-top: 2rem; }
 .projects-grid {
@@ -746,7 +756,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
 .project-card:hover {
   border-color: var(--accent);
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.1);
 }
 .project-card .coming-soon {
   position: absolute;
@@ -758,7 +768,7 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   letter-spacing: 0.08em;
   padding: 0.3rem 0.8rem;
   border-radius: 100px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(11, 29, 58, 0.05);
   color: var(--text-muted);
   border: 1px solid var(--border);
 }
@@ -771,13 +781,14 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
 }
-.project-card.node1 .card-icon { background: rgba(253, 121, 168, 0.12); }
-.project-card.electrolytes .card-icon { background: rgba(0, 206, 201, 0.12); }
+.project-card.node1 .card-icon { background: rgba(201, 149, 111, 0.12); }
+.project-card.electrolytes .card-icon { background: rgba(91, 123, 158, 0.12); }
 .project-card h3 {
   font-size: 1.4rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
   letter-spacing: -0.02em;
+  color: var(--text);
 }
 .project-card .card-tagline {
   color: var(--text-muted);
@@ -791,9 +802,9 @@ section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
   font-size: 0.7rem;
   padding: 0.25rem 0.6rem;
   border-radius: 4px;
-  background: rgba(255,255,255,0.04);
+  background: rgba(11, 29, 58, 0.04);
   color: var(--text-muted);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(11, 29, 58, 0.06);
 }
 footer {
   border-top: 1px solid var(--border);
@@ -807,7 +818,18 @@ footer {
   justify-content: space-between;
   align-items: center;
 }
-.footer-logo { font-weight: 700; font-size: 1rem; }
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-weight: 700;
+  font-size: 1rem;
+}
+.footer-logo img {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+}
 .footer-logo span { color: var(--accent); }
 .footer-links { display: flex; gap: 2rem; }
 .footer-links a { color: var(--text-muted); font-size: 0.85rem; }
@@ -848,7 +870,10 @@ footer {
 </head>
 <body>
 <nav id="navbar">
-  <div class="nav-logo">harrison<span>collab</span></div>
+  <div class="nav-logo">
+    <img src="logo.png" alt="Harrison Collab" style="width:36px;height:36px;border-radius:8px;">
+    <span>collab</span>
+  </div>
   <div class="nav-links" id="navLinks">
     <a href="#renoun">ReNoUn</a>
     <a href="#projects">Projects</a>
@@ -1088,7 +1113,10 @@ Minimum 10 turns for analysis.'></textarea>
 </section>
 <footer>
   <div class="footer-inner">
-    <div class="footer-logo">harrison<span>collab</span></div>
+    <div class="footer-logo">
+      <img src="logo.png" alt="Harrison Collab" style="width:32px;height:32px;border-radius:7px;">
+      <span>collab</span>
+    </div>
     <div class="footer-links">
       <a href="#renoun">ReNoUn</a>
       <a href="#projects">Projects</a>
@@ -1120,11 +1148,11 @@ const sampleConversation = [
   {"speaker": "Client", "text": "I've been feeling stuck. Like nothing is changing no matter what I do."},
   {"speaker": "Therapist", "text": "When you say stuck, what does that feel like in your body?"},
   {"speaker": "Client", "text": "Heavy. Like I'm carrying something but I can't put it down."},
-  {"speaker": "Therapist", "text": "That heaviness \u2014 has it always been there, or is it newer?"},
+  {"speaker": "Therapist", "text": "That heaviness — has it always been there, or is it newer?"},
   {"speaker": "Client", "text": "It's been building. Maybe the last six months. Since the move."},
   {"speaker": "Therapist", "text": "The move was a significant transition. What shifted after that?"},
   {"speaker": "Client", "text": "Everything changed. New city, no friends nearby, different job culture. I lost my routine."},
-  {"speaker": "Therapist", "text": "So the structures that held you together before \u2014 they dissolved."},
+  {"speaker": "Therapist", "text": "So the structures that held you together before — they dissolved."},
   {"speaker": "Client", "text": "Exactly. And I keep trying to rebuild them but nothing sticks. I start a gym habit, it lasts a week. I try to journal, same thing."},
   {"speaker": "Therapist", "text": "What if the old structures aren't what you need anymore? What if the stuckness is actually a signal that you need something different?"},
   {"speaker": "Client", "text": "I... hadn't thought about it that way. I've been assuming I need to get back to who I was."},
@@ -1132,9 +1160,9 @@ const sampleConversation = [
   {"speaker": "Client", "text": "Someone with a plan. Always optimizing. Everything had a system."},
   {"speaker": "Therapist", "text": "It sounds like systems gave you safety. Without them, what comes up?"},
   {"speaker": "Client", "text": "Fear, honestly. That maybe I'm not actually good at figuring things out. That the systems were just hiding that."},
-  {"speaker": "Therapist", "text": "That's a really important insight. The fear was always there \u2014 the systems managed it."},
+  {"speaker": "Therapist", "text": "That's a really important insight. The fear was always there — the systems managed it."},
   {"speaker": "Client", "text": "So now I'm just... exposed to it. That's why everything feels so heavy."},
-  {"speaker": "Therapist", "text": "Yes. And sitting with that exposure \u2014 even right now, in this room \u2014 that takes real courage."},
+  {"speaker": "Therapist", "text": "Yes. And sitting with that exposure — even right now, in this room — that takes real courage."},
   {"speaker": "Client", "text": "It doesn't feel courageous. It feels like failing."},
   {"speaker": "Therapist", "text": "What if we held both? That it can feel like failing and be courageous at the same time?"},
   {"speaker": "Client", "text": "Both at once. I think I can sit with that."}
@@ -1147,7 +1175,7 @@ function updateTurnCount() {
   try {
     const data = JSON.parse(document.getElementById('demoInput').value);
     document.getElementById('turnCount').textContent = (Array.isArray(data) ? data.length : 0) + ' turns';
-  } catch { document.getElementById('turnCount').textContent = '\u2014 turns'; }
+  } catch { document.getElementById('turnCount').textContent = '— turns'; }
 }
 document.getElementById('demoInput')?.addEventListener('input', updateTurnCount);
 function runDemo() {
@@ -1246,7 +1274,7 @@ function analyzeStructure(turns) {
   let narrative = '';
   if (healthScore > 0.65) {
     narrative = 'This conversation shows strong structural health (' + healthScore.toFixed(2) + '). ';
-    if (novAvg > 0.6) narrative += 'Significant novelty is entering \u2014 new material and structural shifts are present. ';
+    if (novAvg > 0.6) narrative += 'Significant novelty is entering — new material and structural shifts are present. ';
     if (uniAvg > 0.55) narrative += 'Speakers are converging toward shared ground. ';
     narrative += 'The structural profile suggests genuine forward movement, not cosmetic variation.';
   } else if (healthScore > 0.45) {
@@ -1256,7 +1284,7 @@ function analyzeStructure(turns) {
     narrative += 'There may be areas where the dialogue is treading familiar ground.';
   } else {
     narrative = 'Low structural health (' + healthScore.toFixed(2) + '). ';
-    if (loopStrength > 0.6) narrative += 'Strong looping detected \u2014 the conversation is recycling patterns despite surface-level variation. ';
+    if (loopStrength > 0.6) narrative += 'Strong looping detected — the conversation is recycling patterns despite surface-level variation. ';
     narrative += 'Consider structural interventions: introduce genuinely new frames, break rhythm patterns, or address the underlying sticking point directly.';
   }
   return { channels, healthScore, loopStrength, constellations, narrative, turnCount: turns.length };
