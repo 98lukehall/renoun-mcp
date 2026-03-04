@@ -1,167 +1,158 @@
 # ReNoUn MCP Server — Registry Submission Playbook
 
 Step-by-step instructions for getting ReNoUn listed in every major MCP registry.
-Target: zero sales effort, discovery-only distribution.
+All copy-paste ready. Work through in order.
 
 ---
 
 ## Pre-Flight Checklist
 
-Before submitting anywhere:
-
-- [ ] GitHub repo created at `github.com/98lukehall/renoun-mcp`
-- [ ] `server.py`, `tool_definition.json`, `smithery.yaml`, `pyproject.toml` committed
-- [ ] `README.md` is registry-ready (config examples, tool table, constellation table)
-- [ ] `tests/test_integration.py` passes (23/23)
-- [ ] `core.py` is NOT in the repo (proprietary — referenced by path only)
-- [ ] License file added (MIT for wrapper, proprietary note for engine)
+- [x] GitHub repo at `github.com/98lukehall/renoun-mcp`
+- [x] PyPI package published: `pip install renoun-mcp` (v1.2.0)
+- [x] README is registry-ready (badges, demo output, pricing, API docs)
+- [x] `smithery.yaml` updated (API key config, not core.py)
+- [x] Railway API live at `https://web-production-817e2.up.railway.app`
+- [x] Stripe checkout working for $4.99/mo Pro tier
+- [x] `.gitignore` excludes proprietary engine files
 
 ---
 
-## Day 0: GitHub + Smithery
+## 1. Smithery (smithery.ai)
 
-### 1. Push to GitHub
+**Status**: [ ] Submitted  [ ] Listed
 
-```bash
-cd renoun-mcp
-git init
-git add server.py tool_definition.json smithery.yaml pyproject.toml README.md tests/
-git commit -m "ReNoUn MCP Server v1.1.0 — structural observability for AI conversations"
-git remote add origin git@github.com:98lukehall/renoun-mcp.git
-git push -u origin main
-```
-
-**Do NOT commit**: `core.py`, `novelty_dual_pass.py`, `__pycache__/`, `.renoun/history/`
-
-Add a `.gitignore`:
-```
-core.py
-novelty_dual_pass.py
-__pycache__/
-*.pyc
-.renoun/
-```
-
-### 2. Smithery Submission
-
-The `smithery.yaml` is already in the repo root. Smithery auto-indexes GitHub repos.
-
-To submit manually:
 1. Go to https://smithery.ai
-2. Click "Add Server" or submit via their GitHub integration
-3. Point to `github.com/98lukehall/renoun-mcp`
-4. Smithery reads `smithery.yaml` and indexes the server automatically
-
-The `configSchema` exposes one optional field (`corePath`) for users who don't have `core.py` in a standard location.
+2. Sign in / create account
+3. Click "Publish MCP" or "Add Server"
+4. Connect GitHub repo: `github.com/98lukehall/renoun-mcp`
+5. Smithery reads `smithery.yaml` automatically
+6. Fill in metadata:
+   - **Name**: ReNoUn
+   - **Description**: Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels without analyzing content.
+   - **Category**: Observability / Analysis
+   - **Tags**: conversation-analysis, loop-detection, agent-observability, pattern-detection
+   - **Environment Variables**: `RENOUN_API_KEY` (required)
+   - **Example Prompts**:
+     - "Check if this conversation is stuck in a loop"
+     - "Analyze the structural health of our discussion"
+     - "Compare these two conversation sessions"
 
 ---
 
-## Day 1: Awesome MCP Servers Lists
+## 2. punkpeye/awesome-mcp-servers (→ synced to mcpservers.org)
 
-### punkpeye/awesome-mcp-servers (Primary — synced to mcpservers.org)
+**Status**: [ ] PR Submitted  [ ] Merged
 
 1. Fork `github.com/punkpeye/awesome-mcp-servers`
-2. Edit `README.md`, add entry under **Monitoring** category (alphabetical):
+2. Edit `README.md` — add under **Monitoring** category (alphabetical order):
 
 ```markdown
-- [98lukehall/renoun-mcp](https://github.com/98lukehall/renoun-mcp) 🐍 🏠 🍎 🪟 🐧 - Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels without analyzing content.
+- [renoun-mcp](https://github.com/98lukehall/renoun-mcp) 🐍 - Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence across 17 channels without analyzing content.
 ```
 
-Emoji key: 🐍 = Python, 🏠 = Local, 🍎🪟🐧 = All OS
-
-3. Submit PR with title: `Add renoun-mcp: structural observability for AI conversations`
-4. PR body:
+3. Submit PR:
+   - **Title**: `Add renoun-mcp: structural observability for AI conversations`
+   - **Body**:
 ```
 Adds ReNoUn MCP Server — structural pattern detection for conversations.
 
 - 4 tools: analyze, health_check, compare, pattern_query
 - 17-channel measurement without content analysis
-- Agent action mappings (tells agents what to do about detected patterns)
-- Patent pending #63/923,592
+- 8 constellation patterns with agent action mappings
+- Available on PyPI: `pip install renoun-mcp`
+- REST API + MCP server
 
 Repo: https://github.com/98lukehall/renoun-mcp
+PyPI: https://pypi.org/project/renoun-mcp/
 ```
-
-### wong2/awesome-mcp-servers (Secondary)
-
-Same process, different repo. Check their category structure — likely "Analysis" or "Monitoring".
 
 ---
 
-## Day 2: MCP.so + PulseMCP
+## 3. wong2/awesome-mcp-servers (→ mcpservers.org)
 
-### MCP.so
+**Status**: [ ] Submitted  [ ] Listed
 
-1. Go to https://mcp.so
-2. Click "Submit" in the nav bar (or go to their GitHub issues)
-3. Create an issue with:
+**Note**: This repo does NOT accept pull requests. Submit via their website.
+
+1. Go to https://mcpservers.org/submit
+2. Submit server details:
+   - **URL**: `https://github.com/98lukehall/renoun-mcp`
+   - **Description**: Structural observability for AI conversations. Detects loops, stuck states, and convergence patterns across 17 channels without analyzing content.
+
+---
+
+## 4. MCP.so
+
+**Status**: [ ] Submitted  [ ] Listed
+
+1. Go to https://mcp.so/submit
+2. Fill in:
    - **Server Name**: ReNoUn MCP Server
    - **URL**: `https://github.com/98lukehall/renoun-mcp`
    - **Description**: Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels without analyzing content. 4 tools with agent action mappings.
    - **Category**: Observability / Analysis
    - **Language**: Python
 
-### PulseMCP
+---
+
+## 5. PulseMCP (pulsemcp.com)
+
+**Status**: [ ] Submitted  [ ] Listed
+
+PulseMCP indexes 8,600+ servers. It may auto-discover from GitHub/PyPI, but to be safe:
 
 1. Go to https://pulsemcp.com
-2. Submit via their form or GitHub integration
+2. Look for a submit/suggest form
 3. Same description as above
 
-### Official MCP Registry (registry.modelcontextprotocol.io)
+---
 
-The official registry is designed for programmatic consumption by sub-registries. Check for submission instructions at:
-- https://registry.modelcontextprotocol.io
-- https://github.com/modelcontextprotocol discussions
+## 6. Official MCP Registry (registry.modelcontextprotocol.io)
+
+**Status**: [ ] Submitted  [ ] Listed
+
+The official registry. Check current submission process:
+
+1. Visit https://registry.modelcontextprotocol.io
+2. Review docs for submission requirements
+3. May require npm publish or specific metadata format
+4. Check https://github.com/modelcontextprotocol discussions for guidance
 
 ---
 
-## Day 3: MCP Market + MCP Server Finder
+## 7. MCP Market (mcpmarket.com)
 
-### MCP Market (mcpmarket.com)
+**Status**: [ ] Submitted  [ ] Listed
 
-Submit via their directory form. Same description.
-
-### MCP Server Finder (mcpserverfinder.com)
-
-Submit via their form. Same description.
+1. Go to https://mcpmarket.com/submit
+2. Submit GitHub repo link: `https://github.com/98lukehall/renoun-mcp`
+3. Same description as above
 
 ---
 
-## Ongoing: Claude Desktop Testing
+## 8. MCP Server Finder (mcpserverfinder.com)
 
-After listing, test that the full loop works from Claude Desktop:
+**Status**: [ ] Submitted  [ ] Listed
 
-1. Add to `claude_desktop_config.json`:
-```json
-{
-    "mcpServers": {
-        "renoun": {
-            "command": "python3",
-            "args": ["/path/to/renoun-mcp/server.py"]
-        }
-    }
-}
-```
-
-2. Restart Claude Desktop
-3. Ask Claude: "Use renoun to check the health of this conversation"
-4. Verify Claude discovers and calls `renoun_health_check`
+1. Go to https://mcpserverfinder.com
+2. Look for "Submit" in nav
+3. Same description as above
 
 ---
 
-## Registry Description Templates
+## Copy-Paste Descriptions
 
-### One-liner (for badges/listings):
+### One-liner:
 ```
 Structural observability for AI conversations — loop detection, convergence tracking, 17-channel analysis.
 ```
 
-### Short (for registry cards):
+### Short (registry cards):
 ```
 Detects when conversations are stuck in loops, producing cosmetic variation instead of real change, or failing to converge. Measures structural health across 17 channels without analyzing content. Your agent doesn't know when it's going in circles. ReNoUn does.
 ```
 
-### Technical (for developer directories):
+### Technical (developer directories):
 ```
 MCP server exposing 4 tools: renoun_analyze (full 17-channel structural analysis), renoun_health_check (fast DHS triage), renoun_compare (structural A/B testing), renoun_pattern_query (longitudinal history). Detects 8 constellation patterns with agent action mappings. Content-free — measures structure, not meaning. Patent pending #63/923,592.
 ```
@@ -172,11 +163,11 @@ MCP server exposing 4 tools: renoun_analyze (full 17-channel structural analysis
 
 | Registry | URL | Submitted | Listed | Notes |
 |----------|-----|-----------|--------|-------|
-| Smithery | smithery.ai | [ ] | [ ] | Auto-indexes from smithery.yaml |
-| awesome-mcp-servers (punkpeye) | github.com/punkpeye/awesome-mcp-servers | [ ] | [ ] | PR to Monitoring category |
-| awesome-mcp-servers (wong2) | github.com/wong2/awesome-mcp-servers | [ ] | [ ] | PR to relevant category |
-| MCP.so | mcp.so | [ ] | [ ] | GitHub issue submission |
-| PulseMCP | pulsemcp.com | [ ] | [ ] | Form submission |
-| Official Registry | registry.modelcontextprotocol.io | [ ] | [ ] | Check submission process |
-| MCP Market | mcpmarket.com | [ ] | [ ] | Directory form |
-| MCP Server Finder | mcpserverfinder.com | [ ] | [ ] | Directory form |
+| Smithery | smithery.ai | [ ] | [ ] | smithery.yaml ready |
+| awesome-mcp (punkpeye) | github.com/punkpeye/awesome-mcp-servers | [ ] | [ ] | PR to Monitoring |
+| awesome-mcp (wong2) | mcpservers.org/submit | [ ] | [ ] | Web form only |
+| MCP.so | mcp.so/submit | [ ] | [ ] | Web form |
+| PulseMCP | pulsemcp.com | [ ] | [ ] | May auto-index |
+| Official Registry | registry.modelcontextprotocol.io | [ ] | [ ] | Check process |
+| MCP Market | mcpmarket.com | [ ] | [ ] | Web form |
+| MCP Server Finder | mcpserverfinder.com | [ ] | [ ] | Web form |
