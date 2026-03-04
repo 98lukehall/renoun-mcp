@@ -28,5 +28,48 @@ else
     echo "[entrypoint] WARNING: GITHUB_TOKEN not set, engine will use remote API fallback."
 fi
 
+# Bootstrap API keys from environment variables on every startup
+# This ensures keys survive container redeploys (no persistent volume needed)
+# Set RENOUN_BOOTSTRAP_KEYS in Railway as a JSON array:
+#   [{"raw_key":"rn_live_...","tier":"pro","owner":"user@email.com"}]
+python3 -c "
+import os, json
+bootstrap = os.environ.get('RENOUN_BOOTSTRAP_KEYS', '')
+if not bootstrap:
+    print('[entrypoint] No RENOUN_BOOTSTRAP_KEYS set, skipping key bootstrap.')
+else:
+    from auth import _load_keys, _save_keys, _hash_key, KEY_PREFIX
+    from datetime import datetime
+    data = _load_keys()
+    existing_hashes = {e['key_hash'] for e in data['keys']}
+    keys = json.loads(bootstrap)
+    added = 0
+    for k in keys:
+        raw_key = k['raw_key']
+        key_hash = _hash_key(raw_key)
+        if key_hash not in existing_hashes:
+            entry = {
+                'key_id': k.get('key_id', KEY_PREFIX + raw_key[-16:]),
+                'key_hash': key_hash,
+                'tier': k.get('tier', 'pro'),
+                'owner': k.get('owner', ''),
+                'created_at': k.get('created_at', datetime.utcnow().isoformat()),
+                'active': True,
+            }
+            # Restore Stripe linking if present
+            if k.get('stripe_customer_id'):
+                entry['stripe_customer_id'] = k['stripe_customer_id']
+            if k.get('stripe_subscription_id'):
+                entry['stripe_subscription_id'] = k['stripe_subscription_id']
+            data['keys'].append(entry)
+            existing_hashes.add(key_hash)
+            added += 1
+    if added:
+        _save_keys(data)
+        print(f'[entrypoint] Bootstrapped {added} API key(s).')
+    else:
+        print('[entrypoint] All bootstrap keys already exist.')
+"
+
 # Start the server
 exec uvicorn api:app --host 0.0.0.0 --port 8080
