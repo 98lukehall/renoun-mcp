@@ -15,10 +15,10 @@ COPY tool_definition.json ./
 # Set GITHUB_TOKEN as a Railway build variable (classic PAT with repo scope)
 ARG GITHUB_TOKEN
 RUN apt-get update && apt-get install -y --no-install-recommends curl && \
-    curl -fsSL -H "Authorization: token ${GITHUB_TOKEN}" \
+    curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
       -H "Accept: application/vnd.github.v3.raw" \
       "https://api.github.com/repos/98lukehall/renoun-engine/contents/core.py" -o core.py && \
-    curl -fsSL -H "Authorization: token ${GITHUB_TOKEN}" \
+    curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
       -H "Accept: application/vnd.github.v3.raw" \
       "https://api.github.com/repos/98lukehall/renoun-engine/contents/novelty_dual_pass.py" -o novelty_dual_pass.py && \
     apt-get purge -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
