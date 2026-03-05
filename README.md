@@ -13,6 +13,10 @@ Your agent doesn't know when it's going in circles. **ReNoUn does.**
 
 Detects when conversations are stuck in loops, producing cosmetic variation instead of real change, or failing to converge. Measures structural health across 17 channels without analyzing content — works on any turn-based interaction.
 
+<a href="https://glama.ai/mcp/servers/@98lukehall/renoun-mpc">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@98lukehall/renoun-mpc/badge" alt="renoun-mpc MCP server" />
+</a>
+
 ## Why?
 
 LLMs get stuck. They produce responses that *sound* different but are structurally identical — what we call **surface variation**. A human might notice after 5 turns. An agent never will.
