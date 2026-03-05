@@ -544,18 +544,21 @@ async def welcome_page(session_id: str = ""):
 # ---------------------------------------------------------------------------
 # MCP SSE Transport (for Smithery and other MCP-over-HTTP clients)
 # ---------------------------------------------------------------------------
+#
+# FastAPI decorators interfere with raw ASGI SSE streaming, so we use
+# raw Starlette Route objects inserted directly into the router.
+# ---------------------------------------------------------------------------
 
 try:
     from mcp.server.sse import SseServerTransport
-    from starlette.responses import JSONResponse as StarletteJSONResponse
+    from starlette.routing import Route
     from server import build_mcp_server as _build_mcp_server, TOOL_DEFS
 
     _mcp_server = _build_mcp_server()
     _sse = SseServerTransport("/mcp/messages")
 
-    @app.get("/mcp")
-    async def mcp_sse_endpoint(request: Request):
-        """SSE endpoint for MCP protocol connections."""
+    async def _handle_mcp_sse(request):
+        """Raw ASGI SSE endpoint for MCP protocol connections."""
         async with _sse.connect_sse(
             request.scope, request.receive, request._send
         ) as streams:
@@ -564,14 +567,18 @@ try:
                 _mcp_server.create_initialization_options(),
             )
 
-    @app.post("/mcp/messages")
-    async def mcp_messages_endpoint(request: Request):
-        """Message endpoint for MCP SSE transport."""
+    async def _handle_mcp_messages(request):
+        """Raw ASGI message endpoint for MCP SSE transport."""
         await _sse.handle_post_message(
             request.scope, request.receive, request._send
         )
 
-    # Smithery server-card for discovery
+    # Insert raw Starlette routes at the FRONT of the router
+    # so they match before FastAPI's own route handling
+    app.router.routes.insert(0, Route("/mcp", endpoint=_handle_mcp_sse))
+    app.router.routes.insert(1, Route("/mcp/messages", endpoint=_handle_mcp_messages, methods=["POST"]))
+
+    # Smithery server-card for discovery (this one is fine as FastAPI route)
     @app.get("/.well-known/mcp/server-card.json")
     async def mcp_server_card():
         """MCP server card for Smithery discovery."""
