@@ -542,6 +542,46 @@ async def welcome_page(session_id: str = ""):
 
 
 # ---------------------------------------------------------------------------
+# MCP SSE Transport (for Smithery and other MCP-over-HTTP clients)
+# ---------------------------------------------------------------------------
+
+try:
+    from mcp.server.sse import SseServerTransport
+    from starlette.applications import Starlette
+    from starlette.routing import Route
+    from server import build_mcp_server as _build_mcp_server
+
+    _mcp_server = _build_mcp_server()
+    _sse = SseServerTransport("/mcp/messages")
+
+    async def _handle_sse(request):
+        async with _sse.connect_sse(
+            request.scope, request.receive, request._send
+        ) as streams:
+            await _mcp_server.run(
+                streams[0], streams[1],
+                _mcp_server.create_initialization_options(),
+            )
+
+    async def _handle_messages(request):
+        await _sse.handle_post_message(
+            request.scope, request.receive, request._send
+        )
+
+    _mcp_app = Starlette(
+        routes=[
+            Route("/", endpoint=_handle_sse),
+            Route("/messages", endpoint=_handle_messages, methods=["POST"]),
+        ]
+    )
+    app.mount("/mcp", _mcp_app)
+    print("MCP SSE transport enabled at /mcp", flush=True)
+
+except ImportError:
+    print("MCP library not available — SSE transport disabled", flush=True)
+
+
+# ---------------------------------------------------------------------------
 # Run
 # ---------------------------------------------------------------------------
 
