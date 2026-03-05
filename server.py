@@ -589,11 +589,12 @@ TOOL_DEFS = [
                     "items": {
                         "type": "object",
                         "properties": {
-                            "speaker": {"type": "string"},
-                            "text": {"type": "string"},
+                            "speaker": {"type": "string", "description": "Speaker identifier (e.g., 'user', 'assistant')"},
+                            "text": {"type": "string", "description": "What the speaker said"},
                         },
                         "required": ["speaker", "text"],
                     },
+                    "description": "Conversation turns in order. Speaker/text pairs. Minimum 3, recommend 10+.",
                     "minItems": 3,
                 }
             },
@@ -609,11 +610,11 @@ TOOL_DEFS = [
                     "type": "object",
                     "description": "The strongest structural pattern detected, with agent_action.",
                     "properties": {
-                        "pattern": {"type": "string"},
-                        "confidence": {"type": "number"},
-                        "description": {"type": "string"},
-                        "agent_action": {"type": "string"},
-                        "agent_guidance": {"type": "string"},
+                        "pattern": {"type": "string", "description": "Constellation pattern name."},
+                        "confidence": {"type": "number", "description": "Match confidence 0.0-1.0."},
+                        "description": {"type": "string", "description": "Plain-language pattern description."},
+                        "agent_action": {"type": "string", "description": "Recommended agent action."},
+                        "agent_guidance": {"type": "string", "description": "One-line guidance for the agent."},
                     },
                 },
                 "summary": {"type": "string", "description": "One-line structural read."},
@@ -688,11 +689,86 @@ TOOL_HANDLERS = {
     "renoun_pattern_query": tool_pattern_query,
 }
 
+# ---------------------------------------------------------------------------
+# MCP Tool Annotations
+# ---------------------------------------------------------------------------
+
+TOOL_ANNOTATIONS = {
+    "renoun_analyze": {
+        "title": "Full Structural Analysis",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+    "renoun_health_check": {
+        "title": "Quick Health Check",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+    "renoun_compare": {
+        "title": "Structural A/B Comparison",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+    "renoun_pattern_query": {
+        "title": "Pattern History Query",
+        "readOnlyHint": False,  # save action writes data
+        "destructiveHint": False,
+        "idempotentHint": False,  # save creates new entries
+        "openWorldHint": False,
+    },
+}
+
 # Build MCP Tool objects only if the library is available
 if MCP_AVAILABLE:
-    TOOLS = [Tool(name=d["name"], description=d["description"], inputSchema=d["inputSchema"]) for d in TOOL_DEFS]
+    from mcp.types import ToolAnnotations
+    TOOLS = [
+        Tool(
+            name=d["name"],
+            description=d["description"],
+            inputSchema=d["inputSchema"],
+            annotations=ToolAnnotations(**TOOL_ANNOTATIONS.get(d["name"], {})),
+        )
+        for d in TOOL_DEFS
+    ]
 else:
     TOOLS = TOOL_DEFS  # Use plain dicts for standalone mode
+
+
+# ---------------------------------------------------------------------------
+# MCP Prompts
+# ---------------------------------------------------------------------------
+
+MCP_PROMPTS = [
+    {
+        "name": "check-conversation-health",
+        "description": "Analyze the structural health of a conversation to see if it's stuck, looping, or progressing.",
+        "arguments": [
+            {"name": "conversation", "description": "Paste the conversation text (alternating speaker lines)", "required": True},
+        ],
+    },
+    {
+        "name": "compare-sessions",
+        "description": "Compare two conversation sessions to see if the second improved over the first.",
+        "arguments": [
+            {"name": "session_a", "description": "First conversation text", "required": True},
+            {"name": "session_b", "description": "Second conversation text", "required": True},
+        ],
+    },
+    {
+        "name": "detect-surface-variation",
+        "description": "Check if a conversation has surface variation — responses that sound different but are structurally identical.",
+        "arguments": [
+            {"name": "conversation", "description": "Paste the conversation to check for surface variation", "required": True},
+        ],
+    },
+]
+
 
 def build_mcp_server() -> "Server":
     """Build and configure the MCP server."""
@@ -713,6 +789,61 @@ def build_mcp_server() -> "Server":
             return [TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
         except Exception as e:
             return [TextContent(type="text", text=json.dumps({"error": str(e)}))]
+
+    # Register prompts
+    if MCP_AVAILABLE:
+        from mcp.types import Prompt, PromptArgument, PromptMessage, TextContent as PromptTextContent
+
+        @server.list_prompts()
+        async def list_prompts():
+            return [
+                Prompt(
+                    name=p["name"],
+                    description=p["description"],
+                    arguments=[PromptArgument(**a) for a in p["arguments"]],
+                )
+                for p in MCP_PROMPTS
+            ]
+
+        @server.get_prompt()
+        async def get_prompt(name: str, arguments: dict | None = None):
+            if name == "check-conversation-health":
+                return {
+                    "messages": [
+                        PromptMessage(
+                            role="user",
+                            content=PromptTextContent(
+                                type="text",
+                                text=f"Use renoun_analyze to check the structural health of this conversation and tell me if it's stuck, looping, or making progress:\n\n{arguments.get('conversation', '')}",
+                            ),
+                        )
+                    ]
+                }
+            elif name == "compare-sessions":
+                return {
+                    "messages": [
+                        PromptMessage(
+                            role="user",
+                            content=PromptTextContent(
+                                type="text",
+                                text=f"Use renoun_compare to structurally compare these two sessions. Did the second improve?\n\nSession A:\n{arguments.get('session_a', '')}\n\nSession B:\n{arguments.get('session_b', '')}",
+                            ),
+                        )
+                    ]
+                }
+            elif name == "detect-surface-variation":
+                return {
+                    "messages": [
+                        PromptMessage(
+                            role="user",
+                            content=PromptTextContent(
+                                type="text",
+                                text=f"Use renoun_analyze to check this conversation for surface variation — where responses sound different but are structurally the same. Look for SURFACE_VARIATION constellation:\n\n{arguments.get('conversation', '')}",
+                            ),
+                        )
+                    ]
+                }
+            return {"messages": []}
 
     return server
 
