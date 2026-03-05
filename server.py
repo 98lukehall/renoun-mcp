@@ -297,8 +297,28 @@ def tool_analyze(arguments: dict) -> dict:
         except Exception as e:
             return _structured_error("api_error", str(e), "Check your API key and network connection.")
 
-    result = engine.score(utterances)
-    output = result.to_dict()
+    # Check for optional weighting parameters
+    weights = arguments.get("weights")
+    tags = arguments.get("tags")
+    weighting_mode = arguments.get("weighting_mode", "weight")
+
+    if weights is not None or tags is not None:
+        # Weighted analysis path
+        try:
+            from weighted_analysis import weighted_analyze
+            output = weighted_analyze(
+                utterances,
+                weights=weights,
+                tags=tags,
+                mode=weighting_mode,
+                engine=engine,
+            )
+        except (ValueError, TypeError) as e:
+            return _structured_error("weighting_error", str(e), "Check weights/tags array length and values.")
+    else:
+        # Standard unweighted path
+        result = engine.score(utterances)
+        output = result.to_dict()
 
     turn_count = len(utterances)
     timestamp = datetime.utcnow().isoformat() + "Z"
@@ -545,7 +565,23 @@ TOOL_DEFS = [
                     },
                     "description": "Conversation turns in order. Speaker/text pairs.",
                     "minItems": 3,
-                }
+                },
+                "weights": {
+                    "type": "array",
+                    "items": {"type": "number"},
+                    "description": "Optional per-turn weights (0.0-1.0). Controls how much each turn contributes to analysis. Omit for uniform weighting.",
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": "Optional per-turn tags from pre_tag(). Each tag has phase, mode, speech_act, and weight fields.",
+                },
+                "weighting_mode": {
+                    "type": "string",
+                    "enum": ["weight", "exclude", "segment"],
+                    "default": "weight",
+                    "description": "How to apply weights: 'weight' (post-process scores), 'exclude' (remove low-weight turns), 'segment' (analyze groups separately).",
+                },
             },
             "required": ["utterances"],
         },

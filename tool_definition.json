@@ -63,6 +63,22 @@
                         },
                         "minItems": 3,
                         "description": "Conversation turns in order. Speaker/text pairs."
+                    },
+                    "weights": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "Optional per-turn weights (0.0-1.0). Controls how much each turn contributes to analysis. Omit for uniform weighting."
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "object"},
+                        "description": "Optional per-turn tags from pre_tag(). Each tag has phase, mode, speech_act, and weight fields."
+                    },
+                    "weighting_mode": {
+                        "type": "string",
+                        "enum": ["weight", "exclude", "segment"],
+                        "default": "weight",
+                        "description": "How to apply weights: 'weight' (post-process scores), 'exclude' (remove low-weight turns), 'segment' (analyze groups separately)."
                     }
                 },
                 "required": ["utterances"]

@@ -135,6 +135,9 @@ class Utterance(BaseModel):
 
 class AnalyzeRequest(BaseModel):
     utterances: list[Utterance] = Field(..., min_length=3)
+    weights: Optional[list[float]] = Field(None, description="Per-turn weights 0.0-1.0")
+    tags: Optional[list[dict]] = Field(None, description="Per-turn tags from pre_tag()")
+    weighting_mode: str = Field("weight", description="weight|exclude|segment")
 
 class HealthCheckRequest(BaseModel):
     utterances: list[Utterance] = Field(..., min_length=3)
@@ -231,10 +234,17 @@ async def status():
 async def analyze(body: AnalyzeRequest, key_info: dict = Depends(require_auth)):
     """Full 17-channel structural analysis."""
     utterances = [u.model_dump(exclude_none=True) for u in body.utterances]
+    arguments = {"utterances": utterances}
+    if body.weights is not None:
+        arguments["weights"] = body.weights
+    if body.tags is not None:
+        arguments["tags"] = body.tags
+    if body.weighting_mode != "weight":
+        arguments["weighting_mode"] = body.weighting_mode
     return _run_tool(
         tool_name="renoun_analyze",
         handler=tool_analyze,
-        arguments={"utterances": utterances},
+        arguments=arguments,
         key_info=key_info,
         endpoint="/v1/analyze",
         turn_count=len(utterances),
@@ -391,7 +401,6 @@ async def billing_portal(body: PortalRequest):
     Requires a valid API key to look up the associated Stripe customer.
     """
     from auth import validate_key as _validate
-    from stripe_billing import _find_key_by_customer
 
     key_info = _validate(body.api_key)
     if not key_info:
@@ -562,7 +571,22 @@ try:
     )
 
     async def _handle_mcp_request(request):
-        """Streamable HTTP endpoint for MCP protocol."""
+        """Streamable HTTP endpoint for MCP protocol with API key auth."""
+        from starlette.responses import JSONResponse as StarletteJSONResponse
+
+        auth_header = request.headers.get("authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return StarletteJSONResponse(
+                status_code=401,
+                content={"error": {"type": "auth_error", "message": "Missing Authorization header. Use: Bearer rn_live_...", "action": "Add header: Authorization: Bearer <your-api-key>"}},
+            )
+        key_info = validate_key(auth_header[7:].strip())
+        if not key_info:
+            return StarletteJSONResponse(
+                status_code=401,
+                content={"error": {"type": "auth_error", "message": "Invalid or revoked API key.", "action": "Check your API key or request a new one."}},
+            )
+
         await _session_manager.handle_request(
             request.scope, request.receive, request._send
         )
