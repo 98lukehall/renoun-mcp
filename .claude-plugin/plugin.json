@@ -1,0 +1,8 @@
+{
+  "name": "renoun",
+  "version": "1.2.0",
+  "description": "Structural pattern analysis for conversations. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels — without reading the content. Use for conversation quality assessment, prompt drift detection, session comparison, and dialogue health monitoring.",
+  "author": {
+    "name": "Luke Hall"
+  }
+}

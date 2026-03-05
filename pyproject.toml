@@ -52,10 +52,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-include = ["server.py", "api_client.py", "tool_definition.json", "api.py", "api_config.py", "auth.py", "rate_limiter.py", "usage.py", "stripe_billing.py", "pre_tag.py", "weighted_analysis.py"]
+include = ["server.py", "api_client.py", "tool_definition.json", "api.py", "api_config.py", "auth.py", "rate_limiter.py", "usage.py", "stripe_billing.py", "pre_tag.py", "weighted_analysis.py", "renoun_analyze.py", "renoun_compare.py", "renoun_store.py", "renoun_format.py"]
 
 [tool.hatch.build.targets.sdist]
-include = ["server.py", "api_client.py", "tool_definition.json", "api.py", "api_config.py", "auth.py", "rate_limiter.py", "usage.py", "stripe_billing.py", "pre_tag.py", "weighted_analysis.py", "pyproject.toml", "README.md", "LICENSE"]
+include = ["server.py", "api_client.py", "tool_definition.json", "api.py", "api_config.py", "auth.py", "rate_limiter.py", "usage.py", "stripe_billing.py", "pre_tag.py", "weighted_analysis.py", "renoun_analyze.py", "renoun_compare.py", "renoun_store.py", "renoun_format.py", "pyproject.toml", "README.md", "LICENSE"]
 
 [tool.ruff]
 target-version = "py39"

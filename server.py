@@ -43,7 +43,6 @@ _remote_client = None
 # ---------------------------------------------------------------------------
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PLUGIN_DIR = SCRIPT_DIR.parent / "renoun-plugin"
 
 
 def _build_core_search_paths() -> list:
@@ -85,7 +84,7 @@ def _build_core_search_paths() -> list:
     paths.extend([
         SCRIPT_DIR / "core.py",
         SCRIPT_DIR.parent / "core.py",
-        PLUGIN_DIR / "core.py",
+        SCRIPT_DIR.parent / "renoun-plugin" / "core.py",  # legacy fallback
         SCRIPT_DIR.parent / "ReNoUn_podcast_corpus" / "core.py",
         SCRIPT_DIR.parent / "ReNoUn_therapy_analysis" / "core.py",
         SCRIPT_DIR.parent / "renoun-studio" / "core.py",
@@ -110,10 +109,9 @@ def find_and_import_core():
         "\n\nFix: Set RENOUN_CORE_PATH=/path/to/core.py or add core_path to ~/.renoun/config.json"
     )
 
-# Add plugin scripts to path for store access
-scripts_dir = PLUGIN_DIR / "scripts"
-if scripts_dir.exists():
-    sys.path.insert(0, str(scripts_dir))
+# Ensure local directory is on path for renoun_analyze, renoun_compare, renoun_store imports
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
 # ---------------------------------------------------------------------------
 # MCP Server Implementation

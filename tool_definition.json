@@ -2,7 +2,7 @@
     "schema_version": "1.1",
     "server": {
         "name": "renoun",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "description": "Structural observability for AI conversations. Detects when conversations are stuck in loops, producing cosmetic variation instead of real change, or failing to converge. Measures structural health across 17 channels without analyzing content — works on any turn-based interaction. Your agent doesn't know when it's going in circles. ReNoUn does.",
         "author": {
             "name": "Luke / ReNoUn",

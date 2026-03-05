@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "renoun": {
+      "command": "python3",
+      "args": ["server.py"],
+      "env": {
+        "RENOUN_CORE_PATH": "${RENOUN_CORE_PATH}"
+      }
+    }
+  }
+}
