@@ -1,6 +1,6 @@
 [project]
 name = "renoun-mcp"
-version = "1.2.0"
+version = "1.2.1"
 description = "Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels without analyzing content."
 readme = "README.md"
 requires-python = ">=3.9"

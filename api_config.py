@@ -32,7 +32,7 @@ API_PORT = int(os.environ.get("PORT", os.environ.get("RENOUN_API_PORT", _file_co
 CORS_ORIGINS = os.environ.get("RENOUN_CORS_ORIGINS", ",".join(_file_config.get("cors_origins", ["*"]))).split(",")
 
 # API metadata
-API_VERSION = "1.2.0"
+API_VERSION = "1.2.1"
 API_TITLE = "ReNoUn Structural Analysis API"
 API_DESCRIPTION = (
     "Structural observability for AI conversations. "
