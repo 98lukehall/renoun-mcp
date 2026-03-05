@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any, Optional
 from datetime import datetime
 
-TOOL_VERSION = "1.2.2"
+TOOL_VERSION = "1.2.3"
 ENGINE_VERSION = "4.1"
 SCHEMA_VERSION = "1.1"
 
