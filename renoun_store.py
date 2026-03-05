@@ -74,18 +74,31 @@ def save_result(result_path: str, session_name: str, domain: str = "",
         "source": result_path,
         "domain": domain,
         "tags": tags or [],
-        "turn_count": result_data.get("_meta", {}).get("turn_count", 0),
+        "turn_count": (
+            result_data.get("_meta", {}).get("turn_count")
+            or result_data.get("turn_count")
+            or len(result_data.get("novelty_items", []))
+            or 0
+        ),
         "dhs": result_data.get("dialectical_health", 0.0),
         "loop_strength": result_data.get("loop_strength", 0.0),
         "dominant_constellation": None,
         "result": result_data,
     }
 
-    # Extract dominant constellation
+    # Extract dominant constellation — handle both analyze and health_check formats
     constellations = result_data.get("constellations", [])
     if constellations:
+        # Full analyze output: constellations is a list of {detected, confidence, ...}
         dominant = max(constellations, key=lambda c: c.get("confidence", 0))
         record["dominant_constellation"] = dominant.get("detected")
+    elif result_data.get("dominant_constellation"):
+        # Health check or simplified output: dominant_constellation is a string or dict
+        dc = result_data["dominant_constellation"]
+        if isinstance(dc, dict):
+            record["dominant_constellation"] = dc.get("pattern")
+        else:
+            record["dominant_constellation"] = dc
 
     # Write the record
     record_path = HISTORY_DIR / filename
