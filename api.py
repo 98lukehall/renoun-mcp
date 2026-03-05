@@ -547,14 +547,15 @@ async def welcome_page(session_id: str = ""):
 
 try:
     from mcp.server.sse import SseServerTransport
-    from starlette.applications import Starlette
-    from starlette.routing import Route
-    from server import build_mcp_server as _build_mcp_server
+    from starlette.responses import JSONResponse as StarletteJSONResponse
+    from server import build_mcp_server as _build_mcp_server, TOOL_DEFS
 
     _mcp_server = _build_mcp_server()
     _sse = SseServerTransport("/mcp/messages")
 
-    async def _handle_sse(request):
+    @app.get("/mcp")
+    async def mcp_sse_endpoint(request: Request):
+        """SSE endpoint for MCP protocol connections."""
         async with _sse.connect_sse(
             request.scope, request.receive, request._send
         ) as streams:
@@ -563,22 +564,35 @@ try:
                 _mcp_server.create_initialization_options(),
             )
 
-    async def _handle_messages(request):
+    @app.post("/mcp/messages")
+    async def mcp_messages_endpoint(request: Request):
+        """Message endpoint for MCP SSE transport."""
         await _sse.handle_post_message(
             request.scope, request.receive, request._send
         )
 
-    _mcp_app = Starlette(
-        routes=[
-            Route("/", endpoint=_handle_sse),
-            Route("/messages", endpoint=_handle_messages, methods=["POST"]),
-        ]
-    )
-    app.mount("/mcp", _mcp_app)
+    # Smithery server-card for discovery
+    @app.get("/.well-known/mcp/server-card.json")
+    async def mcp_server_card():
+        """MCP server card for Smithery discovery."""
+        return {
+            "name": "renoun",
+            "description": "Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence across 17 channels.",
+            "version": TOOL_VERSION,
+            "transport": {
+                "type": "sse",
+                "url": "/mcp",
+            },
+            "tools": [
+                {"name": t["name"], "description": t["description"]}
+                for t in TOOL_DEFS
+            ],
+        }
+
     print("MCP SSE transport enabled at /mcp", flush=True)
 
-except ImportError:
-    print("MCP library not available — SSE transport disabled", flush=True)
+except ImportError as _mcp_err:
+    print(f"MCP library not available — SSE transport disabled: {_mcp_err}", flush=True)
 
 
 # ---------------------------------------------------------------------------
