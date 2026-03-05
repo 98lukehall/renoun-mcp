@@ -542,43 +542,35 @@ async def welcome_page(session_id: str = ""):
 
 
 # ---------------------------------------------------------------------------
-# MCP SSE Transport (for Smithery and other MCP-over-HTTP clients)
+# MCP HTTP Transport (for Smithery and other MCP-over-HTTP clients)
 # ---------------------------------------------------------------------------
 #
-# FastAPI decorators interfere with raw ASGI SSE streaming, so we use
-# raw Starlette Route objects inserted directly into the router.
+# Uses Streamable HTTP transport (POST-based) which is what Smithery and
+# modern MCP clients expect. Handles GET, POST, DELETE on /mcp.
 # ---------------------------------------------------------------------------
 
 try:
-    from mcp.server.sse import SseServerTransport
+    from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
     from starlette.routing import Route
     from server import build_mcp_server as _build_mcp_server, TOOL_DEFS
 
     _mcp_server = _build_mcp_server()
-    _sse = SseServerTransport("/mcp/messages")
+    _session_manager = StreamableHTTPSessionManager(
+        app=_mcp_server,
+        json_response=True,
+        stateless=True,
+    )
 
-    async def _handle_mcp_sse(request):
-        """Raw ASGI SSE endpoint for MCP protocol connections."""
-        async with _sse.connect_sse(
-            request.scope, request.receive, request._send
-        ) as streams:
-            await _mcp_server.run(
-                streams[0], streams[1],
-                _mcp_server.create_initialization_options(),
-            )
-
-    async def _handle_mcp_messages(request):
-        """Raw ASGI message endpoint for MCP SSE transport."""
-        await _sse.handle_post_message(
+    async def _handle_mcp_request(request):
+        """Streamable HTTP endpoint for MCP protocol."""
+        await _session_manager.handle_request(
             request.scope, request.receive, request._send
         )
 
-    # Insert raw Starlette routes at the FRONT of the router
-    # so they match before FastAPI's own route handling
-    app.router.routes.insert(0, Route("/mcp", endpoint=_handle_mcp_sse))
-    app.router.routes.insert(1, Route("/mcp/messages", endpoint=_handle_mcp_messages, methods=["POST"]))
+    # Insert raw Starlette route at the FRONT of the router — accepts all methods
+    app.router.routes.insert(0, Route("/mcp", endpoint=_handle_mcp_request, methods=["GET", "POST", "DELETE"]))
 
-    # Smithery server-card for discovery (this one is fine as FastAPI route)
+    # Smithery server-card for discovery
     @app.get("/.well-known/mcp/server-card.json")
     async def mcp_server_card():
         """MCP server card for Smithery discovery."""
@@ -587,7 +579,7 @@ try:
             "description": "Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence across 17 channels.",
             "version": TOOL_VERSION,
             "transport": {
-                "type": "sse",
+                "type": "streamable-http",
                 "url": "/mcp",
             },
             "tools": [
@@ -596,10 +588,23 @@ try:
             ],
         }
 
-    print("MCP SSE transport enabled at /mcp", flush=True)
+    # Start the session manager as a background task
+    import asyncio
+
+    @app.on_event("startup")
+    async def _start_mcp_session_manager():
+        app.state._mcp_manager_ctx = _session_manager.run()
+        await app.state._mcp_manager_ctx.__aenter__()
+
+    @app.on_event("shutdown")
+    async def _stop_mcp_session_manager():
+        if hasattr(app.state, '_mcp_manager_ctx'):
+            await app.state._mcp_manager_ctx.__aexit__(None, None, None)
+
+    print("MCP Streamable HTTP transport enabled at /mcp", flush=True)
 
 except ImportError as _mcp_err:
-    print(f"MCP library not available — SSE transport disabled: {_mcp_err}", flush=True)
+    print(f"MCP library not available — HTTP transport disabled: {_mcp_err}", flush=True)
 
 
 # ---------------------------------------------------------------------------
