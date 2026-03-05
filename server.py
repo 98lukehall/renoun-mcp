@@ -499,6 +499,12 @@ def tool_pattern_query(arguments: dict) -> dict:
         elif action == "save":
             # Save an analysis result to history
             result_data = arguments.get("result")
+            # Handle case where result is passed as a JSON string
+            if isinstance(result_data, str):
+                try:
+                    result_data = json.loads(result_data)
+                except (json.JSONDecodeError, TypeError):
+                    pass
             session_name = arguments.get("session_name")
 
             if not result_data:
