@@ -2,7 +2,7 @@
     "schema_version": "1.1",
     "server": {
         "name": "renoun",
-        "version": "1.2.0",
+        "version": "1.2.4",
         "description": "Structural observability for AI conversations. Detects when conversations are stuck in loops, producing cosmetic variation instead of real change, or failing to converge. Measures structural health across 17 channels without analyzing content — works on any turn-based interaction. Your agent doesn't know when it's going in circles. ReNoUn does.",
         "author": {
             "name": "Luke / ReNoUn",
@@ -251,6 +251,76 @@
                     "metric": {"type": "string", "default": "dhs", "description": "For trend: which metric to track (dhs or loop)."}
                 },
                 "required": ["action"]
+            }
+        },
+        {
+            "name": "renoun_steer",
+            "description": "Real-time inference steering. Monitor a live conversation and get actionable signals when the model should change strategy. Maintains rolling window buffers per session, runs structural analysis on each window, and emits SteeringSignals when thresholds are crossed (DHS drop, loop persistence, scattering). Use add_turns to feed conversation data incrementally; signals are emitted automatically when windows fill.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "utterances": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "speaker": {"type": "string", "description": "Speaker identifier"},
+                                "text": {"type": "string", "description": "What the speaker said"}
+                            },
+                            "required": ["speaker", "text"]
+                        },
+                        "description": "New conversation turns to add to the session buffer."
+                    },
+                    "session_id": {
+                        "type": "string",
+                        "default": "default",
+                        "description": "Unique session identifier. Tracks state across calls."
+                    },
+                    "action": {
+                        "type": "string",
+                        "enum": ["add_turns", "get_status", "clear_session", "list_sessions"],
+                        "default": "add_turns",
+                        "description": "add_turns = append turns and analyze. get_status = session state. clear_session = remove session. list_sessions = show all active."
+                    },
+                    "window_size": {
+                        "type": "integer",
+                        "default": 30,
+                        "description": "Turns per analysis window. Default 30."
+                    },
+                    "session_ttl": {
+                        "type": "integer",
+                        "default": 3600,
+                        "description": "Session time-to-live in seconds. Default 3600 (1 hour)."
+                    }
+                }
+            },
+            "outputSchema": {
+                "type": "object",
+                "properties": {
+                    "session_id": {"type": "string"},
+                    "turns_added": {"type": "integer"},
+                    "total_turns": {"type": "integer"},
+                    "windows_analyzed": {"type": "integer"},
+                    "dhs_trend": {"type": "string", "enum": ["improving", "declining", "stable", "unknown"]},
+                    "signal": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Steering signal if thresholds triggered. Null if no signal.",
+                        "properties": {
+                            "action": {"type": "string", "description": "Recommended agent action."},
+                            "guidance": {"type": "string", "description": "Human-readable guidance."},
+                            "urgency": {"type": "string", "enum": ["HIGH", "MEDIUM", "INFO"]},
+                            "confidence": {"type": "number"},
+                            "triggered_by": {"type": "array", "items": {"type": "string"}},
+                            "dhs_current": {"type": "number"},
+                            "dhs_previous": {"type": "number"},
+                            "dhs_delta": {"type": "number"},
+                            "reward_signal": {"type": "number"},
+                            "constellation": {"type": "string"},
+                            "recommendations": {"type": "array", "items": {"type": "string"}}
+                        }
+                    }
+                }
             }
         }
     ],
