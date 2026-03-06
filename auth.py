@@ -31,13 +31,13 @@ TIERS = {
         "max_turns": 200,
     },
     "pro": {
-        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query"],
+        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer"],
         "daily_limit": 1000,
         "max_turns": 500,
         "price": "$4.99/mo",
     },
     "enterprise": {
-        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query"],
+        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer"],
         "daily_limit": -1,  # unlimited
         "max_turns": -1,  # unlimited
     },

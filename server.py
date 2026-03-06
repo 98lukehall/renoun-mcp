@@ -10,6 +10,7 @@ Tools:
     renoun_compare       — Structural diff between two analysis results
     renoun_health_check  — Lightweight DHS + constellation check
     renoun_pattern_query — Query longitudinal pattern history
+    renoun_steer         — Real-time inference steering with rolling windows
 
 Usage:
     python3 server.py          # Start MCP server on stdio (or JSON-RPC fallback)
@@ -26,11 +27,12 @@ import os
 import json
 import hashlib
 import asyncio
+import threading
 from pathlib import Path
 from typing import Any, Optional
 from datetime import datetime
 
-TOOL_VERSION = "1.2.3"
+TOOL_VERSION = "1.2.4"
 ENGINE_VERSION = "4.1"
 SCHEMA_VERSION = "1.1"
 
@@ -720,13 +722,197 @@ TOOL_DEFS = [
             "required": ["action"],
         },
     },
+    {
+        "name": "renoun_steer",
+        "description": (
+            "Real-time inference steering. Monitor a live conversation and get actionable signals "
+            "when the model should change strategy. Maintains rolling window buffers per session, "
+            "runs structural analysis on each window, and emits SteeringSignals when thresholds "
+            "are crossed (DHS drop, loop persistence, scattering). Use add_turns to feed conversation "
+            "data incrementally; signals are emitted automatically when windows fill."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "utterances": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "speaker": {"type": "string", "description": "Speaker identifier"},
+                            "text": {"type": "string", "description": "What the speaker said"},
+                        },
+                        "required": ["speaker", "text"],
+                    },
+                    "description": "New conversation turns to add to the session buffer.",
+                },
+                "session_id": {
+                    "type": "string",
+                    "default": "default",
+                    "description": "Unique session identifier. Tracks state across calls.",
+                },
+                "action": {
+                    "type": "string",
+                    "enum": ["add_turns", "get_status", "clear_session", "list_sessions"],
+                    "default": "add_turns",
+                    "description": "add_turns = append turns and analyze. get_status = session state. clear_session = remove session. list_sessions = show all active.",
+                },
+                "window_size": {
+                    "type": "integer",
+                    "default": 30,
+                    "description": "Turns per analysis window. Default 30.",
+                },
+                "session_ttl": {
+                    "type": "integer",
+                    "default": 3600,
+                    "description": "Session time-to-live in seconds. Default 3600 (1 hour).",
+                },
+            },
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string"},
+                "turns_added": {"type": "integer"},
+                "total_turns": {"type": "integer"},
+                "windows_analyzed": {"type": "integer"},
+                "dhs_trend": {"type": "string", "enum": ["improving", "declining", "stable", "unknown"]},
+                "signal": {
+                    "type": "object",
+                    "nullable": True,
+                    "description": "Steering signal if thresholds triggered. Null if no signal.",
+                    "properties": {
+                        "action": {"type": "string", "description": "Recommended agent action (e.g., explore_new_angle, provide_structure)."},
+                        "guidance": {"type": "string", "description": "Human-readable guidance for the agent."},
+                        "urgency": {"type": "string", "enum": ["HIGH", "MEDIUM", "INFO"]},
+                        "confidence": {"type": "number"},
+                        "triggered_by": {"type": "array", "items": {"type": "string"}},
+                        "dhs_current": {"type": "number"},
+                        "dhs_previous": {"type": "number"},
+                        "dhs_delta": {"type": "number"},
+                        "reward_signal": {"type": "number"},
+                        "constellation": {"type": "string"},
+                        "recommendations": {"type": "array", "items": {"type": "string"}},
+                    },
+                },
+            },
+        },
+    },
 ]
+
+
+
+# ---------------------------------------------------------------------------
+# Steering Tool
+# ---------------------------------------------------------------------------
+
+_steering_monitor = None
+_steering_lock = threading.Lock()
+
+
+def _get_steering_monitor(config: Optional[dict] = None):
+    """Lazy-init singleton SteeringMonitor."""
+    global _steering_monitor
+    if _steering_monitor is None:
+        with _steering_lock:
+            if _steering_monitor is None:
+                from steering import SteeringMonitor, start_cleanup_thread
+                _steering_monitor = SteeringMonitor(config)
+                start_cleanup_thread(_steering_monitor)
+    return _steering_monitor
+
+
+def tool_steer(arguments: dict) -> dict:
+    """Real-time inference steering — monitor live conversations and emit strategy signals.
+
+    Actions:
+        add_turns (default) — Append turns and run analysis if window is full.
+        get_status           — Return session state and window history.
+        clear_session        — Remove a session.
+        list_sessions        — List all active sessions.
+    """
+    action = arguments.get("action", "add_turns")
+    session_id = arguments.get("session_id", "default")
+
+    # Optional per-call config overrides
+    config_overrides = {}
+    if "window_size" in arguments:
+        config_overrides["window_size"] = arguments["window_size"]
+    if "session_ttl" in arguments:
+        config_overrides["session_ttl"] = arguments["session_ttl"]
+
+    monitor = _get_steering_monitor(config_overrides if config_overrides else None)
+
+    if action == "list_sessions":
+        return {
+            "sessions": monitor.list_sessions(),
+            "active_count": monitor.active_session_count,
+        }
+
+    if action == "clear_session":
+        existed = monitor.clear_session(session_id)
+        return {"cleared": existed, "session_id": session_id}
+
+    if action == "get_status":
+        return monitor.get_session_status(session_id)
+
+    if action == "add_turns":
+        utterances = arguments.get("utterances")
+        if not utterances:
+            return _structured_error(
+                "missing_input",
+                "No utterances provided.",
+                "Include 'utterances' array of {speaker, text} objects.",
+            )
+
+        # Normalize turns
+        try:
+            turns = normalize_utterances(utterances)
+        except (ValueError, KeyError) as e:
+            return _structured_error("parse_error", str(e), "Provide utterances as [{speaker, text}, ...]")
+
+        signal = monitor.add_turns(
+            session_id=session_id,
+            new_turns=turns,
+            analyze_fn=lambda args: tool_analyze(args),
+            health_fn=lambda args: tool_health_check(args),
+        )
+
+        status = monitor.get_session_status(session_id)
+
+        result = {
+            "session_id": session_id,
+            "turns_added": len(turns),
+            "total_turns": status.get("total_turns", 0),
+            "windows_analyzed": status.get("windows_analyzed", 0),
+            "dhs_trend": status.get("dhs_trend", "unknown"),
+        }
+
+        if signal:
+            result["signal"] = signal
+        else:
+            result["signal"] = None
+            result["message"] = (
+                "Turns buffered. No steering signal triggered."
+                if status.get("windows_analyzed", 0) > 0
+                else f"Turns buffered ({status.get('buffer_size', 0)} in buffer). Waiting for window_size threshold."
+            )
+
+        return result
+
+    return _structured_error(
+        "unknown_action",
+        f"Unknown action: {action}.",
+        "Use add_turns, get_status, clear_session, or list_sessions.",
+    )
+
 
 TOOL_HANDLERS = {
     "renoun_analyze": tool_analyze,
     "renoun_health_check": tool_health_check,
     "renoun_compare": tool_compare,
     "renoun_pattern_query": tool_pattern_query,
+    "renoun_steer": tool_steer,
 }
 
 # ---------------------------------------------------------------------------
@@ -760,6 +946,13 @@ TOOL_ANNOTATIONS = {
         "readOnlyHint": False,  # save action writes data
         "destructiveHint": False,
         "idempotentHint": False,  # save creates new entries
+        "openWorldHint": False,
+    },
+    "renoun_steer": {
+        "title": "Real-Time Inference Steering",
+        "readOnlyHint": False,  # maintains session state
+        "destructiveHint": False,
+        "idempotentHint": False,  # each call advances the buffer
         "openWorldHint": False,
     },
 }

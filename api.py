@@ -14,6 +14,7 @@ Endpoints:
     POST /v1/health-check  — Fast structural triage
     POST /v1/compare       — Structural A/B test between conversations
     POST /v1/patterns/{action} — Save, query, list, or trend session history
+    POST /v1/steer         — Real-time inference steering with rolling windows
     GET  /v1/status        — Liveness + version info (no auth)
     POST /v1/billing/checkout   — Create Stripe Checkout session for pro subscription
     POST /v1/billing/webhook    — Stripe webhook receiver (auto-provisions keys)
@@ -38,7 +39,7 @@ from auth import validate_key, is_tool_allowed, get_tier_config
 from rate_limiter import limiter
 from usage import log_request
 from server import (
-    tool_analyze, tool_health_check, tool_compare, tool_pattern_query,
+    tool_analyze, tool_health_check, tool_compare, tool_pattern_query, tool_steer,
     TOOL_VERSION, ENGINE_VERSION, SCHEMA_VERSION,
 )
 
@@ -162,6 +163,13 @@ class PatternQueryRequest(BaseModel):
     dhs_below: Optional[float] = None
     dhs_above: Optional[float] = None
     metric: str = "dhs"
+
+class SteerRequest(BaseModel):
+    utterances: Optional[list[Utterance]] = Field(None, description="New turns to add to the session buffer")
+    session_id: str = Field("default", description="Unique session identifier")
+    action: str = Field("add_turns", description="add_turns|get_status|clear_session|list_sessions")
+    window_size: Optional[int] = Field(None, description="Turns per analysis window (default 30)")
+    session_ttl: Optional[int] = Field(None, description="Session TTL in seconds (default 3600)")
 
 
 # ---------------------------------------------------------------------------
@@ -329,6 +337,33 @@ async def patterns(action: str, body: PatternQueryRequest, key_info: dict = Depe
         arguments=arguments,
         key_info=key_info,
         endpoint=f"/v1/patterns/{action}",
+    )
+
+
+@app.post("/v1/steer")
+async def steer(body: SteerRequest, key_info: dict = Depends(require_auth)):
+    """Real-time inference steering. Feed turns incrementally and get actionable signals."""
+    arguments = {
+        "action": body.action,
+        "session_id": body.session_id,
+    }
+    turn_count = 0
+
+    if body.utterances is not None:
+        arguments["utterances"] = [u.model_dump(exclude_none=True) for u in body.utterances]
+        turn_count = len(body.utterances)
+    if body.window_size is not None:
+        arguments["window_size"] = body.window_size
+    if body.session_ttl is not None:
+        arguments["session_ttl"] = body.session_ttl
+
+    return _run_tool(
+        tool_name="renoun_steer",
+        handler=tool_steer,
+        arguments=arguments,
+        key_info=key_info,
+        endpoint="/v1/steer",
+        turn_count=turn_count,
     )
 
 
