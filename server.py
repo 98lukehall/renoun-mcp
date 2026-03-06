@@ -778,8 +778,7 @@ TOOL_DEFS = [
                 "windows_analyzed": {"type": "integer"},
                 "dhs_trend": {"type": "string", "enum": ["improving", "declining", "stable", "unknown"]},
                 "signal": {
-                    "type": "object",
-                    "nullable": True,
+                    "type": ["object", "null"],
                     "description": "Steering signal if thresholds triggered. Null if no signal.",
                     "properties": {
                         "action": {"type": "string", "description": "Recommended agent action (e.g., explore_new_angle, provide_structure)."},
