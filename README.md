@@ -1,11 +1,13 @@
 <p align="center">
   <h1 align="center">ReNoUn</h1>
-  <p align="center"><strong>Structural observability for AI conversations</strong></p>
+  <p align="center"><strong>Structural observability for AI conversations and financial markets</strong></p>
   <p align="center">
     <a href="https://pypi.org/project/renoun-mcp/"><img src="https://img.shields.io/pypi/v/renoun-mcp?color=7C9A6E&label=PyPI" alt="PyPI"></a>
     <a href="https://pypi.org/project/renoun-mcp/"><img src="https://img.shields.io/pypi/pyversions/renoun-mcp?color=5B7B9E" alt="Python"></a>
     <a href="https://github.com/98lukehall/renoun-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
     <a href="https://web-production-817e2.up.railway.app/docs"><img src="https://img.shields.io/badge/API-docs-orange" alt="API Docs"></a>
+    <a href="#financial-risk-overlay"><img src="https://img.shields.io/badge/finance-31%2F31_DD_reduced-7C9A6E" alt="Finance: 31/31 DD reduced"></a>
+    <img src="https://img.shields.io/badge/patent_pending-%2363%2F923%2C592-lightgrey" alt="Patent Pending #63/923,592">
   </p>
 </p>
 
@@ -23,6 +25,12 @@ ReNoUn catches this in ~200ms by measuring structure, not content. It works on a
 
 ```bash
 pip install renoun-mcp
+```
+
+For financial market analysis with streaming support:
+
+```bash
+pip install renoun-mcp[finance]
 ```
 
 ## Quick Start
@@ -94,6 +102,7 @@ claude mcp add renoun python3 -m server
 | `renoun_health_check` | Quick triage — one score, one pattern, one action | ~50ms | Free |
 | `renoun_compare` | Structural A/B test between two conversations | ~400ms | Pro |
 | `renoun_pattern_query` | Save, query, and trend longitudinal session history | ~10ms | Pro |
+| `renoun_finance_analyze` | Structural analysis of OHLCV data with exposure recommendations | ~200ms | Pro |
 
 ## How It Works
 
@@ -126,6 +135,7 @@ From these 17 signals, ReNoUn computes a **Dialectical Health Score** (DHS: 0.0�
 | `renoun_analyze` | — | ✓ |
 | `renoun_compare` | — | ✓ |
 | `renoun_pattern_query` | — | ✓ |
+| `renoun_finance_analyze` | — | ✓ |
 | Daily requests | 20 | 1,000 |
 | Max turns per analysis | 200 | 500 |
 
@@ -141,6 +151,7 @@ Base URL: `https://web-production-817e2.up.railway.app`
 | `/v1/health-check` | POST | Bearer | Fast structural triage |
 | `/v1/compare` | POST | Bearer | A/B test two conversations |
 | `/v1/patterns/{action}` | POST | Bearer | Longitudinal pattern history |
+| `/v1/finance/analyze` | POST | Bearer | OHLCV structural analysis with exposure recs |
 | `/v1/status` | GET | None | Liveness + version info |
 | `/v1/billing/checkout` | POST | None | Create Stripe checkout session |
 | `/docs` | GET | None | Interactive API explorer |
@@ -205,6 +216,133 @@ export RENOUN_API_KEY=rn_live_your_key_here
 ## Longitudinal Storage
 
 Results persist to `~/.renoun/history/`. Use `renoun_pattern_query` to save, list, query, and trend session history over time. Filter by date, domain, constellation pattern, or DHS threshold.
+
+---
+
+## Financial Risk Overlay
+
+The same 17-channel engine that detects stuck conversations also detects structural disorder in financial markets. When market structure breaks down, reduce exposure. When it's coherent, stay the course.
+
+- **31/31** drawdown reduction across 9 crypto assets and 5 timeframes
+- **21.3pp** average DD improvement on black swan events (COVID, LUNA, FTX)
+- **0.1 Sharpe** median cost — cheap insurance
+- Works on any OHLCV data — crypto, equities, forex, commodities
+- **Not a prediction engine** — a structural risk overlay
+
+### How It Works (Finance)
+
+ReNoUn maps OHLCV candle data onto the same 17 structural channels used for conversation analysis:
+
+**Recurrence (Re1-Re5)** — Is the market repeating known patterns? Price action rhythms, volume profiles, volatility persistence, session structure, and mean-reversion signatures.
+
+**Novelty (No1-No6)** — Is something genuinely new happening? Regime breaks, flow reversals, volatility spikes, session disruptions, behavioral shifts, and cross-signal rarity.
+
+**Unity (Un1-Un6)** — Is the market holding together? Trend cohesion across price and volume, volatility-price alignment, session continuity, reference-frame stability, and structural symmetry between first-half and second-half of the analysis window.
+
+From these 17 signals, the engine produces:
+
+- **DHS (0.0-1.0)** — Dialectical Health Score. High = coherent structure, low = disorder.
+- **Constellation patterns** — The same 8 patterns (CONVERGENCE, SCATTERING, CLOSED_LOOP, etc.) applied to market structure.
+- **Stress metrics** — Drawdown depth, volatility expansion, and structural fragility indicators.
+- **Exposure scalar** — A smoothed, persistence-weighted recommendation mapping structural health to position sizing. High DHS = full exposure, low DHS = reduce.
+
+### Quick Start (Finance)
+
+#### Python API
+
+```python
+from renoun_finance import analyze_financial
+
+klines = [
+    {"open": 100, "high": 105, "low": 98, "close": 103, "volume": 1000},
+    {"open": 103, "high": 107, "low": 101, "close": 106, "volume": 1200},
+    # ... 50+ candles recommended for reliable signals
+]
+
+result = analyze_financial(klines, symbol="BTCUSDT", timeframe="1h")
+
+print(result["dialectical_health"])  # 0.72
+print(result["constellations"])      # [{"detected": "CONVERGENCE", ...}]
+print(result["stress"])              # {"drawdown": 0.15, "vol_expansion": 0.08}
+print(result["exposure"])            # {"scalar": 0.85, "regime": "healthy"}
+```
+
+#### MCP Tool
+
+```json
+{
+    "tool": "renoun_finance_analyze",
+    "arguments": {
+        "klines": [
+            {"open": 100, "high": 105, "low": 98, "close": 103, "volume": 1000},
+            {"open": 103, "high": 107, "low": 101, "close": 106, "volume": 1200}
+        ],
+        "symbol": "BTCUSDT",
+        "timeframe": "1h",
+        "include_exposure": true
+    }
+}
+```
+
+#### REST API
+
+```bash
+curl -X POST https://web-production-817e2.up.railway.app/v1/finance/analyze \
+  -H "Authorization: Bearer rn_live_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "klines": [{"open": 100, "high": 105, "low": 98, "close": 103, "volume": 1000}],
+    "symbol": "BTCUSDT",
+    "timeframe": "1h",
+    "include_exposure": true
+  }'
+```
+
+### Live Streaming
+
+For real-time monitoring with continuous exposure updates:
+
+```bash
+python renoun_stream.py --symbol BTCUSDT --tf 5m
+python renoun_stream.py --symbols BTCUSDT,ETHUSDT,SOLUSDT  # multi-asset
+```
+
+The streamer connects to exchange websocket feeds, buffers candles, and runs `renoun_finance_analyze` on a rolling window. Output includes live DHS, constellation detection, and exposure scalar updates.
+
+Supported timeframes: `1m`, `5m`, `15m`, `1h`, `4h`, `1d`.
+
+Requires the finance extras: `pip install renoun-mcp[finance]`.
+
+### Backtest Results
+
+Validated across 31 datasets (9 crypto assets, 5 timeframes per asset):
+
+| Metric | Result |
+|--------|--------|
+| Datasets tested | 31 (9 assets x 5 timeframes) |
+| Drawdown improved | 31/31 (100%) |
+| Avg DD improvement | 5.7pp |
+| Black swan DD improvement | 21.3pp avg (4 events) |
+| Sharpe improved | 14/31 (45%) |
+| Sharpe degraded | 17/31 (55%) |
+| Median Sharpe cost | 0.1 |
+| Negative impact (DD worse) | 0/31 (0%) |
+
+The pattern is consistent: ReNoUn reduces drawdowns in every tested configuration. Sharpe impact is mixed because the overlay occasionally reduces exposure during recoveries, trimming upside along with downside. The median Sharpe cost of 0.1 is the price of insurance — you give up a small amount of return for significantly better tail-risk protection.
+
+Best on high-volatility assets (DOGE, SHIB, ETH) where structural disorder is most frequent and drawdown events are deepest.
+
+### The Honest Take
+
+ReNoUn is **not** a prediction engine. It does **not** generate alpha. It does not tell you what to buy or when to enter.
+
+What it does: measures structural market disorder and reduces exposure when structure breaks down. When price, volume, and volatility signals lose coherence — when the 17 channels show SCATTERING or REPEATED_DISRUPTION — the exposure scalar pulls you back. When structure is healthy and converging, you stay fully allocated.
+
+Think of it as a VIX-based position sizer for markets where there is no options-implied volatility. Crypto has no VIX. Most small-cap equities have no liquid options chain. ReNoUn fills that gap by deriving structural disorder directly from OHLCV data.
+
+**Best used as a risk overlay** — pair it with your own signal, your own strategy, your own edge. ReNoUn handles the "when to reduce" question so your signal can focus on the "what to trade" question.
+
+---
 
 ## Version
 

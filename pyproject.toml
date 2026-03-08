@@ -1,7 +1,7 @@
 [project]
 name = "renoun-mcp"
-version = "1.2.4"
-description = "Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels without analyzing content."
+version = "1.3.0"
+description = "Structural observability for AI conversations and financial risk management. Detects patterns across 17 channels without analyzing content. Includes crypto risk overlay with validated drawdown reduction."
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "Luke Hall", email = "98lukehall@gmail.com" }]
@@ -16,6 +16,11 @@ keywords = [
     "pattern-detection",
     "llm",
     "model-context-protocol",
+    "financial-risk",
+    "crypto",
+    "drawdown-reduction",
+    "risk-overlay",
+    "ohlcv",
 ]
 license = { text = "MIT" }
 classifiers = [
@@ -38,6 +43,7 @@ dependencies = [
 mcp = ["mcp>=1.0.0"]
 api = ["fastapi>=0.100.0", "uvicorn>=0.20.0", "stripe>=7.0.0"]
 dev = ["pytest>=8.0.0", "ruff>=0.7.0", "httpx>=0.24.0"]
+finance = ["websocket-client>=1.0.0"]
 
 [project.scripts]
 renoun-mcp = "server:main_sync"
@@ -52,10 +58,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-include = ["server.py", "api_client.py", "tool_definition.json", "api.py", "api_config.py", "auth.py", "rate_limiter.py", "usage.py", "stripe_billing.py", "pre_tag.py", "weighted_analysis.py", "renoun_analyze.py", "renoun_compare.py", "renoun_store.py", "renoun_format.py", "feature_extraction.py", "steering.py"]
+include = ["server.py", "api_client.py", "tool_definition.json", "api.py", "api_config.py", "auth.py", "rate_limiter.py", "usage.py", "stripe_billing.py", "pre_tag.py", "weighted_analysis.py", "renoun_analyze.py", "renoun_compare.py", "renoun_store.py", "renoun_format.py", "feature_extraction.py", "steering.py", "renoun_finance.py", "renoun_exposure.py", "renoun_score.py", "renoun_stream.py", "renoun_risk_backtest.py"]
 
 [tool.hatch.build.targets.sdist]
-include = ["server.py", "api_client.py", "tool_definition.json", "api.py", "api_config.py", "auth.py", "rate_limiter.py", "usage.py", "stripe_billing.py", "pre_tag.py", "weighted_analysis.py", "renoun_analyze.py", "renoun_compare.py", "renoun_store.py", "renoun_format.py", "feature_extraction.py", "steering.py", "pyproject.toml", "README.md", "LICENSE"]
+include = ["server.py", "api_client.py", "tool_definition.json", "api.py", "api_config.py", "auth.py", "rate_limiter.py", "usage.py", "stripe_billing.py", "pre_tag.py", "weighted_analysis.py", "renoun_analyze.py", "renoun_compare.py", "renoun_store.py", "renoun_format.py", "feature_extraction.py", "steering.py", "renoun_finance.py", "renoun_exposure.py", "renoun_score.py", "renoun_stream.py", "renoun_risk_backtest.py", "pyproject.toml", "README.md", "LICENSE"]
 
 [tool.ruff]
 target-version = "py39"

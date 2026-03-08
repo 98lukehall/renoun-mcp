@@ -86,12 +86,12 @@ class TestToolDiscovery:
 
     def test_tool_count(self):
         from server import TOOL_DEFS
-        assert len(TOOL_DEFS) == 4, f"Expected 4 tools, got {len(TOOL_DEFS)}"
+        assert len(TOOL_DEFS) == 6, f"Expected 6 tools, got {len(TOOL_DEFS)}"
 
     def test_tool_names(self):
         from server import TOOL_DEFS
         names = {t["name"] for t in TOOL_DEFS}
-        expected = {"renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query"}
+        expected = {"renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze"}
         assert names == expected, f"Tool name mismatch: {names} != {expected}"
 
     def test_all_have_input_schema(self):
@@ -108,13 +108,116 @@ class TestToolDiscovery:
 
     def test_handlers_registered(self):
         from server import TOOL_HANDLERS
-        expected = {"renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query"}
+        expected = {"renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze"}
         assert set(TOOL_HANDLERS.keys()) == expected
 
     def test_version_constants(self):
         from server import TOOL_VERSION, ENGINE_VERSION, SCHEMA_VERSION
-        assert TOOL_VERSION == "1.1.0"
+        assert TOOL_VERSION == "1.3.0"
         assert SCHEMA_VERSION == "1.1"
+
+    # --- renoun_steer discovery regression (investigated 3+ sessions) ---
+    # Root cause: server-side registration is correct in all code paths.
+    # The bug is client-side or MCP library version-specific — not in server.py.
+    # These tests prove the tool IS discoverable server-side.
+
+    def test_steer_in_tool_defs(self):
+        """renoun_steer must be present in TOOL_DEFS (raw definition list)."""
+        from server import TOOL_DEFS
+        names = {t["name"] for t in TOOL_DEFS}
+        assert "renoun_steer" in names, (
+            f"renoun_steer missing from TOOL_DEFS. Found: {names}"
+        )
+
+    def test_steer_in_tool_handlers(self):
+        """renoun_steer must have a handler function in TOOL_HANDLERS."""
+        from server import TOOL_HANDLERS
+        assert "renoun_steer" in TOOL_HANDLERS, (
+            f"renoun_steer missing from TOOL_HANDLERS. Found: {set(TOOL_HANDLERS.keys())}"
+        )
+
+    def test_steer_handler_is_callable(self):
+        """renoun_steer handler must be callable."""
+        from server import TOOL_HANDLERS
+        handler = TOOL_HANDLERS["renoun_steer"]
+        assert callable(handler), f"renoun_steer handler is not callable: {type(handler)}"
+
+    def test_steer_in_tools(self):
+        """renoun_steer must appear in the final TOOLS list (what clients see)."""
+        from server import TOOLS
+        names = set()
+        for t in TOOLS:
+            name = t.get("name") if isinstance(t, dict) else getattr(t, "name", None)
+            names.add(name)
+        assert "renoun_steer" in names, (
+            f"renoun_steer missing from TOOLS. Found: {names}"
+        )
+
+    def test_steer_in_tool_annotations(self):
+        """renoun_steer must have annotations defined."""
+        from server import TOOL_ANNOTATIONS
+        assert "renoun_steer" in TOOL_ANNOTATIONS, (
+            f"renoun_steer missing from TOOL_ANNOTATIONS. Found: {set(TOOL_ANNOTATIONS.keys())}"
+        )
+
+    def test_steer_has_input_schema(self):
+        """renoun_steer definition must include inputSchema."""
+        from server import TOOL_DEFS
+        steer_def = next(t for t in TOOL_DEFS if t["name"] == "renoun_steer")
+        assert "inputSchema" in steer_def, "renoun_steer missing inputSchema"
+        schema = steer_def["inputSchema"]
+        assert "properties" in schema, "renoun_steer inputSchema missing properties"
+        assert "action" in schema["properties"], "renoun_steer inputSchema missing 'action' property"
+
+    def test_steer_tools_list_json_rpc_format(self):
+        """Simulate the standalone JSON-RPC tools/list response and verify steer is present.
+
+        This reproduces exactly what a client would see via the standalone_server
+        tools/list handler (line 1218-1230 of server.py).
+        """
+        from server import TOOLS
+        tools_list = [
+            {
+                "name": t.get("name") if isinstance(t, dict) else t.name,
+                "description": t.get("description") if isinstance(t, dict) else t.description,
+                "inputSchema": t.get("inputSchema") if isinstance(t, dict) else t.inputSchema,
+            }
+            for t in TOOLS
+        ]
+        names = {t["name"] for t in tools_list}
+        assert "renoun_steer" in names, (
+            f"renoun_steer missing from JSON-RPC tools/list output. Found: {names}"
+        )
+
+    def test_steer_handler_responds_to_list_sessions(self):
+        """renoun_steer handler must respond to list_sessions action without error."""
+        from server import TOOL_HANDLERS
+        handler = TOOL_HANDLERS["renoun_steer"]
+        result = handler({"action": "list_sessions"})
+        assert "error" not in result, f"list_sessions returned error: {result}"
+        assert "sessions" in result, f"list_sessions missing 'sessions' key: {result}"
+
+    def test_steer_parity_with_other_tools(self):
+        """All 6 tools must appear in TOOL_DEFS, TOOL_HANDLERS, TOOLS, and TOOL_ANNOTATIONS.
+
+        This is the comprehensive parity check that ensures no tool is missing
+        from any registration structure. If any tool (including renoun_steer)
+        is missing from any structure, this test fails.
+        """
+        from server import TOOL_DEFS, TOOL_HANDLERS, TOOLS, TOOL_ANNOTATIONS
+
+        expected = {"renoun_analyze", "renoun_health_check", "renoun_compare",
+                    "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze"}
+
+        defs_names = {t["name"] for t in TOOL_DEFS}
+        handler_names = set(TOOL_HANDLERS.keys())
+        tools_names = {t.get("name") if isinstance(t, dict) else t.name for t in TOOLS}
+        annotation_names = set(TOOL_ANNOTATIONS.keys())
+
+        assert defs_names == expected, f"TOOL_DEFS mismatch: {defs_names - expected} extra, {expected - defs_names} missing"
+        assert handler_names == expected, f"TOOL_HANDLERS mismatch: {handler_names - expected} extra, {expected - handler_names} missing"
+        assert tools_names == expected, f"TOOLS mismatch: {tools_names - expected} extra, {expected - tools_names} missing"
+        assert annotation_names == expected, f"TOOL_ANNOTATIONS mismatch: {annotation_names - expected} extra, {expected - annotation_names} missing"
 
 
 class TestAnalyze:
@@ -308,7 +411,7 @@ class TestStandaloneProtocol:
             }
             for t in TOOLS
         ]
-        assert len(tools_list) == 4
+        assert len(tools_list) == 6
         for t in tools_list:
             assert "name" in t
             assert "description" in t

@@ -40,6 +40,7 @@ from rate_limiter import limiter
 from usage import log_request
 from server import (
     tool_analyze, tool_health_check, tool_compare, tool_pattern_query, tool_steer,
+    tool_finance_analyze,
     TOOL_VERSION, ENGINE_VERSION, SCHEMA_VERSION,
 )
 
@@ -170,6 +171,12 @@ class SteerRequest(BaseModel):
     action: str = Field("add_turns", description="add_turns|get_status|clear_session|list_sessions")
     window_size: Optional[int] = Field(None, description="Turns per analysis window (default 30)")
     session_ttl: Optional[int] = Field(None, description="Session TTL in seconds (default 3600)")
+
+class FinanceAnalyzeRequest(BaseModel):
+    klines: list[dict] = Field(..., min_length=10, description="OHLCV candle data")
+    symbol: str = Field("UNKNOWN", description="Trading pair symbol")
+    timeframe: str = Field("1h", description="Candle timeframe")
+    include_exposure: bool = Field(True, description="Include exposure recommendation")
 
 
 # ---------------------------------------------------------------------------
@@ -364,6 +371,24 @@ async def steer(body: SteerRequest, key_info: dict = Depends(require_auth)):
         key_info=key_info,
         endpoint="/v1/steer",
         turn_count=turn_count,
+    )
+
+
+@app.post("/v1/finance/analyze")
+async def finance_analyze(body: FinanceAnalyzeRequest, key_info: dict = Depends(require_auth)):
+    """Structural analysis of financial OHLCV data with exposure recommendations."""
+    arguments = {
+        "klines": body.klines,
+        "symbol": body.symbol,
+        "timeframe": body.timeframe,
+        "include_exposure": body.include_exposure,
+    }
+    return _run_tool(
+        tool_name="renoun_finance_analyze",
+        handler=tool_finance_analyze,
+        arguments=arguments,
+        key_info=key_info,
+        endpoint="/v1/finance/analyze",
     )
 
 

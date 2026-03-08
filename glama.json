@@ -2,5 +2,31 @@
   "$schema": "https://glama.ai/mcp/schemas/server.json",
   "maintainers": [
     "98lukehall"
+  ],
+  "tools": [
+    {
+      "name": "renoun_analyze",
+      "description": "Deep structural analysis of a conversation. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels without reading the content. Returns a health score (0-1), pattern classifications (8 types including CLOSED_LOOP, PATTERN_BREAK, CONVERGENCE, SURFACE_VARIATION), breakthrough moments, and actionable next steps."
+    },
+    {
+      "name": "renoun_health_check",
+      "description": "Fast structural triage. Is this conversation stuck, healthy, or falling apart? Returns one score, one pattern, one summary. Sub-50ms."
+    },
+    {
+      "name": "renoun_compare",
+      "description": "Structural A/B test between two conversations. Did the second session improve over the first? Which channels shifted? Did the pattern change from stuck to converging?"
+    },
+    {
+      "name": "renoun_pattern_query",
+      "description": "Query structural patterns across sessions over time. Save analysis results, filter by date/domain/pattern/health, compute DHS trends."
+    },
+    {
+      "name": "renoun_steer",
+      "description": "Real-time inference steering. Monitor a live conversation and get actionable signals when the model should change strategy. Rolling window buffers with automatic threshold-based alerts."
+    },
+    {
+      "name": "renoun_finance_analyze",
+      "description": "Structural analysis of financial OHLCV data using the 17-channel engine. Returns DHS, constellation patterns, stress levels, and exposure recommendations. Validated drawdown reduction on 31/31 datasets across 9 crypto assets and 5 timeframes."
+    }
   ]
 }

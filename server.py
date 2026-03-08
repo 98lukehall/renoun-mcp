@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Any, Optional
 from datetime import datetime
 
-TOOL_VERSION = "1.2.4"
+TOOL_VERSION = "1.3.0"
 ENGINE_VERSION = "4.1"
 SCHEMA_VERSION = "1.1"
 
@@ -797,6 +797,71 @@ TOOL_DEFS = [
             },
         },
     },
+    {
+        "name": "renoun_finance_analyze",
+        "description": (
+            "Structural analysis of financial OHLCV data using ReNoUn's 17-channel engine. "
+            "Returns DHS (Dialectical Health Score), constellation patterns, stress levels, "
+            "and exposure recommendations. Validated drawdown reduction on 31/31 datasets "
+            "across 9 crypto assets and 5 timeframes. Use as a risk overlay — reduces "
+            "exposure during structural disorder."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "klines": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": "Array of OHLCV candle objects. Each must have: open, high, low, close, volume. Optional: taker_buy_volume, timestamp.",
+                    "minItems": 10,
+                },
+                "symbol": {"type": "string", "default": "UNKNOWN", "description": "Trading pair symbol (e.g., BTCUSDT)."},
+                "timeframe": {
+                    "type": "string",
+                    "enum": ["1m", "5m", "15m", "1h", "4h", "1d"],
+                    "default": "1h",
+                    "description": "Candle timeframe for annualization and micro-constellation detection.",
+                },
+                "include_exposure": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Include v2 exposure recommendation (smoothed + persistence-weighted).",
+                },
+            },
+            "required": ["klines"],
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "dialectical_health": {"type": "number", "description": "Structural health score (0.0-1.0) applied to financial OHLCV data."},
+                "loop_strength": {"type": "number", "description": "How much the price action recycles the same structural patterns (0.0-1.0)."},
+                "constellations": {
+                    "type": "array",
+                    "description": "Structural patterns detected in the financial data.",
+                    "items": {"type": "object", "properties": {"detected": {"type": "string"}, "confidence": {"type": "number"}}},
+                },
+                "stress": {
+                    "type": "object",
+                    "description": "Market stress indicators including drawdown and volatility expansion.",
+                    "properties": {"drawdown": {"type": "number"}, "vol_expansion": {"type": "number"}},
+                },
+                "exposure": {
+                    "type": "object",
+                    "description": "Exposure recommendation based on structural analysis.",
+                    "properties": {
+                        "scalar": {"type": "number", "description": "Final smoothed exposure value (0.0-1.0). Use this as primary signal."},
+                        "raw_v1": {"type": "number", "description": "Raw DHS-to-exposure before smoothing."},
+                        "smoothed_v2": {"type": "number", "description": "After asymmetric EMA smoothing."},
+                        "constellation_persistence": {"type": "integer", "description": "Windows current constellation has persisted."},
+                        "constellation_churn": {"type": "number", "description": "Unique constellations in last 5 windows (0.0-1.0)."},
+                        "crash_regime": {"type": "boolean", "description": "Whether crash regime is active."},
+                        "interpretation": {"type": "string", "description": "Human-readable exposure recommendation."},
+                        "note": {"type": "string", "description": "Context about stateless vs session-aware tracking."},
+                    },
+                },
+            },
+        },
+    },
 ]
 
 
@@ -906,12 +971,111 @@ def tool_steer(arguments: dict) -> dict:
     )
 
 
+# ---------------------------------------------------------------------------
+# Finance Tool
+# ---------------------------------------------------------------------------
+
+_finance_trackers = {}
+
+
+def tool_finance_analyze(arguments: dict) -> dict:
+    """Structural analysis of financial OHLCV data with exposure recommendations."""
+    klines = arguments.get("klines")
+    if not klines:
+        return _structured_error("missing_klines", "klines array is required.", "Provide an array of OHLCV candle objects.")
+
+    if len(klines) < 10:
+        return _structured_error("insufficient_data", f"Need at least 10 candles, got {len(klines)}.", "Provide more OHLCV data.")
+
+    symbol = arguments.get("symbol", "UNKNOWN")
+    timeframe = arguments.get("timeframe", "1h")
+    include_exposure = arguments.get("include_exposure", True)
+
+    try:
+        from renoun_finance import analyze_financial
+        result = analyze_financial(klines, symbol=symbol, timeframe=timeframe)
+    except ImportError:
+        return _structured_error("module_not_found", "renoun_finance module not available.", "Ensure renoun_finance.py is in the server directory.")
+    except Exception as e:
+        return _structured_error("analysis_error", f"Finance analysis failed: {str(e)}", "Check kline data format.")
+
+    if include_exposure:
+        try:
+            from renoun_exposure import ConstellationTracker, smooth_exposure, dhs_to_exposure
+
+            dhs = result["dialectical_health"]
+            consts = result.get("constellations", [])
+            top_const = consts[0]["detected"] if consts else "NONE"
+            loop = result["loop_strength"]
+            dd_stress = result.get("stress", {}).get("drawdown", 0.0)
+            vol_stress = float(result.get("stress", {}).get("vol_expansion", 0.0))
+
+            # Stateless per-call: use fresh tracker (no session memory)
+            tracker = ConstellationTracker()
+            persist = tracker.update(top_const)
+            eff_const = persist.get("effective_constellation", top_const)
+            crash_reg = persist.get("crash_regime", False)
+
+            # v1: raw exposure from DHS + constellation + stress (no smoothing)
+            raw_exp = dhs_to_exposure(dhs, eff_const, loop, dd_stress, vol_stress,
+                                       persistence_mult=persist["persistence_mult"],
+                                       crash_regime=crash_reg)
+
+            # v2: smoothed exposure (asymmetric EMA against a default of 1.0)
+            # For stateless per-call, prev_smooth defaults to 1.0 (full exposure)
+            # so the smoothing only reduces from full. In sequential calls,
+            # callers should track prev_smooth externally.
+            smoothed_exp = smooth_exposure(raw_exp, prev_smooth=1.0)
+
+            # Use the smoothed value as the primary scalar
+            scalar = round(smoothed_exp, 3)
+
+            # Interpretation with richer context
+            if smoothed_exp >= 0.8:
+                interp = f"Full exposure — healthy structure ({top_const})"
+            elif smoothed_exp >= 0.5:
+                interp = f"Moderate exposure — {top_const} detected, some caution warranted"
+            elif smoothed_exp >= 0.3:
+                interp = f"Reduced exposure — {top_const} signals structural degradation"
+            else:
+                interp = f"Minimal exposure — {top_const} indicates significant structural disorder"
+
+            # Add stress context to interpretation
+            stress_notes = []
+            if dd_stress > 0.3:
+                stress_notes.append(f"drawdown stress {dd_stress:.2f}")
+            if vol_stress > 0.15:
+                stress_notes.append(f"vol expansion {vol_stress:.2f}")
+            if stress_notes:
+                interp += f" (active stress: {', '.join(stress_notes)})"
+
+            result["exposure"] = {
+                "scalar": scalar,
+                "raw_v1": round(raw_exp, 3),
+                "smoothed_v2": scalar,
+                "constellation_persistence": persist["run_length"],
+                "constellation_churn": persist["churn"],
+                "crash_regime": crash_reg,
+                "interpretation": interp,
+                "note": (
+                    "Stateless per-call — persistence=1, churn=0.2 are defaults from fresh tracker. "
+                    "For session-aware smoothing with real persistence tracking, use renoun_steer "
+                    "or make sequential calls and track prev_smooth externally."
+                ),
+            }
+        except ImportError:
+            result["exposure"] = {"error": "renoun_exposure module not available"}
+
+    return result
+
+
 TOOL_HANDLERS = {
     "renoun_analyze": tool_analyze,
     "renoun_health_check": tool_health_check,
     "renoun_compare": tool_compare,
     "renoun_pattern_query": tool_pattern_query,
     "renoun_steer": tool_steer,
+    "renoun_finance_analyze": tool_finance_analyze,
 }
 
 # ---------------------------------------------------------------------------
@@ -952,6 +1116,13 @@ TOOL_ANNOTATIONS = {
         "readOnlyHint": False,  # maintains session state
         "destructiveHint": False,
         "idempotentHint": False,  # each call advances the buffer
+        "openWorldHint": False,
+    },
+    "renoun_finance_analyze": {
+        "title": "Financial Risk Analysis",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
         "openWorldHint": False,
     },
 }

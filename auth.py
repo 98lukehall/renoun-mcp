@@ -29,17 +29,32 @@ TIERS = {
         "tools": ["renoun_health_check"],
         "daily_limit": 20,
         "max_turns": 200,
+        "rate_limits": {
+            "renoun_health_check": 10,       # calls/min
+            "renoun_finance_analyze": 10,    # calls/min
+        },
     },
     "pro": {
-        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer"],
+        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze"],
         "daily_limit": 1000,
         "max_turns": 500,
         "price": "$4.99/mo",
+        "rate_limits": {
+            "renoun_analyze": 60,            # calls/min
+            "renoun_health_check": 120,      # calls/min
+            "renoun_compare": 60,            # calls/min
+            "renoun_pattern_query": 60,      # calls/min
+            "renoun_steer": 120,             # calls/min
+            "renoun_finance_analyze": 100,   # calls/min
+        },
     },
     "enterprise": {
-        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer"],
+        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze"],
         "daily_limit": -1,  # unlimited
         "max_turns": -1,  # unlimited
+        "rate_limits": {
+            "renoun_finance_analyze": -1,    # unlimited
+        },
     },
 }
 
@@ -122,6 +137,18 @@ def is_tool_allowed(tier: str, tool_name: str) -> bool:
     """Check if a tool is allowed for a given tier."""
     config = get_tier_config(tier)
     return tool_name in config["tools"]
+
+
+def get_rate_limit(tier: str, tool_name: str) -> int:
+    """Get the per-minute rate limit for a tool in a given tier.
+
+    Returns:
+        int: calls per minute. -1 means unlimited.
+             Defaults to 60 if no specific limit is configured.
+    """
+    config = get_tier_config(tier)
+    rate_limits = config.get("rate_limits", {})
+    return rate_limits.get(tool_name, 60)  # default 60/min if not specified
 
 
 def revoke_key(key_id: str) -> bool:

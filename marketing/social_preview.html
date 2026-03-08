@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReNoUn Social Preview Card</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #111;
+  font-family: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+}
+.card {
+  width: 1280px;
+  height: 640px;
+  background: linear-gradient(135deg, #0B1D3A 0%, #0f2847 40%, #0B1D3A 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #ffffff;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  right: -100px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(91, 123, 158, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.card::after {
+  content: '';
+  position: absolute;
+  bottom: -150px;
+  left: -50px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(124, 154, 110, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.content {
+  position: relative;
+  z-index: 1;
+  padding: 0 80px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: rgba(91, 123, 158, 0.2);
+  border: 1px solid rgba(91, 123, 158, 0.4);
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8BADC7;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+}
+.badge .dot {
+  width: 6px;
+  height: 6px;
+  background: #5B7B9E;
+  border-radius: 50%;
+}
+.title {
+  font-size: 72px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+.title .re { color: #C9956F; }
+.title .no { color: #7C9A6E; }
+.title .un { color: #5B7B9E; }
+.subtitle {
+  font-size: 24px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 48px;
+  letter-spacing: -0.01em;
+}
+.stats {
+  display: flex;
+  gap: 60px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 48px;
+}
+.stat {
+  text-align: center;
+}
+.stat-value {
+  font-size: 48px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+  line-height: 1.2;
+}
+.stat-value.green { color: #4ade80; }
+.stat-value.blue { color: #60a5fa; }
+.stat-value.purple { color: #c084fc; }
+.stat-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+.stat-divider {
+  width: 1px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.patent {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.05em;
+}
+.top-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #C9956F, #7C9A6E, #5B7B9E);
+}
+.bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  z-index: 1;
+}
+.bottom-bar span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.05em;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="top-line"></div>
+  <div class="content">
+    <div class="badge"><span class="dot"></span> Structural Risk Overlay</div>
+    <div class="title"><span class="re">Re</span><span class="no">No</span><span class="un">Un</span></div>
+    <div class="subtitle">Structural Risk Overlay for Crypto</div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value green">31/31</div>
+        <div class="stat-label">DD Reduction</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <div class="stat-value blue">9 Assets</div>
+        <div class="stat-label">Validated</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <div class="stat-value purple">5 TFs</div>
+        <div class="stat-label">1m to 1d</div>
+      </div>
+    </div>
+    <div class="patent">Patent Pending #63/923,592 | harrisoncollab.com</div>
+  </div>
+  <div class="bottom-bar">
+    <span>github.com/98lukehall/renoun-mcp</span>
+    <span>&middot;</span>
+    <span>pip install renoun-mcp</span>
+  </div>
+</div>
+</body>
+</html>

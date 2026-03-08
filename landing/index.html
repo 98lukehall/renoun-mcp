@@ -835,6 +835,138 @@ footer {
 .footer-links a { color: var(--text-muted); font-size: 0.85rem; }
 .footer-links a:hover { color: var(--text); }
 .footer-copy { color: var(--text-muted); font-size: 0.8rem; }
+/* Financial Risk Overlay Section */
+#finance { padding-top: 4rem; }
+.finance-header { text-align: center; margin-bottom: 4rem; }
+.finance-header .section-label { justify-content: center; color: var(--accent2); }
+.finance-header .section-label::before { background: var(--accent2); }
+.finance-header .section-title { max-width: 700px; margin: 0 auto 1rem; }
+.finance-header .section-subtitle { margin: 0 auto; }
+.finance-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 4rem;
+}
+.finance-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.finance-stat::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent2);
+}
+.finance-stat:hover {
+  border-color: var(--accent2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(91, 123, 158, 0.15);
+}
+.finance-stat .stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--accent2);
+  margin-bottom: 0.4rem;
+}
+.finance-stat .stat-label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.finance-stat .stat-detail {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.finance-how {
+  margin-bottom: 4rem;
+}
+.finance-how .section-label { justify-content: center; }
+.finance-steps {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr 40px 1fr;
+  align-items: start;
+  gap: 0;
+  margin-top: 2rem;
+}
+.finance-step {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+}
+.finance-step .step-num {
+  width: 36px; height: 36px;
+  background: var(--accent2);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin: 0 auto 1rem;
+}
+.finance-step h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
+.finance-step p { color: var(--text-dim); font-size: 0.85rem; }
+.finance-step code {
+  font-size: 0.8rem;
+  background: rgba(91, 123, 158, 0.08);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  color: var(--accent2);
+}
+.finance-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  padding-top: 2.5rem;
+}
+.finance-cta {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 3rem;
+}
+.btn-finance {
+  background: var(--accent2);
+  color: white;
+}
+.btn-finance:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(91, 123, 158, 0.3);
+  color: white;
+}
+.btn-finance-outline {
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 2px solid var(--accent2);
+}
+.btn-finance-outline:hover {
+  background: var(--accent2);
+  color: white;
+  transform: translateY(-2px);
+}
+.finance-disclaimer {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
 @media (max-width: 900px) {
   .renoun-intro { grid-template-columns: 1fr; gap: 2rem; }
   .dimensions-grid { grid-template-columns: 1fr; }
@@ -844,6 +976,9 @@ footer {
   .demo-input { border-right: none; border-bottom: 1px solid var(--border); }
   .use-cases { grid-template-columns: 1fr; }
   .projects-grid { grid-template-columns: 1fr; }
+  .finance-stats { grid-template-columns: 1fr; }
+  .finance-steps { grid-template-columns: 1fr; gap: 1rem; }
+  .finance-arrow { display: none; }
   .footer-inner { flex-direction: column; gap: 1rem; }
   .nav-links { display: none; }
   .mobile-menu-btn { display: block; }
@@ -865,6 +1000,8 @@ footer {
   .hero-actions { flex-direction: column; width: 100%; }
   .hero-actions .btn { justify-content: center; }
   .score-row { flex-direction: column; }
+  .finance-cta { flex-direction: column; width: 100%; }
+  .finance-cta .btn { justify-content: center; }
 }
 </style>
 </head>
@@ -876,6 +1013,7 @@ footer {
   </div>
   <div class="nav-links" id="navLinks">
     <a href="#renoun">ReNoUn</a>
+    <a href="#finance">Finance</a>
     <a href="#projects">Projects</a>
     <a href="#demo">Try It</a>
     <a href="#renoun" class="nav-cta">Get Started</a>
@@ -1038,6 +1176,59 @@ footer {
     </div>
   </div>
 </section>
+<section id="finance">
+  <div class="finance-header">
+    <div class="section-label">Financial Risk Overlay</div>
+    <h2 class="section-title">31/31 Drawdown Reduction. Zero Negative Impact.</h2>
+    <p class="section-subtitle">Structural pattern detection applied to OHLCV market data. Not a signal &mdash; a shield.</p>
+  </div>
+  <div class="finance-stats">
+    <div class="finance-stat">
+      <div class="stat-value">31/31</div>
+      <div class="stat-label">DD Reduction</div>
+      <div class="stat-detail">Every dataset improved</div>
+    </div>
+    <div class="finance-stat">
+      <div class="stat-value">21.3pp</div>
+      <div class="stat-label">Black Swan Protection</div>
+      <div class="stat-detail">COVID, LUNA, FTX average</div>
+    </div>
+    <div class="finance-stat">
+      <div class="stat-value">0.1</div>
+      <div class="stat-label">Sharpe Cost</div>
+      <div class="stat-detail">Minimal performance trade-off</div>
+    </div>
+  </div>
+  <div class="finance-how" style="text-align:center;">
+    <div class="section-label" style="justify-content:center;">How It Works</div>
+    <h3 class="section-title" style="font-size:clamp(1.5rem,3vw,2rem);">Structural disorder in, exposure scalar out</h3>
+  </div>
+  <div class="finance-steps">
+    <div class="finance-step">
+      <div class="step-num">1</div>
+      <h4>Feed OHLCV</h4>
+      <p>Send candle data &mdash; <code>open</code>, <code>high</code>, <code>low</code>, <code>close</code>, <code>volume</code>. Any timeframe from 1m to 1d.</p>
+    </div>
+    <div class="finance-arrow">&rarr;</div>
+    <div class="finance-step">
+      <div class="step-num">2</div>
+      <h4>Detect Disorder</h4>
+      <p>The 17-channel engine measures structural health of price action. No prediction, no direction &mdash; just structural state.</p>
+    </div>
+    <div class="finance-arrow">&rarr;</div>
+    <div class="finance-step">
+      <div class="step-num">3</div>
+      <h4>Scale Exposure</h4>
+      <p>Output an exposure scalar (0.0&ndash;1.0) that reduces position size during structural disorder. Pair with any signal.</p>
+    </div>
+  </div>
+  <div class="finance-cta">
+    <a href="https://pypi.org/project/renoun-mcp/" class="btn btn-finance" target="_blank" rel="noopener"><code style="background:none;padding:0;color:inherit;">pip install renoun-mcp</code></a>
+    <a href="https://github.com/98lukehall/renoun-mcp" class="btn btn-finance-outline" target="_blank" rel="noopener">View on GitHub</a>
+    <a href="https://github.com/98lukehall/renoun-mcp#api" class="btn btn-finance-outline" target="_blank" rel="noopener">API Docs</a>
+  </div>
+  <p class="finance-disclaimer">Patent Pending #63/923,592 &middot; 9 assets &middot; 5 timeframes &middot; Validated on historical data. Not financial advice.</p>
+</section>
 <section id="demo">
   <div style="text-align:center; margin-bottom: 2rem;">
     <div class="section-label" style="justify-content:center;">Interactive Demo</div>
@@ -1119,6 +1310,7 @@ Minimum 10 turns for analysis.'></textarea>
     </div>
     <div class="footer-links">
       <a href="#renoun">ReNoUn</a>
+      <a href="#finance">Finance</a>
       <a href="#projects">Projects</a>
       <a href="#demo">Demo</a>
     </div>
@@ -1319,7 +1511,7 @@ const fadeObserver = new IntersectionObserver((entries) => {
     }
   });
 }, { threshold: 0.1 });
-document.querySelectorAll('.dim-card, .how-step, .use-case, .project-card').forEach(el => {
+document.querySelectorAll('.dim-card, .how-step, .use-case, .project-card, .finance-stat, .finance-step').forEach(el => {
   el.style.opacity = '0';
   el.style.transform = 'translateY(20px)';
   el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';

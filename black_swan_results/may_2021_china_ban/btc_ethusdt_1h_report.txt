@@ -1,0 +1,290 @@
+==============================================================================
+ReNoUn Black Swan Report: China Ban May 2021
+Event Period: May 2021
+Generated: 2026-03-08 21:29 UTC
+==============================================================================
+
+Description: BTC dropped ~55% over 2 weeks (May 12-19, 2021). China mining ban + Elon Musk tweets triggered multi-wave selloff.
+
+------------------------------------------------------------------------------
+  Asset: BTCUSDT
+------------------------------------------------------------------------------
+
+  MARKET OVERVIEW
+    Candles analyzed:  673 (1h interval)
+    Price range:       $32,203.68 - $59,361.92
+    Start price:       $55,373.35
+    End price:         $38,093.36
+    Market return:     -31.21%
+
+  CRASH METRICS
+    Worst single hour: -8.90% (candle 515, 2021-05-19 11:00 UTC)
+    Worst 24h DD:      -19.85% (candles 492-516)
+
+  EARLY WARNING
+    Exposure < 0.5 at: candle 70 (445 hours BEFORE worst single-hour drop)
+    Avg exposure during worst 24h: 0.7384
+    Early warning vs worst 24h:    422h before worst 24h window started
+
+  PRE-CRASH CONSTELLATION SEQUENCE (last 5 unique before worst hour)
+    PATTERN_BREAK -> DIP_AND_RECOVERY -> CLOSED_LOOP -> CONVERGENCE -> DIP_AND_RECOVERY
+
+  DRAWDOWN COMPARISON
+    Unmanaged max DD:  -45.75%
+    Managed max DD:    -30.96%
+    DD reduction:      +14.8 pp
+
+    Buy-and-hold final equity: 0.6879
+    Managed final equity:      0.7868
+
+  VERDICT
+    Overall: [PARTIAL]
+    Timing (early warning > 0h):    [PASS]  (445h)
+    Drawdown reduction (> 0 pp):    [PASS]  (+14.8 pp)
+    Protective exposure (< 0.50):   [FAIL]  (0.7384)
+
+  DHS CHART (full event period)
+    DHS Trajectory (BTCUSDT) -- X marks near worst hour
+
+       0.83 |                                                            
+            |##             #    #              # #       #              
+            |||  ##       # |    |    #   ##    | |     ##|     #  ##    
+            ||| #||#  #  #| |## #| # #|   ||    | |     |||X    | #||   #
+            ||| ||||# |  ||#|||#||#| ||   ||    |#|     ||||   #|#|||#  |
+            |||#||||| |# ||||||||||| ||  #||    |||#   #||||  #|||||||  |
+       0.70 |||||||||#||#|||||||||||#|| #|||   #||||   |||||  ||||||||##|
+            |||||||||||||||||||||||||||#||||   |||||   |||||  |||||||||||
+            ||||||||||||||||||||||||||||||||# #|||||## |||||X |||||||||||
+            ||||||||||||||||||||||||||||||||| |||||||| |||||| |||||||||||
+            ||||||||||||||||||||||||||||||||| ||||||||#||||||#|||||||||||
+            ||||||||||||||||||||||||||||||||| |||||||||||||||||||||||||||
+       0.56 |||||||||||||||||||||||||||||||||#|||||||||||||||||||||||||||
+            +------------------------------------------------------------
+
+  EXPOSURE CHART (full event period)
+    Exposure Trajectory (BTCUSDT) -- 0.5 threshold shown
+
+       0.99 |##                                                          
+            |||                                                     #    
+            |||    #                                       #       #|#   
+            |||   #|                              ##      #|      #|||   
+            |||   ||                              ||      ||      ||||#  
+       0.59 |||  #||#                             ||      ||     #|||||  
+            |||  ||||                      #      ||     #||     ||||||  
+            |||# ||||      ##              |     #||     |||#    ||||||  
+            ||||#||||      ||##########    |#   #|||     ||||   #||||||##
+            |||||||||### ##||||||||||||#  #||   ||||#   #||||# #|||||||||
+       0.20 ||||||||||||#|||||||||||||||##|||###|||||###||||||#||||||||||
+            +------------------------------------------------------------
+             (0.50 threshold = protective)
+
+  EXPOSURE TIMELINE SUMMARY
+            Candles |   Duration | Phase                     | Context
+    ----------------+------------+---------------------------+---------------------
+         0-64     |       65h | FULL (0.8-1.0)            | 
+        65-69     |        5h | MODERATE (0.5-0.8)        | 
+        70-89     |       20h | REDUCED (0.3-0.5)         | 
+        90-104    |       15h | MODERATE (0.5-0.8)        | 
+       105-119    |       15h | FULL (0.8-1.0)            | 
+       120-124    |        5h | MODERATE (0.5-0.8)        | 
+       125-129    |        5h | REDUCED (0.3-0.5)         | 
+       130-139    |       10h | MINIMAL (0.2-0.3)         | 
+       140-144    |        5h | REDUCED (0.3-0.5)         | 
+       145-179    |       35h | MINIMAL (0.2-0.3)         | 
+       180-309    |      130h | REDUCED (0.3-0.5)         | 
+       310-339    |       30h | MINIMAL (0.2-0.3)         | 
+       340-349    |       10h | REDUCED (0.3-0.5)         | 
+       350-359    |       10h | MODERATE (0.5-0.8)        | 
+       360-364    |        5h | REDUCED (0.3-0.5)         | 
+       365-399    |       35h | MINIMAL (0.2-0.3)         | 
+       400-414    |       15h | REDUCED (0.3-0.5)         | 
+       415-434    |       20h | MODERATE (0.5-0.8)        | 
+       435-439    |        5h | REDUCED (0.3-0.5)         | 
+       440-479    |       40h | MINIMAL (0.2-0.3)         | 
+       480-489    |       10h | REDUCED (0.3-0.5)         | 
+       490-504    |       15h | MODERATE (0.5-0.8)        | <-- WORST 24H
+       505-519    |       15h | FULL (0.8-1.0)            | <-- WORST HOUR
+       520-529    |       10h | REDUCED (0.3-0.5)         | 
+       530-554    |       25h | MINIMAL (0.2-0.3)         | 
+       555-564    |       10h | REDUCED (0.3-0.5)         | 
+       565-584    |       20h | MODERATE (0.5-0.8)        | 
+       585-614    |       30h | FULL (0.8-1.0)            | 
+       615-624    |       10h | MODERATE (0.5-0.8)        | 
+       625-672    |       48h | REDUCED (0.3-0.5)         | 
+
+  DHS TRAJECTORY TABLE (last 15 rebalance points before worst hour)
+        t-Xh |    DHS |    Exp | Bar                  | Constellation             | Regime
+    ---------+--------+--------+----------------------+---------------------------+-----------
+    t-   70h | 0.6850 | 0.2701 | #####                | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   65h | 0.6517 | 0.2297 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   60h | 0.6387 | 0.2119 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   55h | 0.6051 | 0.2048 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   50h | 0.6977 | 0.2046 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   45h | 0.7168 | 0.2141 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   40h | 0.7845 | 0.2771 | #####                | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   35h | 0.7838 | 0.3119 | ######               | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   30h | 0.7625 | 0.3196 | ######               | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   25h | 0.7956 | 0.5043 | ##########           | CLOSED_LOOP                          | 
+    t-   20h | 0.8136 | 0.6530 | #############        | CONVERGENCE                          | 
+    t-   15h | 0.7993 | 0.7564 | ###############      | CONVERGENCE                          | 
+    t-   10h | 0.8059 | 0.8295 | ################     | CONVERGENCE                          | 
+    t-    5h | 0.7540 | 0.8346 | ################     | DIP_AND_RECOVERY                          | 
+    t-    0h | 0.7565 | 0.8407 | ################     | DIP_AND_RECOVERY                          | 
+
+------------------------------------------------------------------------------
+  Asset: ETHUSDT
+------------------------------------------------------------------------------
+
+  MARKET OVERVIEW
+    Candles analyzed:  1170 (1h interval)
+    Price range:       $1,720.44 - $4,335.25
+    Start price:       $3,307.47
+    End price:         $1,934.01
+    Market return:     -41.53%
+
+  CRASH METRICS
+    Worst single hour: -12.72% (candle 347, 2021-05-19 11:00 UTC)
+    Worst 24h DD:      -33.39% (candles 336-360)
+
+  EARLY WARNING
+    Exposure < 0.5 at: candle 75 (272 hours BEFORE worst single-hour drop)
+    Avg exposure during worst 24h: 0.4408
+    Early warning vs worst 24h:    261h before worst 24h window started
+
+  PRE-CRASH CONSTELLATION SEQUENCE (last 5 unique before worst hour)
+    DIP_AND_RECOVERY -> PATTERN_BREAK -> DIP_AND_RECOVERY -> CONVERGENCE -> DIP_AND_RECOVERY
+
+  DRAWDOWN COMPARISON
+    Unmanaged max DD:  -60.32%
+    Managed max DD:    -42.88%
+    DD reduction:      +17.4 pp
+
+    Buy-and-hold final equity: 0.5847
+    Managed final equity:      0.6595
+
+  VERDICT
+    Overall: [PASS]
+    Timing (early warning > 0h):    [PASS]  (272h)
+    Drawdown reduction (> 0 pp):    [PASS]  (+17.4 pp)
+    Protective exposure (< 0.50):   [PASS]  (0.4408)
+
+  DHS CHART (full event period)
+    DHS Trajectory (ETHUSDT) -- X marks near worst hour
+
+       0.84 |#            #                                              
+            ||  #        #|               # #     #  #  ##    ##     #   
+            ||  | #  ##  ||##        ## ##|#|##  #|# |  ||#  #||  ###| # 
+            ||##|#|  ||  ||||  ##  ##||#|||||||  |||#|##|||##|||  ||||#|#
+            |||||||# || #|||| #||  ||||||||||||##|||||||||||||||##|||||||
+            ||||||||#|| |||||#|||  ||||||||||||||||||||||||||||||||||||||
+       0.62 ||||||||||| |||||||||  ||||||||||||||||||||||||||||||||||||||
+            |||||||||||#|||||||||  ||||||||||||||||||||||||||||||||||||||
+            |||||||||||||||||||||  ||||||||||||||||||||||||||||||||||||||
+            |||||||||||||||||||||X#||||||||||||||||||||||||||||||||||||||
+            |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+            |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+       0.39 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+            +------------------------------------------------------------
+
+  EXPOSURE CHART (full event period)
+    Exposure Trajectory (ETHUSDT) -- 0.5 threshold shown
+
+       1.00 |#                                                           
+            ||                               ##    #           #     #   
+            ||#            #                #||   #|          #|     |   
+            |||            |          #    #|||# #||      #   ||    #|   
+            |||           #|         #|    |||||#|||      |  #||    ||   
+       0.60 |||           ||        #||   #|||||||||      |  |||    ||#  
+            |||       #   ||        |||   ||||||||||#   # |# |||#   |||  
+            |||       |   ||#   #   |||   |||||||||||   |#|| ||||   |||  
+            |||####   |  #|||   |#  |||#  |||||||||||## |||| ||||  #|||##
+            |||||||# #|# ||||  #|| #||||##|||||||||||||#||||#|||| #||||||
+       0.20 ||||||||#|||#||||##|||#||||||||||||||||||||||||||||||#|||||||
+            +------------------------------------------------------------
+             (0.50 threshold = protective)
+
+  EXPOSURE TIMELINE SUMMARY
+            Candles |   Duration | Phase                     | Context
+    ----------------+------------+---------------------------+---------------------
+         0-69     |       70h | FULL (0.8-1.0)            | 
+        70-74     |        5h | MODERATE (0.5-0.8)        | 
+        75-139    |       65h | REDUCED (0.3-0.5)         | 
+       140-174    |       35h | MINIMAL (0.2-0.3)         | 
+       175-184    |       10h | REDUCED (0.3-0.5)         | 
+       185-194    |       10h | MODERATE (0.5-0.8)        | 
+       195-199    |        5h | REDUCED (0.3-0.5)         | 
+       200-229    |       30h | MINIMAL (0.2-0.3)         | 
+       230-239    |       10h | REDUCED (0.3-0.5)         | 
+       240-254    |       15h | MODERATE (0.5-0.8)        | 
+       255-269    |       15h | FULL (0.8-1.0)            | 
+       270-274    |        5h | MODERATE (0.5-0.8)        | 
+       275-284    |       10h | REDUCED (0.3-0.5)         | 
+       285-334    |       50h | MINIMAL (0.2-0.3)         | 
+       335-339    |        5h | REDUCED (0.3-0.5)         | <-- WORST 24H
+       340-349    |       10h | MODERATE (0.5-0.8)        | <-- WORST HOUR
+       350-354    |        5h | REDUCED (0.3-0.5)         | 
+       355-384    |       30h | MINIMAL (0.2-0.3)         | <-- WORST 24H
+       385-394    |       10h | REDUCED (0.3-0.5)         | 
+       395-434    |       40h | MODERATE (0.5-0.8)        | 
+       435-444    |       10h | REDUCED (0.3-0.5)         | 
+       445-474    |       30h | MINIMAL (0.2-0.3)         | 
+       475-484    |       10h | REDUCED (0.3-0.5)         | 
+       485-509    |       25h | MODERATE (0.5-0.8)        | 
+       510-559    |       50h | FULL (0.8-1.0)            | 
+       560-604    |       45h | MODERATE (0.5-0.8)        | 
+       605-634    |       30h | FULL (0.8-1.0)            | 
+       635-639    |        5h | MODERATE (0.5-0.8)        | 
+       640-679    |       40h | REDUCED (0.3-0.5)         | 
+       680-684    |        5h | MINIMAL (0.2-0.3)         | 
+       685-689    |        5h | REDUCED (0.3-0.5)         | 
+       690-694    |        5h | MODERATE (0.5-0.8)        | 
+       695-714    |       20h | REDUCED (0.3-0.5)         | 
+       715-734    |       20h | MODERATE (0.5-0.8)        | 
+       735-739    |        5h | FULL (0.8-1.0)            | 
+       740-744    |        5h | MODERATE (0.5-0.8)        | 
+       745-764    |       20h | REDUCED (0.3-0.5)         | 
+       765-779    |       15h | MODERATE (0.5-0.8)        | 
+       780-814    |       35h | FULL (0.8-1.0)            | 
+       815-819    |        5h | MODERATE (0.5-0.8)        | 
+       820-824    |        5h | REDUCED (0.3-0.5)         | 
+       825-849    |       25h | MINIMAL (0.2-0.3)         | 
+       850-864    |       15h | REDUCED (0.3-0.5)         | 
+       865-879    |       15h | MODERATE (0.5-0.8)        | 
+       880-904    |       25h | FULL (0.8-1.0)            | 
+       905-909    |        5h | MODERATE (0.5-0.8)        | 
+       910-954    |       45h | REDUCED (0.3-0.5)         | 
+       955-959    |        5h | MODERATE (0.5-0.8)        | 
+       960-994    |       35h | REDUCED (0.3-0.5)         | 
+       995-1004   |       10h | MODERATE (0.5-0.8)        | 
+      1005-1054   |       50h | REDUCED (0.3-0.5)         | 
+      1055-1064   |       10h | MINIMAL (0.2-0.3)         | 
+      1065-1099   |       35h | REDUCED (0.3-0.5)         | 
+      1100-1134   |       35h | MODERATE (0.5-0.8)        | 
+      1135-1144   |       10h | REDUCED (0.3-0.5)         | 
+      1145-1169   |       25h | MINIMAL (0.2-0.3)         | 
+
+  DHS TRAJECTORY TABLE (last 15 rebalance points before worst hour)
+        t-Xh |    DHS |    Exp | Bar                  | Constellation             | Regime
+    ---------+--------+--------+----------------------+---------------------------+-----------
+    t-   72h | 0.7790 | 0.4596 | #########            | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   67h | 0.7637 | 0.3996 | #######              | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   62h | 0.6594 | 0.2798 | #####                | PATTERN_BREAK                          | CRASH
+    t-   57h | 0.6652 | 0.2319 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   52h | 0.6426 | 0.2128 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   47h | 0.7037 | 0.2283 | ####                 | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   42h | 0.6899 | 0.2182 | ####                 | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   37h | 0.6784 | 0.2270 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   32h | 0.6807 | 0.2235 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   27h | 0.7453 | 0.2641 | #####                | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   22h | 0.7497 | 0.2857 | #####                | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   17h | 0.7595 | 0.2997 | #####                | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   12h | 0.7165 | 0.4263 | ########             | CONVERGENCE                          | 
+    t-    7h | 0.7447 | 0.5431 | ##########           | CONVERGENCE                          | 
+    t-    2h | 0.7248 | 0.6050 | ############         | DIP_AND_RECOVERY                          | 
+
+==============================================================================
+Engine: ReNoUn Finance v2 (crash regime + ConstellationTracker)
+Window: 50 candles, rebalance every 5 candles, 1h timeframe
+Exposure: asymmetric EMA smoothing + persistence scoring + 0.20 floor
+Patent Pending #63/923,592
+==============================================================================

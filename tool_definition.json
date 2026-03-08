@@ -321,6 +321,108 @@
                     }
                 }
             }
+        },
+        {
+            "name": "renoun_finance_analyze",
+            "description": "Structural analysis of financial OHLCV data using ReNoUn's 17-channel engine. Returns DHS (Dialectical Health Score), constellation patterns, stress levels, and exposure recommendations. Validated drawdown reduction on 31/31 datasets across 9 crypto assets and 5 timeframes. Use as a risk overlay — reduces exposure during structural disorder.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "klines": {
+                        "type": "array",
+                        "items": {"type": "object"},
+                        "description": "Array of OHLCV candle objects. Each must have: open, high, low, close, volume. Optional: taker_buy_volume, timestamp.",
+                        "minItems": 10
+                    },
+                    "symbol": {
+                        "type": "string",
+                        "default": "UNKNOWN",
+                        "description": "Trading pair symbol (e.g., BTCUSDT)."
+                    },
+                    "timeframe": {
+                        "type": "string",
+                        "enum": ["1m", "5m", "15m", "1h", "4h", "1d"],
+                        "default": "1h",
+                        "description": "Candle timeframe for annualization and micro-constellation detection."
+                    },
+                    "include_exposure": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Include v2 exposure recommendation (smoothed + persistence-weighted)."
+                    }
+                },
+                "required": ["klines"]
+            },
+            "outputSchema": {
+                "type": "object",
+                "properties": {
+                    "dialectical_health": {
+                        "type": "number",
+                        "description": "Structural health score (0.0-1.0) applied to financial OHLCV data."
+                    },
+                    "loop_strength": {
+                        "type": "number",
+                        "description": "How much the price action recycles the same structural patterns (0.0-1.0)."
+                    },
+                    "constellations": {
+                        "type": "array",
+                        "description": "Structural patterns detected in the financial data.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "detected": {"type": "string"},
+                                "confidence": {"type": "number"}
+                            }
+                        }
+                    },
+                    "stress": {
+                        "type": "object",
+                        "description": "Market stress indicators including drawdown and volatility expansion.",
+                        "properties": {
+                            "drawdown": {"type": "number"},
+                            "vol_expansion": {"type": "number"}
+                        }
+                    },
+                    "exposure": {
+                        "type": "object",
+                        "description": "Exposure recommendation based on structural analysis.",
+                        "properties": {
+                            "scalar": {
+                                "type": "number",
+                                "description": "Final smoothed exposure value (0.0-1.0). Use this as primary signal."
+                            },
+                            "raw_v1": {
+                                "type": "number",
+                                "description": "Raw DHS-to-exposure before smoothing."
+                            },
+                            "smoothed_v2": {
+                                "type": "number",
+                                "description": "After asymmetric EMA smoothing."
+                            },
+                            "constellation_persistence": {
+                                "type": "integer",
+                                "description": "Windows current constellation has persisted."
+                            },
+                            "constellation_churn": {
+                                "type": "number",
+                                "description": "Unique constellations in last 5 windows (0.0-1.0)."
+                            },
+                            "crash_regime": {
+                                "type": "boolean",
+                                "description": "Whether crash regime is active."
+                            },
+                            "interpretation": {
+                                "type": "string",
+                                "description": "Human-readable exposure recommendation."
+                            },
+                            "note": {
+                                "type": "string",
+                                "description": "Context about stateless vs session-aware tracking."
+                            }
+                        }
+                    }
+                }
+            }
         }
     ],
     "installation": {

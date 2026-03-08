@@ -1,0 +1,144 @@
+==============================================================================
+ReNoUn Black Swan Report: LUNA/UST Collapse 2022
+Event Period: May 2022
+Generated: 2026-03-08 21:29 UTC
+==============================================================================
+
+Description: BTC dropped ~30% in days (May 5-12, 2022). LUNA/UST algorithmic stablecoin death spiral.
+
+------------------------------------------------------------------------------
+  Asset: ETHUSDT
+------------------------------------------------------------------------------
+
+  MARKET OVERVIEW
+    Candles analyzed:  721 (1h interval)
+    Price range:       $1,725.00 - $2,954.94
+    Start price:       $2,737.12
+    End price:         $1,993.50
+    Market return:     -27.17%
+
+  CRASH METRICS
+    Worst single hour: -10.07% (candle 251, 2022-05-11 11:00 UTC)
+    Worst 24h DD:      -22.90% (candles 245-269)
+
+  EARLY WARNING
+    Exposure < 0.5 at: candle 60 (191 hours BEFORE worst single-hour drop)
+    Avg exposure during worst 24h: 0.2376
+    Early warning vs worst 24h:    185h before worst 24h window started
+
+  PRE-CRASH CONSTELLATION SEQUENCE (last 5 unique before worst hour)
+    PATTERN_BREAK -> DIP_AND_RECOVERY -> PATTERN_BREAK -> DIP_AND_RECOVERY -> PATTERN_BREAK
+
+  DRAWDOWN COMPARISON
+    Unmanaged max DD:  -41.62%
+    Managed max DD:    -16.03%
+    DD reduction:      +25.6 pp
+
+    Buy-and-hold final equity: 0.7283
+    Managed final equity:      0.9566
+
+  VERDICT
+    Overall: [PASS]
+    Timing (early warning > 0h):    [PASS]  (191h)
+    Drawdown reduction (> 0 pp):    [PASS]  (+25.6 pp)
+    Protective exposure (< 0.50):   [PASS]  (0.2376)
+
+  DHS CHART (full event period)
+    DHS Trajectory (ETHUSDT) -- X marks near worst hour
+
+       0.83 |                                          #                 
+            |                                          |##               
+            |        #                    # #          |||          #    
+            |#     # |                   #|#|          |||   #     #|    
+            ||   # | |  #            #   ||||     # # #|||   |#   #||# ##
+            ||# #| |#|##|           #|## ||||    #| | ||||   ||   |||| ||
+       0.71 |||#||#||||||##### # X  |||| ||||   #|| |#||||###||## ||||#||
+            ||||||||||||||||||#|#|  ||||#||||   |||#|||||||||||||#|||||||
+            ||||||||||||||||||||||  |||||||||# #|||||||||||||||||||||||||
+            ||||||||||||||||||||||  |||||||||| ||||||||||||||||||||||||||
+            ||||||||||||||||||||||  |||||||||| ||||||||||||||||||||||||||
+            |||||||||||||||||||||| #||||||||||#||||||||||||||||||||||||||
+       0.60 ||||||||||||||||||||||X||||||||||||||||||||||||||||||||||||||
+            +------------------------------------------------------------
+
+  EXPOSURE CHART (full event period)
+    Exposure Trajectory (ETHUSDT) -- 0.5 threshold shown
+
+       0.95 |#                              #                            
+            ||                             #|                            
+            ||                            #||                            
+            ||                           #|||                        #   
+            ||                           ||||                        |   
+       0.57 ||                          #||||                        |   
+            ||                         #|||||#                      #|   
+            ||#                        |||||||    #     ###         ||   
+            |||  # # ## ##             |||||||    |   ##|||  ###   #||# #
+            |||##|#|#||#||####  ##   ##|||||||# ##|###|||||##|||###||||#|
+       0.20 ||||||||||||||||||##||###||||||||||#|||||||||||||||||||||||||
+            +------------------------------------------------------------
+             (0.50 threshold = protective)
+
+  EXPOSURE TIMELINE SUMMARY
+            Candles |   Duration | Phase                     | Context
+    ----------------+------------+---------------------------+---------------------
+         0-54     |       55h | FULL (0.8-1.0)            | 
+        55-59     |        5h | MODERATE (0.5-0.8)        | 
+        60-64     |        5h | REDUCED (0.3-0.5)         | 
+        65-79     |       15h | MINIMAL (0.2-0.3)         | 
+        80-99     |       20h | REDUCED (0.3-0.5)         | 
+       100-109    |       10h | MINIMAL (0.2-0.3)         | 
+       110-119    |       10h | REDUCED (0.3-0.5)         | 
+       120-124    |        5h | MINIMAL (0.2-0.3)         | 
+       125-144    |       20h | REDUCED (0.3-0.5)         | 
+       145-149    |        5h | MINIMAL (0.2-0.3)         | 
+       150-184    |       35h | REDUCED (0.3-0.5)         | 
+       185-304    |      120h | MINIMAL (0.2-0.3)         | <-- WORST HOUR
+       305-309    |        5h | REDUCED (0.3-0.5)         | 
+       310-339    |       30h | MODERATE (0.5-0.8)        | 
+       340-369    |       30h | FULL (0.8-1.0)            | 
+       370-379    |       10h | REDUCED (0.3-0.5)         | 
+       380-419    |       40h | MINIMAL (0.2-0.3)         | 
+       420-429    |       10h | REDUCED (0.3-0.5)         | 
+       430-439    |       10h | MINIMAL (0.2-0.3)         | 
+       440-504    |       65h | REDUCED (0.3-0.5)         | 
+       505-509    |        5h | MINIMAL (0.2-0.3)         | 
+       510-514    |        5h | REDUCED (0.3-0.5)         | 
+       515-529    |       15h | MINIMAL (0.2-0.3)         | 
+       530-554    |       25h | REDUCED (0.3-0.5)         | 
+       555-584    |       30h | MINIMAL (0.2-0.3)         | 
+       585-604    |       20h | REDUCED (0.3-0.5)         | 
+       605-614    |       10h | MODERATE (0.5-0.8)        | 
+       615-624    |       10h | REDUCED (0.3-0.5)         | 
+       625-634    |       10h | MINIMAL (0.2-0.3)         | 
+       635-679    |       45h | REDUCED (0.3-0.5)         | 
+       680-694    |       15h | MODERATE (0.5-0.8)        | 
+       695-709    |       15h | FULL (0.8-1.0)            | 
+       710-714    |        5h | MODERATE (0.5-0.8)        | 
+       715-719    |        5h | REDUCED (0.3-0.5)         | 
+       720-720    |        1h | MINIMAL (0.2-0.3)         | 
+
+  DHS TRAJECTORY TABLE (last 15 rebalance points before worst hour)
+        t-Xh |    DHS |    Exp | Bar                  | Constellation             | Regime
+    ---------+--------+--------+----------------------+---------------------------+-----------
+    t-   71h | 0.7218 | 0.3009 | ######               | PATTERN_BREAK                          | CRASH
+    t-   66h | 0.7267 | 0.2870 | #####                | PATTERN_BREAK                          | CRASH
+    t-   61h | 0.7143 | 0.2691 | #####                | PATTERN_BREAK                          | CRASH
+    t-   56h | 0.6494 | 0.2276 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   51h | 0.7212 | 0.2400 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   46h | 0.7299 | 0.2604 | #####                | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-   41h | 0.7169 | 0.2682 | #####                | PATTERN_BREAK                          | CRASH
+    t-   36h | 0.7279 | 0.2702 | #####                | PATTERN_BREAK                          | CRASH
+    t-   31h | 0.6931 | 0.2281 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   26h | 0.6442 | 0.2112 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   21h | 0.7208 | 0.2208 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   16h | 0.7362 | 0.2426 | ####                 | PATTERN_BREAK                          | CRASH
+    t-   11h | 0.6993 | 0.2545 | #####                | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-    6h | 0.7105 | 0.2594 | #####                | DIP_AND_RECOVERY (eff:PATTERN_BREAK)      | CRASH
+    t-    1h | 0.7157 | 0.2744 | #####                | PATTERN_BREAK                          | CRASH
+
+==============================================================================
+Engine: ReNoUn Finance v2 (crash regime + ConstellationTracker)
+Window: 50 candles, rebalance every 5 candles, 1h timeframe
+Exposure: asymmetric EMA smoothing + persistence scoring + 0.20 floor
+Patent Pending #63/923,592
+==============================================================================
