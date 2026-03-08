@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir -r requirements-api.txt
 COPY api.py api_config.py auth.py rate_limiter.py usage.py stripe_billing.py server.py ./
 COPY api_client.py email_sender.py pre_tag.py weighted_analysis.py ./
 COPY renoun_analyze.py renoun_compare.py renoun_store.py renoun_format.py feature_extraction.py steering.py ./
+COPY renoun_finance.py renoun_exposure.py renoun_score.py renoun_stream.py ./
 COPY tool_definition.json ./
 COPY entrypoint.sh ./
 RUN chmod +x entrypoint.sh
