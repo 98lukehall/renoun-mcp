@@ -113,7 +113,7 @@ class TestToolDiscovery:
 
     def test_version_constants(self):
         from server import TOOL_VERSION, ENGINE_VERSION, SCHEMA_VERSION
-        assert TOOL_VERSION == "1.3.0"
+        assert TOOL_VERSION == "1.3.1"
         assert SCHEMA_VERSION == "1.1"
 
     # --- renoun_steer discovery regression (investigated 3+ sessions) ---
