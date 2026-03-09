@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — ReNoUn | Harrison Collab</title>
+<meta name="description" content="ReNoUn pricing — free 7-day trial of the finance tracker, then $7.99/month. Structural observability for conversations and financial risk.">
+<meta property="og:title" content="ReNoUn Pricing — Harrison Collab">
+<meta property="og:description" content="Free 7-day trial. $7.99/month for the full finance risk overlay.">
+<meta property="og:image" content="https://harrisoncollab.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #F7F6F3;
+  --bg-elevated: #EFEEE9;
+  --bg-card: #FDFCFA;
+  --border: #E8E5DC;
+  --text: #0B1D3A;
+  --text-dim: #4A5568;
+  --text-muted: #8B92A0;
+  --accent: #7C9A6E;
+  --accent2: #5B7B9E;
+  --recurrence: #C9956F;
+  --novelty: #7C9A6E;
+  --unity: #5B7B9E;
+  --radius: 12px;
+  --radius-lg: 20px;
+}
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
+
+/* Nav */
+nav {
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(247, 246, 243, 0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-decoration: none;
+}
+.nav-logo img { width: 36px; height: 36px; border-radius: 8px; }
+.nav-logo span { color: var(--text); }
+.nav-back {
+  color: var(--text-dim);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.nav-back:hover { color: var(--text); }
+
+/* Hero */
+.pricing-hero {
+  text-align: center;
+  padding: 5rem 2rem 2rem;
+}
+.pricing-hero h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.75rem;
+}
+.pricing-hero p {
+  color: var(--text-dim);
+  font-size: 1.15rem;
+  max-width: 550px;
+  margin: 0 auto;
+}
+
+/* Cards */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 3rem auto;
+  padding: 0 2rem;
+}
+.pricing-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.pricing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(11, 29, 58, 0.08);
+}
+.pricing-card.featured {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 8px 30px rgba(124, 154, 110, 0.12);
+}
+.pricing-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.plan-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+.plan-desc {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+.plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin-bottom: 0.25rem;
+}
+.plan-price .amount {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+.plan-price .period {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.plan-trial {
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+.plan-features {
+  list-style: none;
+  flex: 1;
+  margin-bottom: 2rem;
+}
+.plan-features li {
+  padding: 0.5rem 0;
+  font-size: 0.925rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+.plan-features li::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin-top: 2px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.plan-features .included::before {
+  background: rgba(124, 154, 110, 0.15);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237C9A6E' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.plan-features .excluded::before {
+  background: rgba(139, 146, 160, 0.1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238B92A0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6L6 18M6 6l12 12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.plan-features .excluded { color: var(--text-muted); }
+
+.plan-btn {
+  display: block;
+  text-align: center;
+  padding: 0.9rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  border: none;
+}
+.plan-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+.plan-btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.plan-btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--border);
+}
+.plan-btn-outline:hover { border-color: var(--text-muted); }
+
+/* Comparison */
+.comparison {
+  max-width: 900px;
+  margin: 1rem auto 4rem;
+  padding: 0 2rem;
+}
+.comparison h3 {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.comparison-table th,
+.comparison-table td {
+  padding: 0.85rem 1.25rem;
+  text-align: left;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+.comparison-table th {
+  background: var(--bg-elevated);
+  font-weight: 600;
+  color: var(--text);
+}
+.comparison-table td:nth-child(2),
+.comparison-table td:nth-child(3),
+.comparison-table td:nth-child(4),
+.comparison-table th:nth-child(2),
+.comparison-table th:nth-child(3),
+.comparison-table th:nth-child(4) {
+  text-align: center;
+  width: 120px;
+}
+.comparison-table tr:last-child td { border-bottom: none; }
+.check { color: var(--accent); font-weight: 700; }
+.dash { color: var(--text-muted); }
+
+/* FAQ */
+.faq {
+  max-width: 700px;
+  margin: 0 auto 5rem;
+  padding: 0 2rem;
+}
+.faq h3 {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+.faq-item {
+  border-bottom: 1px solid var(--border);
+  padding: 1.25rem 0;
+}
+.faq-item:last-child { border-bottom: none; }
+.faq-q {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+}
+.faq-a {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+/* Footer */
+footer {
+  margin-top: auto;
+  padding: 2rem;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+footer a { color: var(--text-dim); margin: 0 0.75rem; }
+footer a:hover { color: var(--text); }
+
+@media (max-width: 720px) {
+  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
+  .pricing-hero { padding: 3.5rem 1.5rem 1rem; }
+  .comparison-table { font-size: 0.8rem; }
+  .comparison-table th, .comparison-table td { padding: 0.65rem 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="logo.png" alt="Harrison Collab">
+    Harrison <span>Collab</span>
+  </a>
+  <a href="index.html" class="nav-back">&larr; Back to Home</a>
+</nav>
+
+<div class="pricing-hero">
+  <h1>Simple, transparent pricing</h1>
+  <p>Try the open-source engine free, or subscribe for full access. Both plans include a 7-day free trial.</p>
+</div>
+
+<div class="pricing-grid">
+  <!-- Free Plan -->
+  <div class="pricing-card">
+    <div class="plan-name">Open Source</div>
+    <div class="plan-desc">Self-hosted 17-channel structural analysis. Run it yourself, no account needed.</div>
+    <div class="plan-price">
+      <span class="amount">$0</span>
+      <span class="period">/ forever</span>
+    </div>
+    <div class="plan-trial">&nbsp;</div>
+    <ul class="plan-features">
+      <li class="included">17-channel structural analysis</li>
+      <li class="included">Health checks and quick triage</li>
+      <li class="included">Session comparison (A/B diffs)</li>
+      <li class="included">8 constellation pattern detection</li>
+      <li class="excluded">Hosted API access</li>
+      <li class="excluded">Real-time steering monitor</li>
+      <li class="excluded">Finance risk overlay</li>
+      <li class="excluded">Priority support</li>
+    </ul>
+    <a href="https://github.com/98lukehall/renoun-mcp" target="_blank" rel="noopener" class="plan-btn plan-btn-outline">View on GitHub</a>
+  </div>
+
+  <!-- Convo Plan -->
+  <div class="pricing-card">
+    <div class="plan-name">Conversation Pro</div>
+    <div class="plan-desc">Full hosted API access with real-time steering, pattern tracking, and longitudinal analysis.</div>
+    <div class="plan-price">
+      <span class="amount">$4.99</span>
+      <span class="period">/ month</span>
+    </div>
+    <div class="plan-trial">7-day free trial &mdash; cancel anytime</div>
+    <ul class="plan-features">
+      <li class="included">Everything in Open Source</li>
+      <li class="included">Hosted API (no setup)</li>
+      <li class="included">Real-time steering monitor</li>
+      <li class="included">Longitudinal pattern tracking</li>
+      <li class="included">Weighted &amp; segmented analysis</li>
+      <li class="included">Email support</li>
+      <li class="excluded">Finance risk overlay</li>
+      <li class="excluded">Exposure scalar output</li>
+    </ul>
+    <a href="https://buy.stripe.com/price_1T6xE2PRynFelY1KjFIVHGrB" class="plan-btn plan-btn-outline" style="border-color:var(--accent);color:var(--accent);">Start Free Trial</a>
+  </div>
+
+  <!-- Finance Plan -->
+  <div class="pricing-card featured">
+    <div class="pricing-badge">7-Day Free Trial</div>
+    <div class="plan-name">Finance Risk Overlay</div>
+    <div class="plan-desc">Everything in Conversation Pro, plus the validated financial risk engine with exposure scalar.</div>
+    <div class="plan-price">
+      <span class="amount">$7.99</span>
+      <span class="period">/ month</span>
+    </div>
+    <div class="plan-trial">7-day free trial &mdash; cancel anytime</div>
+    <ul class="plan-features">
+      <li class="included">Everything in Conversation Pro</li>
+      <li class="included">OHLCV structural risk analysis</li>
+      <li class="included">Exposure scalar (0.0&ndash;1.0) output</li>
+      <li class="included">Constellation persistence scoring</li>
+      <li class="included">Asymmetric EMA smoothing</li>
+      <li class="included">Crash regime detection</li>
+      <li class="included">Black swan validated (31/31 DD reduction)</li>
+      <li class="included">Priority support</li>
+    </ul>
+    <a href="https://buy.stripe.com/price_1T9DVBPRynFelY1KcKi8iWxO" class="plan-btn plan-btn-primary">Start Free Trial</a>
+  </div>
+</div>
+
+<div class="comparison">
+  <h3>Feature comparison</h3>
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Free</th>
+        <th>Convo $4.99</th>
+        <th>Finance $7.99</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>17-channel structural analysis</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Health check &amp; triage</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Session comparison</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>8 constellation detection</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Hosted API access</td><td class="dash">&mdash;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Real-time steering</td><td class="dash">&mdash;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Longitudinal pattern tracking</td><td class="dash">&mdash;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Finance OHLCV analysis</td><td class="dash">&mdash;</td><td class="dash">&mdash;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Exposure scalar output</td><td class="dash">&mdash;</td><td class="dash">&mdash;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Constellation persistence</td><td class="dash">&mdash;</td><td class="dash">&mdash;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Crash regime detection</td><td class="dash">&mdash;</td><td class="dash">&mdash;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Priority support</td><td class="dash">&mdash;</td><td class="dash">&mdash;</td><td class="check">&#10003;</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="faq">
+  <h3>Frequently asked questions</h3>
+  <div class="faq-item">
+    <div class="faq-q">What happens after the 7-day trial?</div>
+    <div class="faq-a">Your subscription continues at $4.99/month (Conversation Pro) or $7.99/month (Finance). You can cancel anytime before the trial ends and won't be charged. The open-source engine is always free.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">What's the difference between free and paid?</div>
+    <div class="faq-a">The open-source engine runs locally and includes the core 17-channel analysis. Paid plans add hosted API access (no setup), real-time steering, longitudinal tracking, and the Finance plan adds the full risk overlay with exposure scalar.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">What does the finance overlay actually do?</div>
+    <div class="faq-a">It takes OHLCV candle data and measures structural disorder in price action using the same 17-channel engine. It outputs an exposure scalar (0.0&ndash;1.0) that reduces position sizing during structural instability. Validated on 31 datasets across 9 crypto assets and 5 timeframes with 100% drawdown reduction.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Is this financial advice?</div>
+    <div class="faq-a">No. ReNoUn is a structural observability tool, not a trading signal. It measures disorder, not direction. It's designed as a risk overlay to pair with your existing strategy. Always do your own research.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Can I cancel anytime?</div>
+    <div class="faq-a">Yes. Cancel anytime from your account. No contracts, no commitments.</div>
+  </div>
+</div>
+
+<footer>
+  <div>
+    <a href="index.html">Home</a>
+    <a href="https://github.com/98lukehall/renoun-mcp" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://pypi.org/project/renoun-mcp/" target="_blank" rel="noopener">PyPI</a>
+    <a href="mailto:98lukehall@gmail.com">Contact</a>
+  </div>
+  <p style="margin-top:0.75rem;">&copy; 2026 Harrison Collab. All rights reserved. Patent Pending #63/923,592.</p>
+</footer>
+
+</body>
+</html>

@@ -27,9 +27,9 @@
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --bg: #FFFFF0;
-  --bg-elevated: #F8F7F0;
-  --bg-card: #FFFFFF;
+  --bg: #F7F6F3;
+  --bg-elevated: #EFEEE9;
+  --bg-card: #FDFCFA;
   --border: #E8E5DC;
   --text: #0B1D3A;
   --text-dim: #4A5568;
@@ -77,7 +77,7 @@ nav {
   align-items: center;
   justify-content: space-between;
   backdrop-filter: blur(20px);
-  background: rgba(255, 255, 240, 0.9);
+  background: rgba(247, 246, 243, 0.9);
   border-bottom: 1px solid var(--border);
   transition: all 0.3s;
 }
@@ -96,7 +96,7 @@ nav.scrolled { padding: 0.6rem 2rem; }
   height: 36px;
   border-radius: 8px;
 }
-.nav-logo span { color: var(--accent); }
+.nav-logo span { color: var(--text); }
 .nav-links { display: flex; gap: 2rem; align-items: center; }
 .nav-links a {
   color: var(--text-dim);
@@ -1134,7 +1134,7 @@ footer {
     <a href="#projects">Projects</a>
     <a href="#demo">Try It</a>
     <a href="#contact">Contact</a>
-    <a href="#renoun" class="nav-cta">Get Started</a>
+    <a href="pricing.html" class="nav-cta">Get Started</a>
   </div>
   <button class="mobile-menu-btn" id="menuBtn" aria-label="Toggle menu">&#9776;</button>
 </nav>
