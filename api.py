@@ -611,6 +611,56 @@ async def welcome_page(session_id: str = ""):
 
 
 # ---------------------------------------------------------------------------
+# Smithery server-card (MUST be outside try block — always available)
+# ---------------------------------------------------------------------------
+
+@app.get("/.well-known/mcp/server-card.json")
+async def mcp_server_card():
+    """MCP server card for Smithery discovery. No auth required."""
+    return {
+        "name": "renoun",
+        "description": "Structural observability for AI conversations and financial risk management. 17-channel pattern detection, loop/convergence/scattering detection, real-time steering, and OHLCV risk overlay with validated 31/31 drawdown reduction.",
+        "version": TOOL_VERSION,
+        "homepage": "https://harrisoncollab.com",
+        "repository": "https://github.com/98lukehall/renoun-mcp",
+        "transport": {
+            "type": "streamable-http",
+            "url": "/mcp",
+            "authentication": {
+                "type": "bearer",
+                "description": "API key starting with rn_live_. Get one at https://harrisoncollab.com. Free tier: 50 calls/day.",
+            },
+        },
+        "tools": [
+            {
+                "name": "renoun_analyze",
+                "description": "Full 17-channel structural analysis of conversations. Returns DHS, 8 constellation patterns, breakthrough moments, and actionable recommendations.",
+            },
+            {
+                "name": "renoun_health_check",
+                "description": "Sub-50ms structural triage. Returns one health score, one pattern, one summary.",
+            },
+            {
+                "name": "renoun_compare",
+                "description": "Structural A/B test between two conversations. DHS delta, constellation transitions, channel shifts.",
+            },
+            {
+                "name": "renoun_pattern_query",
+                "description": "Longitudinal pattern history. Save, query, filter, and trend analysis results over time.",
+            },
+            {
+                "name": "renoun_steer",
+                "description": "Real-time inference steering. Rolling window monitoring with automatic signals when structural thresholds are crossed.",
+            },
+            {
+                "name": "renoun_finance_analyze",
+                "description": "Structural analysis of OHLCV financial data. Returns DHS, constellations, stress levels, and exposure recommendations. Validated 31/31 drawdown reduction across 9 crypto assets and 5 timeframes.",
+            },
+        ],
+    }
+
+
+# ---------------------------------------------------------------------------
 # MCP HTTP Transport (for Smithery and other MCP-over-HTTP clients)
 # ---------------------------------------------------------------------------
 #
@@ -653,24 +703,6 @@ try:
 
     # Insert raw Starlette route at the FRONT of the router — accepts all methods
     app.router.routes.insert(0, Route("/mcp", endpoint=_handle_mcp_request, methods=["GET", "POST", "DELETE"]))
-
-    # Smithery server-card for discovery
-    @app.get("/.well-known/mcp/server-card.json")
-    async def mcp_server_card():
-        """MCP server card for Smithery discovery."""
-        return {
-            "name": "renoun",
-            "description": "Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence across 17 channels.",
-            "version": TOOL_VERSION,
-            "transport": {
-                "type": "streamable-http",
-                "url": "/mcp",
-            },
-            "tools": [
-                {"name": t["name"], "description": t["description"]}
-                for t in TOOL_DEFS
-            ],
-        }
 
     # Start the session manager as a background task
     import asyncio
