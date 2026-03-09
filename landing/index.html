@@ -835,6 +835,104 @@ footer {
 .footer-links a { color: var(--text-muted); font-size: 0.85rem; }
 .footer-links a:hover { color: var(--text); }
 .footer-copy { color: var(--text-muted); font-size: 0.8rem; }
+
+/* Email Signup Section */
+.email-section {
+  background: linear-gradient(135deg, #0A0E17 0%, #111827 50%, #0A0E17 100%);
+  padding: 0;
+}
+.email-section-inner {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+.email-section h2 {
+  color: #F9FAFB;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+.email-section h2 .re { color: #C9956F; }
+.email-section h2 .no { color: #7C9A6E; }
+.email-section h2 .un { color: #5B7B9E; }
+.email-subtitle {
+  color: #9CA3AF;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+.email-form {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+.email-form input[type="email"] {
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  color: #F9FAFB;
+  min-width: 300px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.email-form input[type="email"]::placeholder { color: #6B7280; }
+.email-form input[type="email"]:focus {
+  border-color: #7C9A6E;
+  box-shadow: 0 0 0 3px rgba(124, 154, 110, 0.2);
+}
+.email-form button {
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #7C9A6E, #5B7B9E);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+.email-form button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(124, 154, 110, 0.35);
+}
+.email-privacy {
+  color: #6B7280;
+  font-size: 0.75rem;
+  margin-top: 0.75rem;
+}
+.email-tags {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+.email-tag {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #9CA3AF;
+}
+.email-success {
+  display: none;
+  color: #10B981;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 1rem;
+}
 /* Financial Risk Overlay Section */
 #finance { padding-top: 4rem; }
 .finance-header { text-align: center; margin-bottom: 4rem; }
@@ -980,6 +1078,9 @@ footer {
   .finance-steps { grid-template-columns: 1fr; gap: 1rem; }
   .finance-arrow { display: none; }
   .footer-inner { flex-direction: column; gap: 1rem; }
+  .email-section-inner { padding: 2rem 1rem; }
+  .email-form { flex-direction: column; }
+  .email-form input[type="email"] { min-width: auto; }
   .nav-links { display: none; }
   .mobile-menu-btn { display: block; }
   .nav-links.open {
@@ -1016,6 +1117,7 @@ footer {
     <a href="#finance">Finance</a>
     <a href="#projects">Projects</a>
     <a href="#demo">Try It</a>
+    <a href="#contact">Contact</a>
     <a href="#renoun" class="nav-cta">Get Started</a>
   </div>
   <button class="mobile-menu-btn" id="menuBtn" aria-label="Toggle menu">&#9776;</button>
@@ -1302,6 +1404,37 @@ Minimum 10 turns for analysis.'></textarea>
     </div>
   </div>
 </section>
+
+<!-- Contact Section -->
+<section class="email-section" id="contact">
+  <div class="email-section-inner">
+    <h2>Get in <span class="re">Touch</span></h2>
+    <p style="color:rgba(255,255,255,0.75); font-size:1.1rem; max-width:520px; margin:0 auto 2rem;">
+      Questions about ReNoUn, enterprise licensing, or partnership opportunities? Reach out directly.
+    </p>
+    <a href="mailto:98lukehall@gmail.com" class="btn" style="
+      display:inline-flex; align-items:center; gap:0.5rem;
+      background:linear-gradient(135deg,#C9956F,#5B7B9E);
+      color:#fff; font-size:1.05rem; padding:0.85rem 2rem;
+      border-radius:8px; text-decoration:none; font-weight:600;
+      transition:transform 0.2s, box-shadow 0.2s;
+    " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 25px rgba(201,149,111,0.35)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4l-10 8L2 4"/></svg>
+      98lukehall@gmail.com
+    </a>
+    <div style="margin-top:1.5rem; display:flex; justify-content:center; gap:1.5rem; flex-wrap:wrap;">
+      <a href="https://github.com/98lukehall/renoun-mcp" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.6); text-decoration:none; font-size:0.95rem; transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.6)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle; margin-right:0.3rem;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+      <a href="https://pypi.org/project/renoun-mcp/" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.6); text-decoration:none; font-size:0.95rem; transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.6)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle; margin-right:0.3rem;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        PyPI
+      </a>
+    </div>
+  </div>
+</section>
+
 <footer>
   <div class="footer-inner">
     <div class="footer-logo">
@@ -1313,6 +1446,7 @@ Minimum 10 turns for analysis.'></textarea>
       <a href="#finance">Finance</a>
       <a href="#projects">Projects</a>
       <a href="#demo">Demo</a>
+      <a href="#contact">Contact</a>
     </div>
     <div class="footer-copy">&copy; 2026 Harrison Collab. All rights reserved.</div>
   </div>
