@@ -1,0 +1,122 @@
+# ReNoUn — Structural Pattern Analysis Engine (Full Reference)
+
+> ReNoUn is a 17-channel structural analysis MCP server for AI conversations and financial risk management. It measures Recurrence, Novelty, and Unity patterns without analyzing semantic content. Patent Pending #63/923,592.
+
+## What ReNoUn Does
+
+ReNoUn is a structural observability engine. It measures HOW conversations and financial data behave structurally — not WHAT they contain. It detects loops, breakthroughs, convergence, and disorder across 17 independent channels.
+
+For conversations: feed utterances as [{speaker, text}] arrays. ReNoUn returns a Dialectical Health Score (0.0-1.0), constellation patterns, per-channel breakdowns, and actionable recommendations.
+
+For finance: feed OHLCV candle data (open, high, low, close, volume). ReNoUn returns the same structural analysis plus an exposure scalar (0.0-1.0) that reduces position sizing during structural disorder.
+
+## The 17 Channels
+
+### Recurrence (Re1-Re5) — Pattern Repetition
+- Re1 Lexical: vocabulary recycling rate
+- Re2 Syntactic: sentence structure repetition
+- Re3 Rhythmic: turn length and pacing consistency
+- Re4 Turn-Taking: predictability of speaker alternation
+- Re5 Self-Interruption: repeated self-correction patterns
+
+### Novelty (No1-No6) — New Information
+- No1 Lexical: new vocabulary entering the conversation
+- No2 Syntactic: new sentence structures appearing
+- No3 Rhythmic: sudden pacing changes
+- No4 Turn-Taking: unexpected interaction shifts
+- No5 Self-Interruption: new correction patterns
+- No6 Global Vocabulary Rarity: statistically rare words
+
+### Unity (Un1-Un6) — Coherence
+- Un1 Lexical Cohesion: vocabulary linking across turns
+- Un2 Syntactic Cohesion: consistent grammar patterns
+- Un3 Rhythmic Cohesion: pacing consistency over time
+- Un4 Interactional Cohesion: stable interaction patterns
+- Un5 Anaphoric Cohesion: building on prior turns
+- Un6 Global Structural Symmetry: first-half/second-half mirroring
+
+All channels produce values between 0.0 and 1.0. Higher = more of that quality.
+
+## The 8 Constellation Patterns
+
+1. CLOSED_LOOP — High recurrence, low novelty, high unity. Conversation stuck in a repetitive cycle.
+2. HIGH_SYMMETRY — Balanced but rigid structure. Predictable but not productive.
+3. PATTERN_BREAK — Recurrence drops, novelty spikes. A disruption in established patterns.
+4. CONVERGENCE — Unity rising across channels. Productive movement toward integration.
+5. SCATTERING — Low recurrence, low unity, high novelty. Structure is fragmenting.
+6. REPEATED_DISRUPTION — Multiple novelty spikes without recovery. Escalating instability.
+7. DIP_AND_RECOVERY — Temporary disruption followed by restored stability. Resilience.
+8. SURFACE_VARIATION — Surface-level novelty without deep structural change.
+
+## Finance Module
+
+The finance module applies the same 17-channel engine to OHLCV candle data. Key outputs:
+
+- DHS: structural health of price action (0.0-1.0)
+- Exposure scalar: recommended position sizing multiplier (0.0-1.0)
+- Constellation: current structural state of the market
+- Stress level: structural stress intensity
+- Crash regime: boolean flag for extreme structural disorder
+
+### Validated Results
+- 31/31 datasets showed drawdown reduction
+- Average improvement: 5.7 percentage points
+- Black swan events caught: COVID crash (Mar 2020), LUNA collapse (May 2022), FTX contagion (Nov 2022), China mining ban (May 2021) — 7/8 events validated
+- Cost: approximately 0.1 Sharpe ratio
+- Assets tested: BTC, ETH, SOL, BNB, ADA, DOGE, XRP, AVAX, DOT
+- Timeframes tested: 1m, 5m, 1h, 4h, 1d
+
+### Exposure Scalar Details
+- v2 uses asymmetric EMA smoothing: alpha_down=0.6 (fast de-risk), alpha_up=0.3 (slow recovery)
+- Constellation persistence scoring: 1 window = 0.5x weight, 2 windows = 0.8x, 3+ = 1.0x
+- Floor of 0.20: exposure never goes to zero
+
+## MCP Tools API
+
+### renoun_analyze
+Input: {utterances: [{speaker: string, text: string}], weights?: number[], tags?: object[], weighting_mode?: "weight"|"exclude"|"segment"}
+Output: {dhs: number, loop: number, channels: object, constellations: array, recommendations: array}
+
+### renoun_health_check
+Input: {utterances: [{speaker: string, text: string}]}
+Output: {dhs: number, assessment: string, dominant_constellation: string, summary: string}
+
+### renoun_compare
+Input: {utterances_a?: array, utterances_b?: array, result_a?: object, result_b?: object}
+Output: {delta_dhs: number, trend: string, constellation_transition: string, top_channel_shifts: array}
+
+### renoun_pattern_query
+Input: {action: "save"|"list"|"query"|"trend", session_name?: string, result?: object, tags?: string[]}
+Output: varies by action
+
+### renoun_steer
+Input: {action: "add_turns"|"get_status"|"clear_session"|"list_sessions", session_id?: string, utterances?: array}
+Output: {signals: array, buffer_size: number, windows_analyzed: number}
+
+### renoun_finance_analyze
+Input: {klines: [{open, high, low, close, volume}], symbol?: string, timeframe?: "1m"|"5m"|"15m"|"1h"|"4h"|"1d"}
+Output: {dhs: number, constellations: array, stress: number, exposure: {raw_v1: number, smoothed_v2: number}, crash_regime: boolean}
+
+## Installation
+
+pip install renoun-mcp
+
+Or run directly:
+python -m renoun_mcp
+
+## Pricing
+
+- Open Source: $0 forever — self-hosted, full 17-channel conversation analysis
+- Conversation Pro: $4.99/month — hosted API, real-time steering, pattern tracking, 7-day free trial
+- Finance Risk Overlay: $7.99/month — everything in Pro plus OHLCV analysis and exposure scalar, 7-day free trial
+
+## Links
+
+- Website: https://harrisoncollab.com
+- GitHub: https://github.com/98lukehall/renoun-mcp
+- PyPI: https://pypi.org/project/renoun-mcp/
+- Pricing: https://harrisoncollab.com/pricing.html
+- Contact: 98lukehall@gmail.com
+- Author: Luke Hall, Harrison Collab
+- Patent: Pending #63/923,592
+- Version: 1.3.1
