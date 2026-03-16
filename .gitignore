@@ -68,7 +68,7 @@ vite.config.js
 node_modules/
 package.json
 package-lock.json
-index.html
+/index.html
 
 # Plugin dev (separate repo)
 renoun-plugin/
