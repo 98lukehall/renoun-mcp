@@ -22,20 +22,23 @@ from typing import Optional
 
 KEYS_FILE = Path.home() / ".renoun" / "api_keys.json"
 KEY_PREFIX = "rn_live_"
+AGENT_KEY_PREFIX = "rn_agent_"
+VALID_KEY_PREFIXES = (KEY_PREFIX, AGENT_KEY_PREFIX)
 
 # Tier definitions
 TIERS = {
     "free": {
-        "tools": ["renoun_health_check"],
+        "tools": ["renoun_health_check", "regime_live"],
         "daily_limit": 20,
         "max_turns": 200,
         "rate_limits": {
             "renoun_health_check": 10,       # calls/min
             "renoun_finance_analyze": 10,    # calls/min
+            "regime_live": 10,               # calls/min
         },
     },
     "pro": {
-        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze"],
+        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze", "regime", "regime_live", "regime_batch"],
         "daily_limit": 1000,
         "max_turns": 500,
         "price": "$4.99/mo",
@@ -46,14 +49,37 @@ TIERS = {
             "renoun_pattern_query": 60,      # calls/min
             "renoun_steer": 120,             # calls/min
             "renoun_finance_analyze": 100,   # calls/min
+            "regime": 100,                   # calls/min
+            "regime_live": 100,              # calls/min
+            "regime_batch": 30,              # calls/min
         },
     },
     "enterprise": {
-        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze"],
+        "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze", "regime", "regime_live", "regime_batch"],
         "daily_limit": -1,  # unlimited
         "max_turns": -1,  # unlimited
         "rate_limits": {
             "renoun_finance_analyze": -1,    # unlimited
+        },
+    },
+    "agent": {
+        "tools": [
+            "renoun_finance_analyze",
+            "regime",
+            "regime_live",
+            "regime_batch",
+        ],
+        "rate_limit": 1000,         # calls per hour
+        "max_turns": -1,            # not applicable for finance
+        "daily_limit": 10000,       # hard daily cap
+        "free_daily": 50,           # 50 free calls/day
+        "price_per_call": 0.02,     # $0.02 per call beyond free tier
+        "metered": True,            # flag for usage-based billing
+        "rate_limits": {
+            "renoun_finance_analyze": 100,
+            "regime": 100,
+            "regime_live": 100,
+            "regime_batch": 30,
         },
     },
 }
@@ -109,9 +135,52 @@ def create_key(tier: str = "free", owner: str = "") -> dict:
     return {"raw_key": raw_key, "key_id": key_id, "tier": tier, "owner": owner}
 
 
+def create_agent_key(email: str, agent_name: str, stripe_customer_id: str = "",
+                     stripe_subscription_item_id: str = "") -> dict:
+    """Create a new agent API key with rn_agent_ prefix.
+
+    Returns dict with raw_key, key_id, tier, owner, agent_name.
+    """
+    raw_key = AGENT_KEY_PREFIX + secrets.token_hex(16)
+    key_id = AGENT_KEY_PREFIX + secrets.token_hex(8)
+
+    data = _load_keys()
+    entry = {
+        "key_id": key_id,
+        "key_hash": _hash_key(raw_key),
+        "tier": "agent",
+        "owner": email,
+        "agent_name": agent_name,
+        "stripe_customer_id": stripe_customer_id,
+        "stripe_subscription_item_id": stripe_subscription_item_id,
+        "created_at": datetime.utcnow().isoformat(),
+        "active": True,
+        "public": True,
+    }
+    data["keys"].append(entry)
+    _save_keys(data)
+
+    return {"raw_key": raw_key, "key_id": key_id, "tier": "agent", "owner": email, "agent_name": agent_name}
+
+
+def find_agent_key_by_email(email: str) -> Optional[dict]:
+    """Find an existing active agent key by email. Returns key entry or None."""
+    data = _load_keys()
+    for entry in data["keys"]:
+        if entry.get("owner") == email and entry.get("tier") == "agent" and entry.get("active"):
+            return entry
+    return None
+
+
+def count_agent_keys_by_email(email: str) -> int:
+    """Count how many active agent keys an email has."""
+    data = _load_keys()
+    return sum(1 for e in data["keys"] if e.get("owner") == email and e.get("tier") == "agent" and e.get("active"))
+
+
 def validate_key(raw_key: str) -> Optional[dict]:
     """Validate an API key. Returns key metadata if valid, None if invalid."""
-    if not raw_key or not raw_key.startswith(KEY_PREFIX):
+    if not raw_key or not any(raw_key.startswith(p) for p in VALID_KEY_PREFIXES):
         return None
 
     key_hash = _hash_key(raw_key)

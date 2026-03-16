@@ -24,6 +24,7 @@ Patent Pending #63/923,592 — core engine is proprietary.
 """
 
 import time
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import FastAPI, Request, HTTPException, Depends
@@ -35,14 +36,17 @@ from api_config import (
     API_HOST, API_PORT, CORS_ORIGINS,
     API_VERSION, API_TITLE, API_DESCRIPTION,
 )
-from auth import validate_key, is_tool_allowed, get_tier_config
+from auth import validate_key, is_tool_allowed, get_tier_config, create_agent_key, find_agent_key_by_email, count_agent_keys_by_email
 from rate_limiter import limiter
-from usage import log_request
+from usage import log_request, metered_tracker
 from server import (
     tool_analyze, tool_health_check, tool_compare, tool_pattern_query, tool_steer,
     tool_finance_analyze,
     TOOL_VERSION, ENGINE_VERSION, SCHEMA_VERSION,
+    TOOL_HANDLERS,
 )
+from regime_cache import regime_cache
+from regime_service import analysis_to_regime_response, compute_portfolio_action, META_BLOCK
 
 
 # ---------------------------------------------------------------------------
@@ -50,9 +54,16 @@ from server import (
 # ---------------------------------------------------------------------------
 
 app = FastAPI(
-    title=API_TITLE,
-    description=API_DESCRIPTION,
-    version=API_VERSION,
+    title="ReNoUn Regime Classification API",
+    description=(
+        "Structural regime classification for crypto markets. "
+        "98% accuracy across 240+ live predictions. "
+        "Pre-trade risk check: returns regime (bounded/active/unstable) "
+        "and action (proceed/reduce/avoid)."
+    ),
+    version="1.3.1",
+    contact={"name": "Harrison Collab", "email": "98lukehall@gmail.com", "url": "https://harrisoncollab.com"},
+    license_info={"name": "Proprietary — Patent Pending #63/923,592"},
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -64,6 +75,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def add_agent_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Agent-Compatible"] = "true"
+    response.headers["X-Agent-Free-Tier"] = "50/day"
+    response.headers["X-Agent-Provision-URL"] = "/v1/keys/provision"
+    response.headers["X-Agent-Docs"] = "https://harrisoncollab.com/agents"
+    return response
 
 
 # ---------------------------------------------------------------------------
@@ -179,6 +200,37 @@ class FinanceAnalyzeRequest(BaseModel):
     include_exposure: bool = Field(True, description="Include exposure recommendation")
 
 
+class RegimeRequest(BaseModel):
+    symbol: str = Field("BTCUSDT", description="Trading pair symbol")
+    timeframe: str = Field("1h", description="Candle timeframe")
+    klines: list[dict] = Field(..., min_length=10, description="OHLCV candle data")
+    include_full: bool = Field(False, description="Include full analysis in response")
+
+class RegimeBatchRequest(BaseModel):
+    symbols: list[str] = Field(..., min_length=1, max_length=10, description="Binance USDT pairs")
+    timeframe: str = Field("1h", description="Candle timeframe")
+    include_full: bool = Field(False, description="Include full analysis per asset")
+
+class TraceEventRequest(BaseModel):
+    agent_id: str = Field(..., description="Agent identifier")
+    event_type: str = Field(..., description="Event type: user_message, assistant_message, tool_call, etc.")
+    content: str = Field(..., description="Event content")
+    timestamp: Optional[str] = Field(None, description="ISO 8601 timestamp")
+
+
+class AgentMonitorRequest(BaseModel):
+    action: str = Field("ingest", description="ingest|dashboard|configure|clear")
+    session_id: str = Field("default", description="Session identifier for the agent workflow")
+    events: Optional[list[TraceEventRequest]] = Field(None, description="Trace events to ingest")
+    config: Optional[dict] = Field(None, description="Configuration overrides for thresholds and monitoring mode")
+
+
+class AlignmentClassifyRequest(BaseModel):
+    utterances: list[Utterance] = Field(..., min_length=4, description="Conversation turns (minimum 4)")
+    include_bridge_signals: bool = Field(True, description="Include per-speaker revision traces, challenge detection, vocabulary adoption")
+    include_renoun_raw: bool = Field(False, description="Include full ReNoUn channel-level analysis")
+
+
 # ---------------------------------------------------------------------------
 # Helper
 # ---------------------------------------------------------------------------
@@ -238,10 +290,17 @@ async def status():
     return {
         "status": "ok",
         "server": "renoun",
-        "version": API_VERSION,
+        "version": "1.3.1",
         "engine_version": ENGINE_VERSION,
         "tool_version": TOOL_VERSION,
         "schema_version": SCHEMA_VERSION,
+        "agent_info": {
+            "provision_url": "/v1/keys/provision",
+            "free_tier": "50 calls/day",
+            "regime_endpoint": "/v1/regime/live/{symbol}",
+            "docs": "/docs",
+            "accuracy": "98% across 240+ predictions",
+        },
     }
 
 
@@ -393,6 +452,311 @@ async def finance_analyze(body: FinanceAnalyzeRequest, key_info: dict = Depends(
 
 
 # ---------------------------------------------------------------------------
+# Regime Endpoints (Agent-Optimized)
+# ---------------------------------------------------------------------------
+
+def _run_regime_analysis(klines: list[dict], symbol: str, timeframe: str,
+                          include_full: bool, key_info: dict, endpoint: str) -> JSONResponse:
+    """Shared logic for regime endpoints: auth, analyze, translate, respond."""
+    check_tool_access(key_info, "regime")
+    check_rate_limit(key_info)
+
+    start = time.time()
+    analysis = tool_finance_analyze({
+        "klines": klines,
+        "symbol": symbol,
+        "timeframe": timeframe,
+        "include_exposure": True,
+    })
+    elapsed_ms = (time.time() - start) * 1000
+
+    limiter.record(key_info["key_id"], key_info["tier"])
+    if key_info["tier"] == "agent":
+        tier_config = get_tier_config("agent")
+        metered_tracker.record_call(key_info["key_id"], endpoint, tier_config)
+    has_error = "error" in analysis
+    log_request(
+        key_id=key_info["key_id"], tier=key_info["tier"],
+        endpoint=endpoint, response_time_ms=elapsed_ms,
+        status_code=400 if has_error else 200,
+        error=analysis["error"]["message"] if has_error else "",
+    )
+
+    if has_error:
+        return JSONResponse(status_code=400, content=analysis)
+
+    result = analysis_to_regime_response(analysis, symbol, timeframe, include_full)
+    usage = limiter.get_usage(key_info["key_id"], key_info["tier"])
+
+    headers = {
+        "X-ReNoUn-Regime": result["regime"],
+        "X-ReNoUn-Action": result["action"],
+        "X-RateLimit-Remaining": str(usage["remaining"]),
+        "X-Response-Time-Ms": str(round(elapsed_ms, 2)),
+    }
+    stability = result.get("stability", {})
+    if stability:
+        headers["X-ReNoUn-Stability"] = str(stability.get("stability_score", ""))
+        headers["X-ReNoUn-Halflife"] = str(int(stability.get("halflife_minutes", 0)))
+        headers["X-ReNoUn-Urgency"] = stability.get("urgency", "")
+
+    return JSONResponse(content=result, headers=headers)
+
+
+@app.get("/v1/regime/live/{symbol}",
+         summary="Live regime classification",
+         description="Current structural regime for a Binance trading pair.",
+         tags=["Regime"],
+         responses={
+             200: {"description": "Regime classification with action recommendation"},
+             429: {"description": "Rate limit exceeded"},
+         },
+         openapi_extra={
+             "x-agent-use-case": "Call before any crypto trade to check structural regime.",
+             "x-agent-frequency": "Before each trade, or every 1-5 minutes for monitoring.",
+             "x-agent-action-field": "action (proceed/reduce/avoid)",
+         })
+async def regime_live(
+    symbol: str,
+    timeframe: str = "1h",
+    include_full: bool = False,
+    key_info: dict = Depends(require_auth),
+):
+    """Live regime classification for a Binance symbol. Cached 60s."""
+    check_tool_access(key_info, "regime_live")
+    check_rate_limit(key_info)
+
+    # Check cache
+    cached = regime_cache.get(symbol, timeframe)
+    if cached is not None:
+        usage = limiter.get_usage(key_info["key_id"], key_info["tier"])
+        limiter.record(key_info["key_id"], key_info["tier"])
+        if key_info["tier"] == "agent":
+            tier_config = get_tier_config("agent")
+            metered_tracker.record_call(key_info["key_id"], "/v1/regime/live", tier_config)
+        log_request(key_id=key_info["key_id"], tier=key_info["tier"],
+                    endpoint="/v1/regime/live", status_code=200)
+        headers = {
+            "X-ReNoUn-Regime": cached["regime"],
+            "X-ReNoUn-Action": cached["action"],
+            "X-ReNoUn-Cache": "HIT",
+            "X-RateLimit-Remaining": str(usage["remaining"]),
+        }
+        stability = cached.get("stability", {})
+        if stability:
+            headers["X-ReNoUn-Stability"] = str(stability.get("stability_score", ""))
+            headers["X-ReNoUn-Halflife"] = str(int(stability.get("halflife_minutes", 0)))
+            headers["X-ReNoUn-Urgency"] = stability.get("urgency", "")
+        return JSONResponse(content=cached, headers=headers)
+
+    # Cache miss — fetch from Binance
+    from signal_bot.renoun_signal_bot import fetch_klines
+    klines = fetch_klines(symbol, interval=timeframe, limit=100)
+    if not klines:
+        raise HTTPException(status_code=502, detail={
+            "error": {"type": "upstream_error",
+                      "message": f"Failed to fetch klines for {symbol} from Binance.",
+                      "action": "Check symbol is a valid Binance pair (e.g. BTCUSDT)."}
+        })
+
+    start = time.time()
+    analysis = tool_finance_analyze({
+        "klines": klines, "symbol": symbol,
+        "timeframe": timeframe, "include_exposure": True,
+    })
+    elapsed_ms = (time.time() - start) * 1000
+
+    limiter.record(key_info["key_id"], key_info["tier"])
+    if key_info["tier"] == "agent":
+        tier_config = get_tier_config("agent")
+        metered_tracker.record_call(key_info["key_id"], "/v1/regime/live", tier_config)
+
+    if "error" in analysis:
+        log_request(key_id=key_info["key_id"], tier=key_info["tier"],
+                    endpoint="/v1/regime/live", response_time_ms=elapsed_ms,
+                    status_code=400, error=analysis["error"]["message"])
+        return JSONResponse(status_code=400, content=analysis)
+
+    # Record DHS for momentum tracking before building response
+    dhs_value = analysis.get("dialectical_health", 0.5)
+    regime_cache.record_dhs(symbol, dhs_value)
+    dhs_history = regime_cache.get_dhs_history(symbol)
+
+    result = analysis_to_regime_response(
+        analysis, symbol, timeframe, include_full,
+        recent_dhs_values=dhs_history,
+    )
+    regime_cache.set(symbol, timeframe, result)
+
+    usage = limiter.get_usage(key_info["key_id"], key_info["tier"])
+    log_request(key_id=key_info["key_id"], tier=key_info["tier"],
+                endpoint="/v1/regime/live", response_time_ms=elapsed_ms, status_code=200)
+
+    headers = {
+        "X-ReNoUn-Regime": result["regime"],
+        "X-ReNoUn-Action": result["action"],
+        "X-ReNoUn-Cache": "MISS",
+        "X-RateLimit-Remaining": str(usage["remaining"]),
+        "X-Response-Time-Ms": str(round(elapsed_ms, 2)),
+    }
+    stability = result.get("stability", {})
+    if stability:
+        headers["X-ReNoUn-Stability"] = str(stability.get("stability_score", ""))
+        headers["X-ReNoUn-Halflife"] = str(int(stability.get("halflife_minutes", 0)))
+        headers["X-ReNoUn-Urgency"] = stability.get("urgency", "")
+
+    return JSONResponse(content=result, headers=headers)
+
+
+@app.post("/v1/regime",
+          summary="Regime from OHLCV data",
+          description="Regime classification from your own OHLCV candle data.",
+          tags=["Regime"],
+          openapi_extra={
+              "x-agent-use-case": "Regime check with data from any exchange (not just Binance).",
+          })
+async def regime_classify(body: RegimeRequest, key_info: dict = Depends(require_auth)):
+    """Regime classification from user-provided OHLCV data."""
+    return _run_regime_analysis(
+        klines=body.klines, symbol=body.symbol, timeframe=body.timeframe,
+        include_full=body.include_full, key_info=key_info, endpoint="/v1/regime",
+    )
+
+
+@app.post("/v1/regime/batch",
+          summary="Multi-asset regime batch",
+          description="Regime classification for multiple assets with portfolio-level aggregate.",
+          tags=["Regime"],
+          openapi_extra={
+              "x-agent-use-case": "Portfolio risk assessment. Multi-asset position sizing.",
+          })
+async def regime_batch(body: RegimeBatchRequest, key_info: dict = Depends(require_auth)):
+    """Regime classification for multiple assets with portfolio aggregate."""
+    check_tool_access(key_info, "regime_batch")
+
+    from signal_bot.renoun_signal_bot import fetch_klines
+    from datetime import datetime, timezone
+
+    regimes = {}
+    for symbol in body.symbols:
+        check_rate_limit(key_info)
+
+        # Check cache first
+        cached = regime_cache.get(symbol, body.timeframe)
+        if cached is not None:
+            regimes[symbol] = cached
+            limiter.record(key_info["key_id"], key_info["tier"])
+            if key_info["tier"] == "agent":
+                tier_config = get_tier_config("agent")
+                metered_tracker.record_call(key_info["key_id"], "/v1/regime/batch", tier_config)
+            log_request(key_id=key_info["key_id"], tier=key_info["tier"],
+                        endpoint="/v1/regime/batch", status_code=200)
+            continue
+
+        klines = fetch_klines(symbol, interval=body.timeframe, limit=100)
+        if not klines:
+            regimes[symbol] = {
+                "regime": "unstable", "action": "avoid", "dhs": 0.0, "exposure": 0.0,
+                "constellation": "NONE", "error": f"Failed to fetch {symbol}",
+            }
+            limiter.record(key_info["key_id"], key_info["tier"])
+            if key_info["tier"] == "agent":
+                tier_config = get_tier_config("agent")
+                metered_tracker.record_call(key_info["key_id"], "/v1/regime/batch", tier_config)
+            continue
+
+        analysis = tool_finance_analyze({
+            "klines": klines, "symbol": symbol,
+            "timeframe": body.timeframe, "include_exposure": True,
+        })
+        limiter.record(key_info["key_id"], key_info["tier"])
+        if key_info["tier"] == "agent":
+            tier_config = get_tier_config("agent")
+            metered_tracker.record_call(key_info["key_id"], "/v1/regime/batch", tier_config)
+
+        if "error" in analysis:
+            regimes[symbol] = {
+                "regime": "unstable", "action": "avoid", "dhs": 0.0, "exposure": 0.0,
+                "constellation": "NONE", "error": analysis["error"]["message"],
+            }
+        else:
+            result = analysis_to_regime_response(
+                analysis, symbol, body.timeframe, body.include_full
+            )
+            regime_cache.set(symbol, body.timeframe, result)
+            regimes[symbol] = result
+
+        log_request(key_id=key_info["key_id"], tier=key_info["tier"],
+                    endpoint="/v1/regime/batch", status_code=200)
+
+    portfolio_action, portfolio_exposure, unstable_count = compute_portfolio_action(regimes)
+
+    return JSONResponse(content={
+        "regimes": regimes,
+        "portfolio_action": portfolio_action,
+        "portfolio_exposure": portfolio_exposure,
+        "unstable_count": unstable_count,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "_meta": META_BLOCK,
+    })
+
+
+@app.post("/v1/agent/monitor")
+async def agent_monitor(body: AgentMonitorRequest, key_info: dict = Depends(require_auth)):
+    """Real-time structural health monitoring for AI agent sessions.
+
+    Feed agent trace events incrementally and receive alerts when
+    structural pathologies are detected (stuck loops, oversight loss,
+    scattering, cascading errors).
+    """
+    arguments = {
+        "action": body.action,
+        "session_id": body.session_id,
+    }
+    turn_count = 0
+
+    if body.events is not None:
+        arguments["events"] = [e.model_dump(exclude_none=True) for e in body.events]
+        turn_count = len(body.events)
+    if body.config is not None:
+        arguments["config"] = body.config
+
+    return _run_tool(
+        tool_name="renoun_agent_monitor",
+        handler=TOOL_HANDLERS["renoun_agent_monitor"],
+        arguments=arguments,
+        key_info=key_info,
+        endpoint="/v1/agent/monitor",
+        turn_count=turn_count,
+    )
+
+
+@app.post("/v1/alignment/classify")
+async def alignment_classify(body: AlignmentClassifyRequest, key_info: dict = Depends(require_auth)):
+    """Structural alignment classification using the Life as Ground + ReNoUn bridge.
+
+    Classifies conversations as INTEGRATIVELY_COHERENT, SUPPRESSIVELY_COHERENT,
+    FRAGMENTED, or RIGID. Adds corrigibility scoring, challenge detection,
+    and revision trace analysis on top of base ReNoUn analysis.
+    """
+    utterances = [u.model_dump(exclude_none=True) for u in body.utterances]
+    arguments = {
+        "utterances": utterances,
+        "include_bridge_signals": body.include_bridge_signals,
+        "include_renoun_raw": body.include_renoun_raw,
+    }
+
+    return _run_tool(
+        tool_name="renoun_alignment_classify",
+        handler=TOOL_HANDLERS["renoun_alignment_classify"],
+        arguments=arguments,
+        key_info=key_info,
+        endpoint="/v1/alignment/classify",
+        turn_count=len(utterances),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Billing Endpoints
 # ---------------------------------------------------------------------------
 
@@ -482,6 +846,227 @@ async def billing_portal(body: PortalRequest):
     if "error" in result:
         raise HTTPException(status_code=500, detail={"error": {"type": "billing_error", "message": result["error"]}})
     return result
+
+
+# ---------------------------------------------------------------------------
+# Agent Key Provisioning & Usage
+# ---------------------------------------------------------------------------
+
+import re
+
+# In-memory rate limiting for provisioning endpoint
+_provision_rate: dict = {}  # {ip: [timestamps]}
+
+class ProvisionRequest(BaseModel):
+    email: str = Field(..., description="Agent owner email")
+    agent_name: str = Field(..., description="Name for this agent")
+
+
+@app.post("/v1/keys/provision")
+async def provision_agent_key(body: ProvisionRequest, request: Request):
+    """Provision a free agent API key. No auth required.
+
+    50 free calls/day, $0.02/call after that. No credit card needed to start.
+    Idempotent: same email returns the same key.
+    """
+    # Validate email
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", body.email):
+        raise HTTPException(status_code=400, detail={
+            "error": {"type": "validation_error", "message": "Invalid email format.",
+                      "action": "Provide a valid email address."}
+        })
+
+    # Rate limit provisioning: max 10 per IP per hour
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    _provision_rate.setdefault(client_ip, [])
+    _provision_rate[client_ip] = [t for t in _provision_rate[client_ip] if now - t < 3600]
+    if len(_provision_rate[client_ip]) >= 10:
+        raise HTTPException(status_code=429, detail={
+            "error": {"type": "rate_limited",
+                      "message": "Too many provisioning requests. Max 10 per hour.",
+                      "action": "Wait before provisioning more keys."}
+        })
+
+    # Max 5 keys per email
+    existing_count = count_agent_keys_by_email(body.email)
+    if existing_count >= 5:
+        raise HTTPException(status_code=429, detail={
+            "error": {"type": "limit_reached",
+                      "message": f"Maximum 5 agent keys per email ({existing_count} active).",
+                      "action": "Revoke an existing key or use a different email."}
+        })
+
+    # Idempotent: check if email already has an agent key with same name
+    from auth import _load_keys
+    data = _load_keys()
+    for entry in data["keys"]:
+        if (entry.get("owner") == body.email and entry.get("agent_name") == body.agent_name
+                and entry.get("tier") == "agent" and entry.get("active")):
+            # Return existing — but we need the raw key, which we can't recover.
+            # Return key_id and instructions instead.
+            _provision_rate[client_ip].append(now)
+            return {
+                "api_key": f"(previously provisioned — key_id: {entry['key_id']})",
+                "key_id": entry["key_id"],
+                "tier": "agent",
+                "note": "This email+agent_name already has an active key. If you lost the key, revoke and re-provision.",
+                "free_daily": 50,
+                "rate_limit_hourly": 1000,
+                "daily_limit": 10000,
+                "price_per_call": "$0.02 (beyond free tier)",
+                "billing_url": "https://harrisoncollab.com/billing",
+                "docs_url": "https://harrisoncollab.com/agents",
+            }
+
+    # Create new key
+    key_data = create_agent_key(email=body.email, agent_name=body.agent_name)
+    _provision_rate[client_ip].append(now)
+
+    log_request(key_id=key_data["key_id"], tier="agent",
+                endpoint="/v1/keys/provision", status_code=200)
+
+    return {
+        "api_key": key_data["raw_key"],
+        "tier": "agent",
+        "free_daily": 50,
+        "rate_limit_hourly": 1000,
+        "daily_limit": 10000,
+        "price_per_call": "$0.02 (beyond free tier)",
+        "billing_url": "https://harrisoncollab.com/billing",
+        "docs_url": "https://harrisoncollab.com/agents",
+        "quick_start": f"curl -H 'Authorization: Bearer {key_data['raw_key']}' https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT",
+    }
+
+
+@app.get("/v1/usage")
+async def usage_dashboard(key_info: dict = Depends(require_auth)):
+    """Check usage stats for your API key."""
+    tier_config = get_tier_config(key_info["tier"])
+
+    if key_info["tier"] == "agent":
+        usage = metered_tracker.get_usage(key_info["key_id"], tier_config)
+        monthly = metered_tracker.get_monthly_estimate(key_info["key_id"], tier_config)
+        return {
+            "tier": "agent",
+            "today": usage["today"],
+            "this_month": monthly,
+            "by_endpoint": usage["by_endpoint"],
+        }
+
+    # Non-agent tiers: basic usage from rate limiter
+    usage = limiter.get_usage(key_info["key_id"], key_info["tier"])
+    return {
+        "tier": key_info["tier"],
+        "today": {
+            "total_calls": usage["used"],
+            "daily_limit": usage["limit"],
+            "remaining": usage["remaining"],
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# Webhook Endpoints
+# ---------------------------------------------------------------------------
+
+from webhooks import register_webhook, list_webhooks, delete_webhook, dispatch_webhook, get_webhook, sign_payload, VALID_EVENTS
+
+
+class WebhookRegisterRequest(BaseModel):
+    url: str = Field(..., description="URL to receive webhook payloads")
+    symbols: list[str] = Field(..., min_length=1, max_length=10, description="Binance symbols to watch")
+    events: list[str] = Field(..., min_length=1, description="Event types to subscribe to")
+    secret: str = Field(..., description="Signing secret for HMAC-SHA256 verification")
+
+
+@app.post("/v1/webhooks/register", tags=["Webhooks"])
+async def webhook_register(body: WebhookRegisterRequest, key_info: dict = Depends(require_auth)):
+    """Register a webhook for regime change notifications."""
+    result = register_webhook(
+        api_key_id=key_info["key_id"],
+        url=body.url,
+        symbols=body.symbols,
+        events=body.events,
+        secret=body.secret,
+    )
+    if "error" in result:
+        raise HTTPException(status_code=400, detail={"error": {"type": "webhook_error", "message": result["error"]}})
+    return result
+
+
+@app.get("/v1/webhooks", tags=["Webhooks"])
+async def webhook_list(key_info: dict = Depends(require_auth)):
+    """List all registered webhooks for this API key."""
+    return {"webhooks": list_webhooks(key_info["key_id"])}
+
+
+@app.delete("/v1/webhooks/{webhook_id}", tags=["Webhooks"])
+async def webhook_delete(webhook_id: str, key_info: dict = Depends(require_auth)):
+    """Deactivate a webhook."""
+    if delete_webhook(key_info["key_id"], webhook_id):
+        return {"deleted": True, "webhook_id": webhook_id}
+    raise HTTPException(status_code=404, detail={"error": {"type": "not_found", "message": f"Webhook {webhook_id} not found."}})
+
+
+@app.post("/v1/webhooks/{webhook_id}/test", tags=["Webhooks"])
+async def webhook_test(webhook_id: str, key_info: dict = Depends(require_auth)):
+    """Send a test payload to verify the webhook URL works."""
+    wh = get_webhook(webhook_id)
+    if not wh or wh["api_key_id"] != key_info["key_id"]:
+        raise HTTPException(status_code=404, detail={"error": {"type": "not_found", "message": "Webhook not found."}})
+
+    test_payload = {
+        "event": "test",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "symbol": wh["symbols"][0] if wh["symbols"] else "BTCUSDT",
+        "message": "This is a test webhook payload from ReNoUn.",
+    }
+    dispatch_webhook(wh, test_payload)
+    return {"sent": True, "webhook_id": webhook_id, "url": wh["url"]}
+
+
+# ---------------------------------------------------------------------------
+# Agent Leaderboard
+# ---------------------------------------------------------------------------
+
+@app.get("/v1/agents/leaderboard", tags=["Agents"])
+async def agent_leaderboard():
+    """Public leaderboard of most active agents. No auth required."""
+    from auth import _load_keys
+    from datetime import datetime, timezone
+
+    data = _load_keys()
+    agents = []
+    total_agents = 0
+
+    for entry in data["keys"]:
+        if entry.get("tier") != "agent" or not entry.get("active"):
+            continue
+        total_agents += 1
+        if entry.get("public", True) is False:
+            continue
+
+        agents.append({
+            "agent_name": entry.get("agent_name", "unnamed"),
+            "member_since": entry.get("created_at", "")[:7],  # YYYY-MM
+        })
+
+    # Sort by name for now (usage tracking would require more state)
+    agents.sort(key=lambda a: a["agent_name"])
+
+    # Add rank
+    for i, agent in enumerate(agents):
+        agent["rank"] = i + 1
+
+    return {
+        "leaderboard": agents[:20],
+        "stats": {
+            "total_agents": total_agents,
+            "regime_accuracy": "98%",
+        },
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -655,6 +1240,14 @@ async def mcp_server_card():
             {
                 "name": "renoun_finance_analyze",
                 "description": "Structural analysis of OHLCV financial data. Returns DHS, constellations, stress levels, and exposure recommendations. Validated 31/31 drawdown reduction across 9 crypto assets and 5 timeframes.",
+            },
+            {
+                "name": "renoun_agent_monitor",
+                "description": "Real-time structural health monitoring for AI agent sessions. Feed trace events and receive alerts for stuck loops, oversight loss, scattering, and cascading errors.",
+            },
+            {
+                "name": "renoun_alignment_classify",
+                "description": "Structural alignment classification. Classifies conversations as integrative, suppressive, fragmented, or rigid with corrigibility scoring.",
             },
         ],
     }

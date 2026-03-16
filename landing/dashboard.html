@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReNoUn Dashboard — Live Structural Regime Classification</title>
+<meta name="description" content="Live structural regime classifications for BTC, ETH, SOL, DOGE, XRP. 6-hour delayed feed. 98% regime accuracy across 240+ predictions.">
+<meta property="og:title" content="ReNoUn Dashboard — Live Regime Classification">
+<meta property="og:description" content="Watch structural regime detection in real-time. 98% accuracy. Free 6h-delayed feed.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0B1D3A;
+  --bg-card: #122649;
+  --bg-elevated: #1A3258;
+  --border: #1E3A5F;
+  --text: #E8EDF4;
+  --text-dim: #8BA3C4;
+  --text-muted: #5A7A9E;
+  --accent: #7C9A6E;
+  --accent-glow: rgba(124, 154, 110, 0.3);
+  --bounded: #7C9A6E;
+  --active: #C9956F;
+  --unstable: #C75050;
+  --radius: 10px;
+}
+html { font-size: 16px; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+code, .mono { font-family: 'JetBrains Mono', monospace; }
+
+/* Header */
+.dash-header {
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.dash-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  text-decoration: none;
+  color: var(--text);
+}
+.dash-logo img { width: 32px; height: 32px; border-radius: 8px; }
+.dash-logo span { font-weight: 700; font-size: 1rem; letter-spacing: -0.02em; }
+.dash-meta {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.dash-meta .stat {
+  text-align: center;
+}
+.dash-meta .stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+.dash-meta .stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.delay-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  background: rgba(199, 80, 80, 0.15);
+  border: 1px solid rgba(199, 80, 80, 0.3);
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #E8A0A0;
+}
+.live-badge {
+  background: rgba(124, 154, 110, 0.15);
+  border-color: rgba(124, 154, 110, 0.3);
+  color: #A8CFA0;
+}
+.upgrade-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.45rem 1rem;
+  background: linear-gradient(135deg, var(--accent), #5B7B9E);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.upgrade-link:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(124, 154, 110, 0.3); }
+
+/* Grid */
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.2rem;
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Asset card */
+.asset-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  transition: border-color 0.2s;
+}
+.asset-card:hover { border-color: var(--text-muted); }
+.asset-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+.asset-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.asset-price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  color: var(--text-dim);
+}
+.regime-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.regime-bounded {
+  background: rgba(124, 154, 110, 0.15);
+  border: 1px solid rgba(124, 154, 110, 0.3);
+  color: var(--bounded);
+}
+.regime-active {
+  background: rgba(201, 149, 111, 0.15);
+  border: 1px solid rgba(201, 149, 111, 0.3);
+  color: var(--active);
+}
+.regime-unstable {
+  background: rgba(199, 80, 80, 0.15);
+  border: 1px solid rgba(199, 80, 80, 0.3);
+  color: var(--unstable);
+}
+
+/* DHS bar */
+.dhs-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+.dhs-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  width: 30px;
+  flex-shrink: 0;
+}
+.dhs-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dhs-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.dhs-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  width: 38px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Details */
+.asset-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.detail-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.detail-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+/* Timeline */
+.timeline-section {
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.timeline-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.timeline-filter {
+  display: flex;
+  gap: 0.5rem;
+}
+.timeline-filter button {
+  padding: 0.3rem 0.8rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.timeline-filter button.active,
+.timeline-filter button:hover {
+  background: var(--bg-elevated);
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+.timeline-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.timeline-table th {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.timeline-table td {
+  padding: 0.5rem 0.8rem;
+  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  border-bottom: 1px solid rgba(30, 58, 95, 0.5);
+  color: var(--text-dim);
+}
+.timeline-table tr:hover td { background: rgba(26, 50, 88, 0.4); }
+.transition-arrow { color: var(--text-muted); margin: 0 0.2rem; }
+
+/* Accuracy section */
+.accuracy-section {
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.accuracy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+}
+.accuracy-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+}
+.accuracy-card h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+}
+.accuracy-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0;
+}
+.accuracy-row .label { font-size: 0.8rem; color: var(--text-dim); }
+.accuracy-row .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* CTA banner */
+.cta-banner {
+  margin: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.cta-banner h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.cta-banner p {
+  color: var(--text-dim);
+  margin-bottom: 1.2rem;
+  font-size: 0.95rem;
+}
+.cta-features {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.cta-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+.cta-feature .check { color: var(--accent); }
+
+/* Footer */
+.dash-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+.dash-footer a { color: var(--text-dim); text-decoration: none; }
+.dash-footer a:hover { color: var(--text); }
+
+/* Loading */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.loading .spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.8rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dash-grid { grid-template-columns: 1fr; padding: 1rem; }
+  .accuracy-grid { grid-template-columns: 1fr; }
+  .dash-header { padding: 1rem; }
+  .timeline-section, .accuracy-section { padding: 1rem; }
+  .cta-banner { margin: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="dash-header">
+  <a href="/" class="dash-logo">
+    <img src="logo.png" alt="ReNoUn">
+    <span>ReNoUn Dashboard</span>
+  </a>
+  <div class="dash-meta">
+    <div class="stat">
+      <div class="stat-val" id="metaAccuracy">--</div>
+      <div class="stat-label">Regime Accuracy</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="metaTotal">--</div>
+      <div class="stat-label">Predictions Graded</div>
+    </div>
+    <div class="delay-badge" id="delayBadge">
+      <span>&#9679;</span> 6h delayed
+    </div>
+    <a href="#upgrade" class="upgrade-link">Get Real-Time &#8594;</a>
+  </div>
+</header>
+
+<!-- Asset Cards -->
+<div class="dash-grid" id="assetGrid">
+  <div class="loading"><div class="spinner"></div>Loading signals...</div>
+</div>
+
+<!-- Regime Transition Timeline -->
+<div class="timeline-section">
+  <div class="timeline-header">
+    <div class="timeline-title">Regime Transitions (Last 48h)</div>
+    <div class="timeline-filter">
+      <button class="active" onclick="filterTimeline('all', this)">All</button>
+      <button onclick="filterTimeline('BTC', this)">BTC</button>
+      <button onclick="filterTimeline('ETH', this)">ETH</button>
+      <button onclick="filterTimeline('SOL', this)">SOL</button>
+    </div>
+  </div>
+  <table class="timeline-table">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Asset</th>
+        <th>Transition</th>
+        <th>DHS</th>
+        <th>Regime</th>
+      </tr>
+    </thead>
+    <tbody id="timelineBody">
+      <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Accuracy Breakdown -->
+<div class="accuracy-section">
+  <div class="accuracy-grid" id="accuracyGrid">
+    <!-- Filled by JS -->
+  </div>
+</div>
+
+<!-- CTA Banner -->
+<div class="cta-banner" id="upgrade">
+  <h3>Get Real-Time Regime Classification</h3>
+  <p>You're seeing data delayed by 6 hours. Upgrade for real-time API access, webhook alerts on regime shifts, and all timeframes.</p>
+  <div class="cta-features">
+    <div class="cta-feature"><span class="check">&#10003;</span> Real-time regime feed</div>
+    <div class="cta-feature"><span class="check">&#10003;</span> Webhook alerts on shifts</div>
+    <div class="cta-feature"><span class="check">&#10003;</span> All timeframes (1m&ndash;1d)</div>
+    <div class="cta-feature"><span class="check">&#10003;</span> Custom asset pairs</div>
+  </div>
+  <a href="mailto:98lukehall@gmail.com?subject=ReNoUn%20Real-Time%20Access" class="upgrade-link" style="font-size:1rem; padding:0.7rem 2rem;">Request Early Access &#8594;</a>
+</div>
+
+<!-- Footer -->
+<footer class="dash-footer">
+  <p>ReNoUn measures structural regimes, not price direction. Not financial advice. Patent Pending #63/923,592.</p>
+  <p style="margin-top:0.5rem;"><a href="/">harrisoncollab.com</a> &middot; <a href="https://x.com/98lukehall" target="_blank">@98lukehall on X</a> &middot; <a href="https://github.com/98lukehall/renoun-mcp" target="_blank">GitHub</a></p>
+</footer>
+
+<script>
+// ============================================================
+// ReNoUn Dashboard — Client-side renderer
+// ============================================================
+// Reads from signals_public.json (6h-delayed export from bot)
+// This file is generated by the bot's export_public_json() function.
+
+const DATA_URL = 'signals_public.json';
+
+const REGIME_MAP = {
+  'CLOSED_LOOP':          { regime: 'bounded',  desc: 'Range-bound' },
+  'HIGH_SYMMETRY':        { regime: 'bounded',  desc: 'Tight equilibrium' },
+  'CONVERGENCE':          { regime: 'active',   desc: 'Trend-active' },
+  'SURFACE_VARIATION':    { regime: 'bounded',  desc: 'Choppy but bounded' },
+  'DIP_AND_RECOVERY':     { regime: 'active',   desc: 'Recovery regime' },
+  'SCATTERING':           { regime: 'unstable', desc: 'Structure fragmenting' },
+  'REPEATED_DISRUPTION':  { regime: 'unstable', desc: 'Unstable' },
+  'PATTERN_BREAK':        { regime: 'active',   desc: 'Regime shift' },
+  'NOMINAL':              { regime: 'bounded',  desc: 'No strong signal' },
+};
+
+const SHORT_PATTERNS = {
+  'CONVERGENCE': 'CONVG', 'HIGH_SYMMETRY': 'SYMM', 'CLOSED_LOOP': 'LOOP',
+  'SCATTERING': 'SCAT', 'REPEATED_DISRUPTION': 'DISRUPT',
+  'SURFACE_VARIATION': 'SURFACE', 'DIP_AND_RECOVERY': 'RECOV',
+  'PATTERN_BREAK': 'BREAK', 'NOMINAL': 'NOM',
+};
+
+function formatPrice(p) {
+  if (!p) return '--';
+  if (p >= 10000) return '$' + p.toLocaleString('en-US', {maximumFractionDigits: 0});
+  if (p >= 100) return '$' + p.toFixed(0);
+  if (p >= 1) return '$' + p.toFixed(2);
+  return '$' + p.toFixed(4);
+}
+
+function dhsColor(dhs) {
+  if (dhs >= 0.75) return 'var(--bounded)';
+  if (dhs >= 0.55) return 'var(--active)';
+  if (dhs >= 0.35) return 'var(--unstable)';
+  return '#C75050';
+}
+
+function renderAssetCard(name, data) {
+  const constellation = data.constellation || 'NOMINAL';
+  const info = REGIME_MAP[constellation] || { regime: 'bounded', desc: 'Unknown' };
+  const dhs = data.dhs || 0.5;
+  const exposure = data.exposure_scalar || 1.0;
+  const price = data.price;
+
+  return `
+    <div class="asset-card">
+      <div class="asset-top">
+        <div>
+          <div class="asset-name">${name}</div>
+          <div class="asset-price">${formatPrice(price)}</div>
+        </div>
+        <span class="regime-badge regime-${info.regime}">${info.regime}</span>
+      </div>
+      <div class="dhs-row">
+        <span class="dhs-label">DHS</span>
+        <div class="dhs-bar-bg">
+          <div class="dhs-bar-fill" style="width:${dhs*100}%; background:${dhsColor(dhs)};"></div>
+        </div>
+        <span class="dhs-val" style="color:${dhsColor(dhs)}">${dhs.toFixed(2)}</span>
+      </div>
+      <div class="asset-details">
+        <div class="detail-item">
+          <span class="detail-label">Pattern</span>
+          <span class="detail-val">${SHORT_PATTERNS[constellation] || constellation}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Exposure</span>
+          <span class="detail-val">${(exposure*100).toFixed(0)}%</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Regime</span>
+          <span class="detail-val">${info.desc}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Persistence</span>
+          <span class="detail-val">${data.persistence_count ? 'x'+data.persistence_count : '--'}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTimeline(transitions, filter) {
+  const tbody = document.getElementById('timelineBody');
+  let rows = transitions;
+  if (filter && filter !== 'all') {
+    rows = rows.filter(t => t.asset === filter);
+  }
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No transitions in this period</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.slice(0, 30).map(t => {
+    const info = REGIME_MAP[t.to] || { regime: 'bounded', desc: '' };
+    const time = new Date(t.timestamp).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12: false });
+    return `<tr>
+      <td>${time}</td>
+      <td>${t.asset}</td>
+      <td>${SHORT_PATTERNS[t.from]||t.from} <span class="transition-arrow">&rarr;</span> ${SHORT_PATTERNS[t.to]||t.to}</td>
+      <td style="color:${dhsColor(t.dhs)}">${t.dhs.toFixed(2)}</td>
+      <td><span class="regime-badge regime-${info.regime}" style="font-size:0.7rem;padding:0.15rem 0.5rem;">${info.regime}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAccuracy(scores) {
+  const grid = document.getElementById('accuracyGrid');
+  if (!scores || !scores.summary) {
+    grid.innerHTML = '<div class="accuracy-card"><h3>Accuracy</h3><p style="color:var(--text-muted);">No data yet</p></div>';
+    return;
+  }
+  const s = scores.summary;
+
+  // By regime type
+  let byType = '';
+  const types = {'bounded': 0, 'active': 0, 'unstable': 0};
+  const typeTotals = {'bounded': 0, 'active': 0, 'unstable': 0};
+  if (scores.by_type) {
+    for (const [t, d] of Object.entries(scores.by_type)) {
+      byType += `<div class="accuracy-row"><span class="label">${t}</span><span class="value">${d.accuracy}</span></div>`;
+    }
+  }
+
+  // By asset
+  let byAsset = '';
+  if (s.by_asset) {
+    for (const [a, d] of Object.entries(s.by_asset)) {
+      const acc = d.total > 0 ? ((d.correct / d.total) * 100).toFixed(0) + '%' : '--';
+      byAsset += `<div class="accuracy-row"><span class="label">${a}</span><span class="value" style="color:${parseInt(acc)>=90?'var(--bounded)':parseInt(acc)>=70?'var(--active)':'var(--unstable)'}">${acc}</span></div>`;
+    }
+  }
+
+  // By constellation
+  let byConst = '';
+  if (s.by_constellation) {
+    for (const [c, d] of Object.entries(s.by_constellation)) {
+      const acc = d.total > 0 ? ((d.correct / d.total) * 100).toFixed(0) + '%' : '--';
+      byConst += `<div class="accuracy-row"><span class="label">${SHORT_PATTERNS[c]||c}</span><span class="value">${acc}</span></div>`;
+    }
+  }
+
+  grid.innerHTML = `
+    <div class="accuracy-card">
+      <h3>By Asset</h3>
+      ${byAsset || '<p style="color:var(--text-muted);">No data</p>'}
+    </div>
+    <div class="accuracy-card">
+      <h3>By Constellation</h3>
+      ${byConst || '<p style="color:var(--text-muted);">No data</p>'}
+    </div>
+    <div class="accuracy-card">
+      <h3>Overall</h3>
+      <div class="accuracy-row"><span class="label">Total graded</span><span class="value">${s.total_graded || 0}</span></div>
+      <div class="accuracy-row"><span class="label">Correct</span><span class="value" style="color:var(--bounded)">${s.correct || 0}</span></div>
+      <div class="accuracy-row"><span class="label">Partial</span><span class="value" style="color:var(--active)">${s.partial || 0}</span></div>
+      <div class="accuracy-row"><span class="label">Wrong</span><span class="value" style="color:var(--unstable)">${s.wrong || 0}</span></div>
+      <div class="accuracy-row" style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--border);">
+        <span class="label" style="font-weight:600;color:var(--text);">Accuracy</span>
+        <span class="value" style="font-size:1.1rem;color:var(--bounded)">${s.accuracy ? (s.accuracy * 100).toFixed(1) + '%' : '--'}</span>
+      </div>
+    </div>
+  `;
+}
+
+let allTransitions = [];
+
+function filterTimeline(filter, btn) {
+  document.querySelectorAll('.timeline-filter button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderTimeline(allTransitions, filter);
+}
+
+async function loadDashboard() {
+  try {
+    const resp = await fetch(DATA_URL + '?t=' + Date.now());
+    if (!resp.ok) throw new Error('Failed to load data');
+    const data = await resp.json();
+
+    // Render asset cards
+    const grid = document.getElementById('assetGrid');
+    const latest = data.latest || {};
+    const assets = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP'];
+    grid.innerHTML = assets
+      .filter(a => latest[a])
+      .map(a => renderAssetCard(a, latest[a]))
+      .join('');
+
+    // Update header stats
+    if (data.scores) {
+      const s = data.scores.summary || {};
+      document.getElementById('metaAccuracy').textContent = s.accuracy ? (s.accuracy * 100).toFixed(0) + '%' : '--';
+      document.getElementById('metaTotal').textContent = s.total_graded || '--';
+    }
+
+    // Timeline
+    allTransitions = data.transitions || [];
+    renderTimeline(allTransitions, 'all');
+
+    // Accuracy
+    renderAccuracy(data.scores);
+
+    // Update delay badge with data timestamp
+    if (data.delayed_until) {
+      const d = new Date(data.delayed_until);
+      document.getElementById('delayBadge').innerHTML =
+        '<span>&#9679;</span> Data as of ' + d.toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false });
+    }
+
+  } catch (err) {
+    document.getElementById('assetGrid').innerHTML = `
+      <div style="grid-column:1/-1; text-align:center; padding:4rem 2rem;">
+        <p style="color:var(--text-muted); font-size:1.1rem; margin-bottom:1rem;">Dashboard data not available yet.</p>
+        <p style="color:var(--text-muted); font-size:0.85rem;">The signal bot exports <code>signals_public.json</code> every hour. Once it's running, this dashboard populates automatically.</p>
+      </div>
+    `;
+  }
+}
+
+// Load on page ready
+loadDashboard();
+// Auto-refresh every 5 minutes
+setInterval(loadDashboard, 300000);
+</script>
+</body>
+</html>

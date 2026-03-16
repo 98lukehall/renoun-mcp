@@ -25,10 +25,19 @@ _orig_home = os.environ.get("HOME")
 _tmpdir = tempfile.mkdtemp(prefix="renoun_api_test_")
 os.environ["HOME"] = _tmpdir
 
+import auth as _auth_module
+from pathlib import Path
+
+# CRITICAL: auth.KEYS_FILE may have been redirected by a prior test module
+# (e.g. test_stripe.py). Force it to this test's temp dir for isolation.
+_api_test_keys_file = Path(_tmpdir) / ".renoun" / "api_keys.json"
+_auth_module.KEYS_FILE = _api_test_keys_file
+
 from fastapi.testclient import TestClient
 from api import app
 from auth import create_key
 from rate_limiter import limiter
+import pytest
 
 
 # ---------------------------------------------------------------------------
@@ -70,6 +79,14 @@ def setup_keys():
 
 
 FREE_KEY, PRO_KEY, ENTERPRISE_KEY = setup_keys()
+
+
+@pytest.fixture(autouse=True)
+def _ensure_keys_file():
+    """Ensure auth.KEYS_FILE points to our temp dir, not another test module's."""
+    _auth_module.KEYS_FILE = _api_test_keys_file
+    yield
+    _auth_module.KEYS_FILE = _api_test_keys_file
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReNoUn Agent Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0A0E17; --bg-card: #111827; --border: #1F2937;
+  --text: #F9FAFB; --text-dim: #9CA3AF; --text-muted: #6B7280;
+  --accent: #7C9A6E; --radius: 12px;
+}
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+a { color: var(--accent); text-decoration: none; }
+.container { max-width: 800px; margin: 0 auto; padding: 0 24px; }
+nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid var(--border); }
+nav .logo { font-weight: 700; font-size: 18px; }
+nav .links a { color: var(--text-dim); margin-left: 24px; font-size: 14px; }
+h1 { font-size: 36px; font-weight: 700; text-align: center; padding: 60px 0 16px; }
+.subtitle { text-align: center; color: var(--text-dim); margin-bottom: 40px; }
+.stats { display: flex; justify-content: center; gap: 40px; margin-bottom: 40px; }
+.stat { text-align: center; }
+.stat .value { font-size: 32px; font-weight: 700; color: var(--accent); }
+.stat .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
+.rank { font-weight: 600; color: var(--accent); }
+.cta { text-align: center; margin: 48px 0; }
+.cta a { display: inline-block; background: var(--accent); color: #fff; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; }
+footer { border-top: 1px solid var(--border); padding: 32px; text-align: center; color: var(--text-muted); font-size: 12px; }
+#loading { text-align: center; color: var(--text-dim); padding: 40px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">ReNoUn</div>
+  <div class="links">
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="agents.html">Agents</a>
+  </div>
+</nav>
+
+<div class="container">
+  <h1>Agent Leaderboard</h1>
+  <p class="subtitle">Active agents using ReNoUn for pre-trade structural risk checks</p>
+
+  <div class="stats">
+    <div class="stat"><div class="value" id="totalAgents">--</div><div class="label">Total Agents</div></div>
+    <div class="stat"><div class="value" id="accuracy">98%</div><div class="label">Regime Accuracy</div></div>
+  </div>
+
+  <div id="loading">Loading leaderboard...</div>
+  <table id="leaderboard" style="display:none">
+    <thead><tr><th>#</th><th>Agent</th><th>Member Since</th></tr></thead>
+    <tbody id="leaderboardBody"></tbody>
+  </table>
+
+  <div class="cta">
+    <a href="agents.html">Join the Leaderboard</a>
+  </div>
+</div>
+
+<footer>&copy; 2026 Harrison Collab. Patent Pending #63/923,592.</footer>
+
+<script>
+const API = "https://web-production-817e2.up.railway.app";
+fetch(`${API}/v1/agents/leaderboard`)
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById("totalAgents").textContent = data.stats.total_agents;
+    document.getElementById("loading").style.display = "none";
+    const table = document.getElementById("leaderboard");
+    const tbody = document.getElementById("leaderboardBody");
+
+    if (data.leaderboard.length === 0) {
+      document.getElementById("loading").style.display = "block";
+      document.getElementById("loading").textContent = "No public agents yet. Be the first!";
+      return;
+    }
+
+    table.style.display = "table";
+    data.leaderboard.forEach(agent => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="rank">${agent.rank}</td><td>${agent.agent_name}</td><td>${agent.member_since}</td>`;
+      tbody.appendChild(tr);
+    });
+  })
+  .catch(() => {
+    document.getElementById("loading").textContent = "Could not load leaderboard.";
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReNoUn for AI Trading Agents</title>
+<meta name="description" content="Pre-trade structural risk check for autonomous trading agents. 98% regime accuracy. 50 free calls/day.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0A0E17; --bg-card: #111827; --border: #1F2937;
+  --text: #F9FAFB; --text-dim: #9CA3AF; --text-muted: #6B7280;
+  --accent: #7C9A6E; --accent-hover: #6A8A5E;
+  --red: #EF4444; --yellow: #F59E0B;
+  --radius: 12px;
+}
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: 'JetBrains Mono', monospace; }
+.container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+/* Nav */
+nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid var(--border); }
+nav .logo { font-weight: 700; font-size: 18px; color: var(--text); }
+nav .links a { color: var(--text-dim); margin-left: 24px; font-size: 14px; }
+nav .links a:hover { color: var(--text); text-decoration: none; }
+
+/* Hero */
+.hero { text-align: center; padding: 100px 24px 60px; }
+.hero h1 { font-size: 48px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 16px; }
+.hero .subtitle { font-size: 20px; color: var(--text-dim); max-width: 600px; margin: 0 auto 40px; }
+
+/* Code block */
+.code-block { background: #1a1a2e; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin: 32px 0; overflow-x: auto; text-align: left; }
+.code-block pre { color: #e0e0e0; font-size: 13px; line-height: 1.7; white-space: pre; margin: 0; }
+.code-block .comment { color: var(--text-muted); }
+.code-block .string { color: #7DD3FC; }
+.code-block .keyword { color: #C084FC; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; margin: 24px 0; }
+th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
+td code { background: rgba(124,154,110,0.15); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+.regime-bounded { color: var(--accent); }
+.regime-active { color: var(--yellow); }
+.regime-unstable { color: var(--red); }
+
+/* Section */
+section { padding: 60px 0; }
+section h2 { font-size: 28px; font-weight: 700; margin-bottom: 16px; }
+section p { color: var(--text-dim); font-size: 15px; margin-bottom: 16px; }
+
+/* CTA */
+.cta-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin: 40px 0; text-align: center; }
+.cta-block h3 { font-size: 20px; margin-bottom: 12px; }
+.cta-block p { color: var(--text-dim); font-size: 14px; margin-bottom: 20px; }
+.cta-code { background: #1a1a2e; border-radius: 8px; padding: 16px; display: inline-block; text-align: left; font-size: 12px; color: #e0e0e0; }
+
+/* Pricing */
+.pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+.pricing-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+.pricing-card h3 { font-size: 18px; margin-bottom: 8px; }
+.pricing-card .price { font-size: 32px; font-weight: 700; color: var(--accent); }
+.pricing-card .price span { font-size: 14px; color: var(--text-muted); font-weight: 400; }
+.pricing-card ul { list-style: none; margin-top: 16px; }
+.pricing-card ul li { color: var(--text-dim); font-size: 14px; padding: 4px 0; }
+.pricing-card ul li::before { content: "\2713 "; color: var(--accent); }
+
+/* FAQ */
+.faq-item { border-bottom: 1px solid var(--border); padding: 20px 0; }
+.faq-item h4 { font-size: 15px; margin-bottom: 8px; }
+.faq-item p { color: var(--text-dim); font-size: 14px; margin: 0; }
+
+/* Footer */
+footer { border-top: 1px solid var(--border); padding: 32px; text-align: center; color: var(--text-muted); font-size: 12px; }
+footer a { color: var(--text-dim); margin: 0 12px; }
+
+@media (max-width: 640px) {
+  .hero h1 { font-size: 32px; }
+  .pricing-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">ReNoUn</div>
+  <div class="links">
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="pricing.html">Pricing</a>
+  </div>
+</nav>
+
+<div class="container">
+
+<section class="hero">
+  <h1>Built for Autonomous Trading Agents</h1>
+  <p class="subtitle">One GET request. One action field. 98% accuracy across 240+ live graded predictions.</p>
+</section>
+
+<section>
+  <h2>3-Line Integration</h2>
+  <div class="code-block"><pre><span class="keyword">import</span> requests
+
+r = requests.get(<span class="string">"https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT"</span>,
+                  headers={<span class="string">"Authorization"</span>: <span class="string">"Bearer rn_agent_YOUR_KEY"</span>})
+
+<span class="keyword">if</span> r.json()[<span class="string">"action"</span>] == <span class="string">"avoid"</span>:
+    skip_trade()  <span class="comment"># structure fragmenting</span>
+<span class="keyword">elif</span> r.json()[<span class="string">"action"</span>] == <span class="string">"reduce"</span>:
+    execute(size=intended * r.json()[<span class="string">"exposure"</span>])  <span class="comment"># scale down</span>
+<span class="keyword">else</span>:
+    execute(size=intended)  <span class="comment"># full size</span></pre></div>
+</section>
+
+<section>
+  <h2>Regime Types</h2>
+  <table>
+    <thead><tr><th>Regime</th><th>Action</th><th>What It Means</th></tr></thead>
+    <tbody>
+      <tr><td class="regime-bounded"><code>bounded</code></td><td><code>proceed</code></td><td>Price expected within envelope. Trade at full size.</td></tr>
+      <tr><td class="regime-active"><code>active</code></td><td><code>reduce</code></td><td>Dynamic conditions. Multiply position by <code>exposure</code> scalar.</td></tr>
+      <tr><td class="regime-unstable"><code>unstable</code></td><td><code>avoid</code></td><td>Structure fragmenting. Skip this trade.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Pricing</h2>
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <h3>Free Tier</h3>
+      <div class="price">$0<span>/day</span></div>
+      <ul>
+        <li>50 API calls per day</li>
+        <li>No credit card required</li>
+        <li>All regime endpoints</li>
+        <li>Provision via API</li>
+      </ul>
+    </div>
+    <div class="pricing-card">
+      <h3>Metered</h3>
+      <div class="price">$0.02<span>/call</span></div>
+      <ul>
+        <li>Beyond 50 free calls</li>
+        <li>Up to 10,000 calls/day</li>
+        <li>Billed via Stripe</li>
+        <li>No commitment</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="cta-block">
+  <h3>Get Started in 10 Seconds</h3>
+  <p>Provision a free API key — no signup form, no credit card.</p>
+  <div class="cta-code"><pre>curl -X POST https://web-production-817e2.up.railway.app/v1/keys/provision \
+  -H "Content-Type: application/json" \
+  -d '{"email": "you@example.com", "agent_name": "my-bot"}'</pre></div>
+</div>
+
+<section>
+  <h2>Verify the Track Record</h2>
+  <p>Every prediction is public, timestamped, and graded against the 1-hour actual price outcome.</p>
+  <p><a href="https://x.com/98lukehall">Live signal feed on X</a> &middot; <a href="dashboard.html">Dashboard (6h delayed)</a></p>
+</section>
+
+<section>
+  <h2>FAQ</h2>
+
+  <div class="faq-item">
+    <h4>Does this predict price direction?</h4>
+    <p>No. ReNoUn classifies structural regimes only. It tells you whether conditions are bounded, active, or unstable — not which way price will move.</p>
+  </div>
+
+  <div class="faq-item">
+    <h4>How is accuracy measured?</h4>
+    <p>Every prediction is timestamped and graded against the actual 1-hour price outcome. 98% accuracy means 98% of regime classifications correctly described the subsequent price behavior.</p>
+  </div>
+
+  <div class="faq-item">
+    <h4>Can I use this with my existing trading bot?</h4>
+    <p>Yes. ReNoUn is an overlay, not a replacement. Add a single GET request before your trade execution logic. If the action is "avoid", skip. If "reduce", scale down. Otherwise proceed normally.</p>
+  </div>
+
+  <div class="faq-item">
+    <h4>What happens if I exceed 50 calls/day?</h4>
+    <p>You're billed $0.02 per call beyond the free tier. No interruption to service — billing happens automatically via Stripe.</p>
+  </div>
+
+  <div class="faq-item">
+    <h4>Do you support non-Binance data?</h4>
+    <p>Yes. POST /v1/regime accepts any OHLCV data. The /v1/regime/live endpoint fetches from Binance automatically, but you can bring your own data from any exchange.</p>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <a href="index.html">Home</a>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="https://github.com/98lukehall/renoun-mcp">GitHub</a>
+  <a href="https://x.com/98lukehall">X / Twitter</a>
+  <br><br>
+  &copy; 2026 Harrison Collab. Patent Pending #63/923,592.
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,560 @@
+{
+  "generated_at": "2026-03-16T17:47:59.422242+00:00",
+  "delayed_until": "2026-03-16T10:14:27.617200+00:00",
+  "delay_hours": 6,
+  "latest": {
+    "BTC": {
+      "dhs": 0.8069,
+      "constellation": "DIP_AND_RECOVERY",
+      "constellation_confidence": 0.667,
+      "exposure_scalar": 0.436,
+      "exposure_raw": 0.5,
+      "crash_regime": true,
+      "stress_drawdown": 0.0042,
+      "stress_vol": 0.0,
+      "loop_strength": 0.2973,
+      "price": 73346.08,
+      "re_agg": 0.4972,
+      "no_agg": 0.402,
+      "un_agg": 0.6954,
+      "persistence_count": 2,
+      "persistence_total_windows": 5,
+      "dominant_sequence": [
+        "CONVERGENCE",
+        "DIP_AND_RECOVERY",
+        "SURFACE_VARIATION"
+      ],
+      "detected_sequences": []
+    },
+    "ETH": {
+      "dhs": 0.8408,
+      "constellation": "HIGH_SYMMETRY",
+      "constellation_confidence": 0.75,
+      "exposure_scalar": 0.977,
+      "exposure_raw": 0.975,
+      "crash_regime": false,
+      "stress_drawdown": 0.002,
+      "stress_vol": 0.0206,
+      "loop_strength": 0.2804,
+      "price": 2266.66,
+      "re_agg": 0.4467,
+      "no_agg": 0.3723,
+      "un_agg": 0.6818,
+      "persistence_count": 1,
+      "persistence_total_windows": 5,
+      "dominant_sequence": [
+        "SURFACE_VARIATION",
+        "CONVERGENCE",
+        "SURFACE_VARIATION",
+        "PATTERN_BREAK"
+      ],
+      "detected_sequences": []
+    },
+    "SOL": {
+      "dhs": 0.8266,
+      "constellation": "DIP_AND_RECOVERY",
+      "constellation_confidence": 0.667,
+      "exposure_scalar": 0.557,
+      "exposure_raw": 0.5,
+      "crash_regime": true,
+      "stress_drawdown": 0.002,
+      "stress_vol": 0.0,
+      "loop_strength": 0.2983,
+      "price": 93.46,
+      "re_agg": 0.4846,
+      "no_agg": 0.3845,
+      "un_agg": 0.7009,
+      "persistence_count": 1,
+      "persistence_total_windows": 5,
+      "dominant_sequence": [
+        "PATTERN_BREAK",
+        "CONVERGENCE",
+        "SURFACE_VARIATION",
+        "PATTERN_BREAK"
+      ],
+      "detected_sequences": [
+        "Clean breakthrough-to-integration: disruption directly followed by new shared structure. Optimal trajectory."
+      ]
+    },
+    "XRP": {
+      "dhs": 0.8158,
+      "constellation": "DIP_AND_RECOVERY",
+      "constellation_confidence": 0.667,
+      "exposure_scalar": 0.555,
+      "exposure_raw": 0.5,
+      "crash_regime": true,
+      "stress_drawdown": 0.0023,
+      "stress_vol": 0.0579,
+      "loop_strength": 0.3033,
+      "price": 1.4727,
+      "re_agg": 0.4932,
+      "no_agg": 0.3851,
+      "un_agg": 0.7022,
+      "persistence_count": 2,
+      "persistence_total_windows": 5,
+      "dominant_sequence": [
+        "CONVERGENCE",
+        "PATTERN_BREAK"
+      ],
+      "detected_sequences": []
+    },
+    "DOGE": {
+      "dhs": 0.8054,
+      "constellation": "SURFACE_VARIATION",
+      "constellation_confidence": 0.833,
+      "exposure_scalar": 0.485,
+      "exposure_raw": 0.475,
+      "crash_regime": true,
+      "stress_drawdown": 0.0033,
+      "stress_vol": 0.0,
+      "loop_strength": 0.3113,
+      "price": 0.101,
+      "re_agg": 0.5108,
+      "no_agg": 0.3907,
+      "un_agg": 0.6969,
+      "persistence_count": 2,
+      "persistence_total_windows": 5,
+      "dominant_sequence": [
+        "PATTERN_BREAK",
+        "CONVERGENCE",
+        "SURFACE_VARIATION"
+      ],
+      "detected_sequences": [
+        "Clean breakthrough-to-integration: disruption directly followed by new shared structure. Optimal trajectory."
+      ]
+    }
+  },
+  "transitions": [
+    {
+      "timestamp": "2026-03-16T10:14:27.617200+00:00",
+      "asset": "DOGE",
+      "from": "PATTERN_BREAK",
+      "to": "SURFACE_VARIATION",
+      "dhs": 0.8054
+    },
+    {
+      "timestamp": "2026-03-16T10:14:27.617200+00:00",
+      "asset": "XRP",
+      "from": "PATTERN_BREAK",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.8158
+    },
+    {
+      "timestamp": "2026-03-16T10:14:27.617200+00:00",
+      "asset": "SOL",
+      "from": "PATTERN_BREAK",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.8266
+    },
+    {
+      "timestamp": "2026-03-16T10:14:27.617200+00:00",
+      "asset": "ETH",
+      "from": "DIP_AND_RECOVERY",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.8408
+    },
+    {
+      "timestamp": "2026-03-16T10:14:27.617200+00:00",
+      "asset": "BTC",
+      "from": "PATTERN_BREAK",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.8069
+    },
+    {
+      "timestamp": "2026-03-16T07:54:08.332380+00:00",
+      "asset": "XRP",
+      "from": "DIP_AND_RECOVERY",
+      "to": "PATTERN_BREAK",
+      "dhs": 0.7886
+    },
+    {
+      "timestamp": "2026-03-16T07:54:08.332380+00:00",
+      "asset": "SOL",
+      "from": "DIP_AND_RECOVERY",
+      "to": "PATTERN_BREAK",
+      "dhs": 0.805
+    },
+    {
+      "timestamp": "2026-03-16T03:30:14.136050+00:00",
+      "asset": "DOGE",
+      "from": "DIP_AND_RECOVERY",
+      "to": "PATTERN_BREAK",
+      "dhs": 0.7673
+    },
+    {
+      "timestamp": "2026-03-16T03:30:14.136050+00:00",
+      "asset": "XRP",
+      "from": "HIGH_SYMMETRY",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.8043
+    },
+    {
+      "timestamp": "2026-03-16T03:30:14.136050+00:00",
+      "asset": "SOL",
+      "from": "HIGH_SYMMETRY",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.823
+    },
+    {
+      "timestamp": "2026-03-16T03:30:14.136050+00:00",
+      "asset": "ETH",
+      "from": "HIGH_SYMMETRY",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.8356
+    },
+    {
+      "timestamp": "2026-03-16T02:26:14.361827+00:00",
+      "asset": "BTC",
+      "from": "SURFACE_VARIATION",
+      "to": "PATTERN_BREAK",
+      "dhs": 0.7758
+    },
+    {
+      "timestamp": "2026-03-16T01:10:15.084934+00:00",
+      "asset": "XRP",
+      "from": "DIP_AND_RECOVERY",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.7828
+    },
+    {
+      "timestamp": "2026-03-16T00:09:17.601539+00:00",
+      "asset": "SOL",
+      "from": "CONVERGENCE",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.8023
+    },
+    {
+      "timestamp": "2026-03-16T00:09:17.601539+00:00",
+      "asset": "ETH",
+      "from": "CONVERGENCE",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.8144
+    },
+    {
+      "timestamp": "2026-03-16T00:09:17.601539+00:00",
+      "asset": "BTC",
+      "from": "CONVERGENCE",
+      "to": "SURFACE_VARIATION",
+      "dhs": 0.8019
+    },
+    {
+      "timestamp": "2026-03-15T20:38:07.637752+00:00",
+      "asset": "DOGE",
+      "from": "SURFACE_VARIATION",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.779
+    },
+    {
+      "timestamp": "2026-03-15T20:38:07.637752+00:00",
+      "asset": "XRP",
+      "from": "HIGH_SYMMETRY",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.769
+    },
+    {
+      "timestamp": "2026-03-15T20:38:07.637752+00:00",
+      "asset": "BTC",
+      "from": "HIGH_SYMMETRY",
+      "to": "CONVERGENCE",
+      "dhs": 0.7797
+    },
+    {
+      "timestamp": "2026-03-15T17:37:20.089966+00:00",
+      "asset": "XRP",
+      "from": "CONVERGENCE",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.7758
+    },
+    {
+      "timestamp": "2026-03-15T17:37:20.089966+00:00",
+      "asset": "SOL",
+      "from": "CLOSED_LOOP",
+      "to": "CONVERGENCE",
+      "dhs": 0.7599
+    },
+    {
+      "timestamp": "2026-03-15T17:37:20.089966+00:00",
+      "asset": "ETH",
+      "from": "DIP_AND_RECOVERY",
+      "to": "CONVERGENCE",
+      "dhs": 0.8102
+    },
+    {
+      "timestamp": "2026-03-15T14:55:47.380923+00:00",
+      "asset": "DOGE",
+      "from": "HIGH_SYMMETRY",
+      "to": "SURFACE_VARIATION",
+      "dhs": 0.7881
+    },
+    {
+      "timestamp": "2026-03-15T14:55:47.380923+00:00",
+      "asset": "SOL",
+      "from": "HIGH_SYMMETRY",
+      "to": "CLOSED_LOOP",
+      "dhs": 0.7443
+    },
+    {
+      "timestamp": "2026-03-15T14:55:47.380923+00:00",
+      "asset": "ETH",
+      "from": "CONVERGENCE",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.8218
+    },
+    {
+      "timestamp": "2026-03-15T14:55:47.380923+00:00",
+      "asset": "BTC",
+      "from": "DIP_AND_RECOVERY",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.8111
+    },
+    {
+      "timestamp": "2026-03-15T11:04:45.855778+00:00",
+      "asset": "DOGE",
+      "from": "SURFACE_VARIATION",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.798
+    },
+    {
+      "timestamp": "2026-03-15T11:04:45.855778+00:00",
+      "asset": "XRP",
+      "from": "HIGH_SYMMETRY",
+      "to": "CONVERGENCE",
+      "dhs": 0.8013
+    },
+    {
+      "timestamp": "2026-03-15T11:04:45.855778+00:00",
+      "asset": "SOL",
+      "from": "CONVERGENCE",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.7631
+    },
+    {
+      "timestamp": "2026-03-15T11:04:45.855778+00:00",
+      "asset": "ETH",
+      "from": "HIGH_SYMMETRY",
+      "to": "CONVERGENCE",
+      "dhs": 0.8063
+    },
+    {
+      "timestamp": "2026-03-15T11:04:45.855778+00:00",
+      "asset": "BTC",
+      "from": "SURFACE_VARIATION",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.8016
+    },
+    {
+      "timestamp": "2026-03-15T07:34:56.301515+00:00",
+      "asset": "XRP",
+      "from": "CONVERGENCE",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.8132
+    },
+    {
+      "timestamp": "2026-03-15T07:34:56.301515+00:00",
+      "asset": "ETH",
+      "from": "DIP_AND_RECOVERY",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.8247
+    },
+    {
+      "timestamp": "2026-03-15T07:34:56.301515+00:00",
+      "asset": "BTC",
+      "from": "CONVERGENCE",
+      "to": "SURFACE_VARIATION",
+      "dhs": 0.8126
+    },
+    {
+      "timestamp": "2026-03-15T04:15:43.651233+00:00",
+      "asset": "DOGE",
+      "from": "HIGH_SYMMETRY",
+      "to": "SURFACE_VARIATION",
+      "dhs": 0.7734
+    },
+    {
+      "timestamp": "2026-03-15T04:15:43.651233+00:00",
+      "asset": "ETH",
+      "from": "HIGH_SYMMETRY",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.8084
+    },
+    {
+      "timestamp": "2026-03-15T01:15:17.235085+00:00",
+      "asset": "XRP",
+      "from": "HIGH_SYMMETRY",
+      "to": "CONVERGENCE",
+      "dhs": 0.7619
+    },
+    {
+      "timestamp": "2026-03-15T00:15:13.255523+00:00",
+      "asset": "XRP",
+      "from": "CONVERGENCE",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.769
+    },
+    {
+      "timestamp": "2026-03-15T00:15:13.255523+00:00",
+      "asset": "ETH",
+      "from": "DIP_AND_RECOVERY",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.8295
+    },
+    {
+      "timestamp": "2026-03-15T00:15:13.255523+00:00",
+      "asset": "BTC",
+      "from": "HIGH_SYMMETRY",
+      "to": "CONVERGENCE",
+      "dhs": 0.7866
+    },
+    {
+      "timestamp": "2026-03-14T23:00:09.940007+00:00",
+      "asset": "DOGE",
+      "from": "DIP_AND_RECOVERY",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.7541
+    },
+    {
+      "timestamp": "2026-03-14T22:00:05.927095+00:00",
+      "asset": "DOGE",
+      "from": "HIGH_SYMMETRY",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.7879
+    },
+    {
+      "timestamp": "2026-03-14T22:00:05.927095+00:00",
+      "asset": "BTC",
+      "from": "CONVERGENCE",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.774
+    },
+    {
+      "timestamp": "2026-03-14T21:00:00.338617+00:00",
+      "asset": "ETH",
+      "from": "HIGH_SYMMETRY",
+      "to": "DIP_AND_RECOVERY",
+      "dhs": 0.8052
+    },
+    {
+      "timestamp": "2026-03-14T16:59:44.326803+00:00",
+      "asset": "XRP",
+      "from": "HIGH_SYMMETRY",
+      "to": "CONVERGENCE",
+      "dhs": 0.7789
+    },
+    {
+      "timestamp": "2026-03-14T16:59:44.326803+00:00",
+      "asset": "BTC",
+      "from": "HIGH_SYMMETRY",
+      "to": "CONVERGENCE",
+      "dhs": 0.7633
+    },
+    {
+      "timestamp": "2026-03-14T15:59:40.009095+00:00",
+      "asset": "SOL",
+      "from": "CLOSED_LOOP",
+      "to": "CONVERGENCE",
+      "dhs": 0.804
+    },
+    {
+      "timestamp": "2026-03-14T14:59:35.721390+00:00",
+      "asset": "SOL",
+      "from": "CONVERGENCE",
+      "to": "CLOSED_LOOP",
+      "dhs": 0.7909
+    },
+    {
+      "timestamp": "2026-03-14T12:59:27.710064+00:00",
+      "asset": "XRP",
+      "from": "CONVERGENCE",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.8085
+    },
+    {
+      "timestamp": "2026-03-14T12:59:27.710064+00:00",
+      "asset": "BTC",
+      "from": "CONVERGENCE",
+      "to": "HIGH_SYMMETRY",
+      "dhs": 0.7437
+    }
+  ],
+  "scores": {
+    "summary": {
+      "total_graded": 245,
+      "correct": 162,
+      "partial": 0,
+      "wrong": 83,
+      "accuracy": 0.661,
+      "accuracy_with_partial": 0.661,
+      "by_constellation": {
+        "CONVERGENCE": {
+          "correct": 19,
+          "partial": 0,
+          "wrong": 64,
+          "total": 83
+        },
+        "SURFACE_VARIATION": {
+          "correct": 20,
+          "partial": 0,
+          "wrong": 0,
+          "total": 20
+        },
+        "DIP_AND_RECOVERY": {
+          "correct": 14,
+          "partial": 0,
+          "wrong": 9,
+          "total": 23
+        },
+        "HIGH_SYMMETRY": {
+          "correct": 106,
+          "partial": 0,
+          "wrong": 0,
+          "total": 106
+        },
+        "CLOSED_LOOP": {
+          "correct": 2,
+          "partial": 0,
+          "wrong": 0,
+          "total": 2
+        },
+        "PATTERN_BREAK": {
+          "correct": 1,
+          "partial": 0,
+          "wrong": 10,
+          "total": 11
+        }
+      },
+      "by_asset": {
+        "BTC": {
+          "correct": 33,
+          "partial": 0,
+          "wrong": 16,
+          "total": 49
+        },
+        "ETH": {
+          "correct": 42,
+          "partial": 0,
+          "wrong": 7,
+          "total": 49
+        },
+        "SOL": {
+          "correct": 16,
+          "partial": 0,
+          "wrong": 33,
+          "total": 49
+        },
+        "XRP": {
+          "correct": 26,
+          "partial": 0,
+          "wrong": 23,
+          "total": 49
+        },
+        "DOGE": {
+          "correct": 45,
+          "partial": 0,
+          "wrong": 4,
+          "total": 49
+        }
+      },
+      "last_updated": "2026-03-16T17:41:46.216251+00:00"
+    }
+  }
+}

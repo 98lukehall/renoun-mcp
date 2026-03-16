@@ -1,39 +1,135 @@
-# ReNoUn — Structural Pattern Analysis Engine
+# ReNoUn — Structural Regime Classification for Crypto Markets
 
-> ReNoUn is a 17-channel structural analysis MCP server for AI conversations and financial risk management. It measures Recurrence, Novelty, and Unity patterns without analyzing semantic content. Patent Pending #63/923,592.
+> Call before any crypto trade. Returns regime type (bounded/active/unstable) and action (proceed/reduce/avoid). 98% accuracy across 240+ live graded predictions. 50 free calls/day.
 
-ReNoUn detects structural patterns across 17 channels organized into three dimensions: Recurrence (5 channels measuring pattern repetition), Novelty (6 channels measuring new information entering), and Unity (6 channels measuring coherence). It identifies 8 constellation patterns including CLOSED_LOOP, CONVERGENCE, SCATTERING, PATTERN_BREAK, and others.
+## Quick Start
 
-The finance module analyzes OHLCV candle data and outputs an exposure scalar (0.0-1.0) for position sizing. Validated on 31 datasets across 9 crypto assets and 5 timeframes with 100% drawdown reduction (5.7pp average improvement) at a cost of approximately 0.1 Sharpe ratio.
+```
+GET https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT
+Authorization: Bearer rn_agent_YOUR_KEY
+```
 
-## Core Tools
+Returns:
+```json
+{
+  "regime": "bounded",
+  "action": "proceed",
+  "exposure": 0.95,
+  "dhs": 0.83,
+  "description": "Range-bound, <2% move expected",
+  "stability": {
+    "halflife_minutes": 240,
+    "stability_score": 0.82,
+    "instability_risk": "low",
+    "time_horizon": "2-4 hours",
+    "urgency": "none"
+  }
+}
+```
 
-- [renoun_analyze](https://github.com/98lukehall/renoun-mcp#renoun_analyze): Full 17-channel structural analysis of conversation utterances. Returns DHS (Dialectical Health Score), constellation patterns, channel breakdowns, and recommendations.
-- [renoun_health_check](https://github.com/98lukehall/renoun-mcp#renoun_health_check): Fast structural triage returning one score, one pattern, one summary. Sub-50ms response.
-- [renoun_compare](https://github.com/98lukehall/renoun-mcp#renoun_compare): Structural A/B comparison between two conversation sessions. Shows health trajectory, constellation transitions, and channel shifts.
-- [renoun_pattern_query](https://github.com/98lukehall/renoun-mcp#renoun_pattern_query): Save, query, and trend longitudinal pattern history across sessions.
-- [renoun_steer](https://github.com/98lukehall/renoun-mcp#renoun_steer): Real-time inference steering with rolling window analysis. Emits signals when structural thresholds are crossed.
-- [renoun_finance_analyze](https://github.com/98lukehall/renoun-mcp#renoun_finance_analyze): Structural analysis of OHLCV financial data. Returns DHS, constellation patterns, stress levels, and exposure scalar recommendations.
+## When to Call This Tool
 
-## Documentation
+- Before entering any crypto position — check regime
+- Before increasing position size — verify regime is still bounded
+- After a price spike or crash — check if structure is fragmenting
+- Portfolio-wide risk check — use /v1/regime/batch with multiple symbols
 
-- [GitHub Repository](https://github.com/98lukehall/renoun-mcp): Full source code, README, API documentation, and examples
-- [PyPI Package](https://pypi.org/project/renoun-mcp/): Install via `pip install renoun-mcp`
-- [Pricing](https://harrisoncollab.com/pricing.html): Free open source, $4.99/mo Conversation Pro, $7.99/mo Finance Risk Overlay
-- [Website](https://harrisoncollab.com): Landing page with interactive demo
+## Regime Types
+
+| Regime | Action | Meaning |
+|--------|--------|---------|
+| bounded | proceed | Price expected within envelope. Structure healthy. |
+| active | reduce | Dynamic conditions. Reduce position to exposure scalar. |
+| unstable | avoid | Structure fragmenting. Skip this trade. |
+
+## Regime Stability
+
+Every regime response includes a `stability` block estimating how long the current regime will persist.
+
+| Field | Meaning |
+|-------|---------|
+| halflife_minutes | Minutes until 50% probability of regime transition |
+| stability_score | 0.0-1.0 composite stability (1.0 = maximally stable) |
+| instability_risk | low / moderate / elevated / high |
+| time_horizon | Human-readable estimate: "2-4 hours", "15-30 minutes", etc. |
+| urgency | none / watch / prepare_exit / exit_now |
+| exit_window_minutes | (only if urgency is prepare_exit or exit_now) Safe exit window |
+
+### Agent Decision Flow
+
+```
+regime = check_regime("BTCUSDT")
+if regime["action"] == "avoid":
+    skip_trade()
+elif regime["stability"]["urgency"] == "exit_now":
+    close_position()
+elif regime["stability"]["urgency"] == "prepare_exit":
+    set_tight_stop_loss()
+elif regime["action"] == "reduce":
+    execute(size=intended * regime["exposure"])
+else:
+    execute(size=intended)
+```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /v1/regime/live/{symbol} | Current regime for any Binance pair (cached 60s) |
+| POST | /v1/regime | Regime from your own OHLCV data |
+| POST | /v1/regime/batch | Multiple assets at once |
+| POST | /v1/keys/provision | Get a free API key (50 calls/day, no card) |
+| GET | /v1/usage | Check your call count and billing |
+| GET | /v1/status | Liveness check (no auth) |
+
+## Supported Symbols
+
+Any Binance USDT pair. Common: BTCUSDT, ETHUSDT, SOLUSDT, XRPUSDT, DOGEUSDT.
+
+## Pricing
+
+- **Free**: 50 calls/day, no credit card required
+- **Metered**: $0.02/call beyond free tier
+- **Provision**: POST /v1/keys/provision with your email
+
+## Integration Examples
+
+### Python
+```python
+import requests
+r = requests.get("https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT",
+                  headers={"Authorization": "Bearer rn_agent_YOUR_KEY"})
+if r.json()["action"] == "avoid":
+    skip_trade()
+```
+
+### Agent System Prompt
+```
+Before executing any crypto trade, call the ReNoUn regime endpoint.
+If action is "avoid", skip the trade.
+If action is "reduce", multiply position by the exposure scalar.
+If action is "proceed", execute at full size.
+```
+
+### MCP Config
+```json
+{
+  "mcpServers": {
+    "renoun": {
+      "command": "python",
+      "args": ["-m", "renoun_mcp"],
+      "env": { "RENOUN_API_KEY": "rn_agent_YOUR_KEY" }
+    }
+  }
+}
+```
 
 ## Key Facts
 
-- 17 structural channels across Recurrence (Re1-Re5), Novelty (No1-No6), and Unity (Un1-Un6)
-- 8 constellation patterns: CLOSED_LOOP, HIGH_SYMMETRY, PATTERN_BREAK, CONVERGENCE, SCATTERING, REPEATED_DISRUPTION, DIP_AND_RECOVERY, SURFACE_VARIATION
-- DHS (Dialectical Health Score) range: 0.0-1.0 where higher is healthier
-- Finance exposure scalar: 0.0-1.0 where lower means more structural disorder
-- Backtested results: 31/31 drawdown reduction, 5.7pp average, 7/8 black swan events caught
-- Black swan validation: COVID crash, LUNA collapse, FTX contagion, China mining ban
-- Built by Luke Hall at Harrison Collab
+- 98% regime classification accuracy (240+ live graded predictions)
+- 17-channel structural analysis engine (Recurrence, Novelty, Unity)
+- 8 constellation patterns detected
 - Patent Pending #63/923,592
-
-## Optional
-
-- [Interactive Demo](https://harrisoncollab.com/#demo): Try the analysis engine in-browser with sample data
-- [Cowork Plugin](https://harrisoncollab.com): ReNoUn plugin for Claude desktop with 5 built-in skills
+- Built by Luke Hall at Harrison Collab
+- Live signal feed: https://x.com/98lukehall
+- Dashboard (6h delayed): https://harrisoncollab.com/dashboard.html

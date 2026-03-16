@@ -1,6 +1,108 @@
 # Proprietary engine (patent pending #63/923,592)
 core.py
 novelty_dual_pass.py
+alignment_bridge.py
+alignment_bridge_v1.py
+temporal.py
+recovery.py
+
+# Proprietary adapters & v5 engine internals
+adapters/
+
+# Proprietary analysis / monitoring modules
+agent_monitor.py
+meta_monitor.py
+proprioceptive.py
+alignment_api.py
+alignment_evaluator.py
+alignment_datasets.py
+steering.py
+
+# Experiment data & results (not for public repo)
+experiments/
+experiment/
+data/
+demo/
+paper/
+papers/
+ablation_results.json
+baseline_comparison_v2.json
+fig*.png
+
+# Build specs & internal docs
+AGENT_BUILD_*.md
+AGENT_MARKET_BUILD.md
+AGENT_MONITOR_MASTERPROMPT.md
+CLAUDE_CODE_*.md
+EMPIRICAL_RESULTS.md
+POST_BUILD_VERIFICATION.md
+REAL_DATA_CAMPAIGN.md
+REGISTRY_SUBMISSIONS.md
+REGISTRY_SUBMISSION_BROWSER_PROMPT.md
+RENOUN_V5_BUILD_REPORT.md
+SIGNAL_BOT_REBUILD.md
+VALIDATION_CAMPAIGN.md
+build_health_report.md
+
+# Internal tools & scripts
+run_hhrlhf_eval.py
+run_session_analysis.py
+run_sycophancy_eval.py
+validate_retrospective.py
+validation_experiment.py
+extended_eval.py
+generate_visualizations.py
+dogfood.py
+baseline_comparison.py
+build_pitch_deck.js
+renoun_black_swan_report.py
+
+# Signal bot (separate deployment)
+signal_bot/
+
+# Dashboard / frontend dev
+src/
+renoun-dashboard.jsx
+start-dashboard.sh
+vite.config.js
+node_modules/
+package.json
+package-lock.json
+index.html
+
+# Plugin dev (separate repo)
+renoun-plugin/
+renoun.plugin
+
+# Marketing
+marketing/
+ReNoUn_Pitch_Deck.pptx
+
+# Alignment tests (contains proprietary test fixtures)
+alignment_tests/
+
+# Tests that import proprietary core engine
+tests/test_v5_engine.py
+tests/test_temporal.py
+tests/test_code_adapter.py
+tests/test_agent_trace_adapter.py
+tests/test_finance_adapter.py
+tests/test_finance_edge_cases.py
+tests/test_recovery.py
+tests/test_recovery_adversarial.py
+tests/test_recovery_integration.py
+tests/test_real_data_recovery.py
+tests/test_agent_monitor.py
+tests/test_meta_monitor.py
+tests/test_proprioceptive.py
+tests/test_steer.py
+tests/test_adapters.py
+
+# Claude Code local config
+.claude/
+
+# GitHub Actions (not ready)
+.github/
 
 # Python
 __pycache__/
@@ -9,6 +111,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.venv/
 
 # Local history storage
 .renoun/

@@ -86,12 +86,12 @@ class TestToolDiscovery:
 
     def test_tool_count(self):
         from server import TOOL_DEFS
-        assert len(TOOL_DEFS) == 6, f"Expected 6 tools, got {len(TOOL_DEFS)}"
+        assert len(TOOL_DEFS) == 9, f"Expected 9 tools, got {len(TOOL_DEFS)}"
 
     def test_tool_names(self):
         from server import TOOL_DEFS
         names = {t["name"] for t in TOOL_DEFS}
-        expected = {"renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze"}
+        expected = {"renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze", "renoun_agent_monitor", "renoun_alignment_classify", "renoun_recovery_analyze"}
         assert names == expected, f"Tool name mismatch: {names} != {expected}"
 
     def test_all_have_input_schema(self):
@@ -108,7 +108,7 @@ class TestToolDiscovery:
 
     def test_handlers_registered(self):
         from server import TOOL_HANDLERS
-        expected = {"renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze"}
+        expected = {"renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze", "renoun_agent_monitor", "renoun_alignment_classify", "renoun_recovery_analyze"}
         assert set(TOOL_HANDLERS.keys()) == expected
 
     def test_version_constants(self):
@@ -207,7 +207,9 @@ class TestToolDiscovery:
         from server import TOOL_DEFS, TOOL_HANDLERS, TOOLS, TOOL_ANNOTATIONS
 
         expected = {"renoun_analyze", "renoun_health_check", "renoun_compare",
-                    "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze"}
+                    "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze",
+                    "renoun_agent_monitor", "renoun_alignment_classify",
+                    "renoun_recovery_analyze"}
 
         defs_names = {t["name"] for t in TOOL_DEFS}
         handler_names = set(TOOL_HANDLERS.keys())
@@ -411,7 +413,7 @@ class TestStandaloneProtocol:
             }
             for t in TOOLS
         ]
-        assert len(tools_list) == 6
+        assert len(tools_list) == 9
         for t in tools_list:
             assert "name" in t
             assert "description" in t

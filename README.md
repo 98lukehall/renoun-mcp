@@ -2,11 +2,13 @@
   <h1 align="center">ReNoUn</h1>
   <p align="center"><strong>Structural observability for AI conversations and financial markets</strong></p>
   <p align="center">
+    <a href="https://codecov.io/gh/98lukehall/renoun-mcp"><img src="https://codecov.io/gh/98lukehall/renoun-mcp/branch/main/graph/badge.svg" alt="codecov"></a>
+    <a href="https://github.com/98lukehall/renoun-mcp/actions/workflows/ci.yml"><img src="https://github.com/98lukehall/renoun-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
     <a href="https://pypi.org/project/renoun-mcp/"><img src="https://img.shields.io/pypi/v/renoun-mcp?color=7C9A6E&label=PyPI" alt="PyPI"></a>
     <a href="https://pypi.org/project/renoun-mcp/"><img src="https://img.shields.io/pypi/pyversions/renoun-mcp?color=5B7B9E" alt="Python"></a>
     <a href="https://github.com/98lukehall/renoun-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
     <a href="https://web-production-817e2.up.railway.app/docs"><img src="https://img.shields.io/badge/API-docs-orange" alt="API Docs"></a>
-    <a href="#financial-risk-overlay"><img src="https://img.shields.io/badge/finance-31%2F31_DD_reduced-7C9A6E" alt="Finance: 31/31 DD reduced"></a>
+    <a href="#financial-risk-overlay"><img src="https://img.shields.io/badge/finance-98%25_accuracy-7C9A6E" alt="Finance: 98% accuracy"></a>
     <img src="https://img.shields.io/badge/patent_pending-%2363%2F923%2C592-lightgrey" alt="Patent Pending #63/923,592">
   </p>
 </p>
@@ -223,7 +225,7 @@ Results persist to `~/.renoun/history/`. Use `renoun_pattern_query` to save, lis
 
 The same 17-channel engine that detects stuck conversations also detects structural disorder in financial markets. When market structure breaks down, reduce exposure. When it's coherent, stay the course.
 
-- **31/31** drawdown reduction across 9 crypto assets and 5 timeframes
+- **98% accuracy** across 240+ live graded predictions
 - **21.3pp** average DD improvement on black swan events (COVID, LUNA, FTX)
 - **0.1 Sharpe** median cost — cheap insurance
 - Works on any OHLCV data — crypto, equities, forex, commodities
@@ -320,7 +322,7 @@ Validated across 31 datasets (9 crypto assets, 5 timeframes per asset):
 | Metric | Result |
 |--------|--------|
 | Datasets tested | 31 (9 assets x 5 timeframes) |
-| Drawdown improved | 31/31 (100%) |
+| Live prediction accuracy | 98% (240+ graded) |
 | Avg DD improvement | 5.7pp |
 | Black swan DD improvement | 21.3pp avg (4 events) |
 | Sharpe improved | 14/31 (45%) |
@@ -341,6 +343,80 @@ What it does: measures structural market disorder and reduces exposure when stru
 Think of it as a VIX-based position sizer for markets where there is no options-implied volatility. Crypto has no VIX. Most small-cap equities have no liquid options chain. ReNoUn fills that gap by deriving structural disorder directly from OHLCV data.
 
 **Best used as a risk overlay** — pair it with your own signal, your own strategy, your own edge. ReNoUn handles the "when to reduce" question so your signal can focus on the "what to trade" question.
+
+---
+
+## For AI Trading Agents
+
+ReNoUn serves as a pre-trade structural risk check for autonomous trading agents. Call the regime endpoint before any crypto position to classify the current market structure.
+
+### Quick Integration (3 lines)
+
+```python
+import requests
+
+def check_regime(symbol="BTCUSDT", key="rn_agent_YOUR_KEY"):
+    r = requests.get(f"https://web-production-817e2.up.railway.app/v1/regime/live/{symbol}",
+                     headers={"Authorization": f"Bearer {key}"})
+    return r.json()
+
+# In your trading logic:
+regime = check_regime("BTCUSDT")
+if regime["action"] == "avoid":
+    pass  # skip trade — structure fragmenting
+elif regime["action"] == "reduce":
+    execute(size=intended * regime["exposure"])  # scale down
+else:
+    execute(size=intended)  # full size — structure healthy
+```
+
+### Regime Types
+
+| Regime | Action | What It Means |
+|--------|--------|---------------|
+| `bounded` | `proceed` | Price expected within envelope. Trade at full size. |
+| `active` | `reduce` | Dynamic conditions. Multiply position by `exposure` scalar. |
+| `unstable` | `avoid` | Structure fragmenting. Skip this trade. |
+
+### Get a Key (Free)
+
+```bash
+curl -X POST https://web-production-817e2.up.railway.app/v1/keys/provision \
+  -H "Content-Type: application/json" \
+  -d '{"email": "you@example.com", "agent_name": "my-bot"}'
+```
+
+50 free calls/day. $0.02/call after that. No credit card to start.
+
+### MCP Integration
+
+```json
+{
+  "mcpServers": {
+    "renoun": {
+      "command": "python",
+      "args": ["-m", "renoun_mcp"],
+      "env": { "RENOUN_API_KEY": "rn_agent_YOUR_KEY" }
+    }
+  }
+}
+```
+
+### System Prompt for Your Agent
+
+```
+Before any crypto trade, check the structural regime:
+  GET /v1/regime/live/{SYMBOL}
+If action is "avoid" — skip the trade (structure unstable).
+If action is "reduce" — multiply position by the exposure scalar.
+If action is "proceed" — execute at intended size.
+ReNoUn classifies structural regimes with 98% accuracy across 240+ live predictions.
+It does not predict price direction.
+```
+
+### Accuracy
+
+98% regime classification accuracy across 240+ live, timestamped, graded predictions. Every prediction is public: [@98lukehall on X](https://x.com/98lukehall).
 
 ---
 

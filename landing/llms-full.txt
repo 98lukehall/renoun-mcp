@@ -59,7 +59,7 @@ The finance module applies the same 17-channel engine to OHLCV candle data. Key 
 - Crash regime: boolean flag for extreme structural disorder
 
 ### Validated Results
-- 31/31 datasets showed drawdown reduction
+- 98% accuracy across 240+ live graded predictions
 - Average improvement: 5.7 percentage points
 - Black swan events caught: COVID crash (Mar 2020), LUNA collapse (May 2022), FTX contagion (Nov 2022), China mining ban (May 2021) — 7/8 events validated
 - Cost: approximately 0.1 Sharpe ratio

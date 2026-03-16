@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0",
+  "name": "renoun",
+  "display_name": "ReNoUn — Crypto Regime Classification",
+  "description": "Pre-trade structural risk check. Classifies crypto market regimes (bounded/active/unstable) with 98% accuracy. Call before any position.",
+  "version": "1.3.1",
+  "author": {
+    "name": "Harrison Collab",
+    "url": "https://harrisoncollab.com",
+    "email": "98lukehall@gmail.com"
+  },
+  "repository": "https://github.com/98lukehall/renoun-mcp",
+  "homepage": "https://harrisoncollab.com",
+  "license": "Proprietary (Patent Pending #63/923,592)",
+  "transport": ["stdio", "http"],
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false
+  },
+  "tools": [
+    {
+      "name": "renoun_finance_analyze",
+      "description": "Full 17-channel structural analysis of OHLCV data. Returns DHS, constellations, stress, exposure scalar.",
+      "use_when": "Need full structural profile. Building dashboards or research tools.",
+      "input_summary": "OHLCV klines array (min 10 candles), symbol, timeframe",
+      "output_summary": "Full analysis with channels, constellations, stress, exposure"
+    },
+    {
+      "name": "regime_live",
+      "description": "Current regime classification with stability estimate for a Binance symbol. Returns regime, action, AND how long the regime is likely to persist.",
+      "use_when": "Pre-trade risk check. Position exit timing. Agent decision-making.",
+      "input_summary": "Symbol (path param), optional timeframe",
+      "output_summary": "regime, action, dhs, exposure, stability (halflife, urgency, exit_window)"
+    },
+    {
+      "name": "regime_batch",
+      "description": "Regime classification for multiple assets. Includes portfolio-level aggregate.",
+      "use_when": "Portfolio risk assessment. Multi-asset position sizing.",
+      "input_summary": "Array of symbols, timeframe",
+      "output_summary": "Per-asset regimes + portfolio_action + portfolio_exposure"
+    }
+  ],
+  "api": {
+    "base_url": "https://web-production-817e2.up.railway.app",
+    "auth_type": "bearer",
+    "key_prefix": "rn_agent_",
+    "free_tier": "50 calls/day, no credit card",
+    "metered_price": "$0.02/call beyond free tier",
+    "provision_endpoint": "POST /v1/keys/provision",
+    "status_endpoint": "GET /v1/status"
+  },
+  "install": {
+    "pip": "pip install renoun-mcp",
+    "env": "RENOUN_API_KEY=rn_agent_your_key",
+    "config_file": "~/.renoun/config.json"
+  },
+  "keywords": [
+    "crypto", "risk", "regime", "structural", "trading", "mcp",
+    "bitcoin", "ethereum", "solana", "pre-trade", "position-sizing"
+  ],
+  "accuracy": {
+    "regime_accuracy_pct": 98.3,
+    "total_predictions_graded": 240,
+    "methodology": "Every prediction timestamped, graded against 1h actual price outcome",
+    "live_track_record": "https://x.com/98lukehall"
+  }
+}

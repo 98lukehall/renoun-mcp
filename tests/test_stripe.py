@@ -34,6 +34,14 @@ os.environ["STRIPE_WEBHOOK_SECRET"] = TEST_WEBHOOK_SECRET
 os.environ["STRIPE_SECRET_KEY"] = "sk_test_fake"
 os.environ["STRIPE_PRICE_ID"] = "price_test_fake"
 
+import auth as _auth_module
+from pathlib import Path
+
+# Save original KEYS_FILE and redirect to temp dir for isolation
+_orig_keys_file = _auth_module.KEYS_FILE
+_isolated_keys_file = Path(_tmpdir) / ".renoun" / "api_keys.json"
+_auth_module.KEYS_FILE = _isolated_keys_file
+
 from auth import create_key, _load_keys, list_keys
 from stripe_billing import (
     handle_webhook,
@@ -46,6 +54,18 @@ from stripe_billing import (
     _handle_subscription_change,
     _handle_payment_failed,
 )
+
+
+import pytest
+
+
+@pytest.fixture(autouse=True, scope="module")
+def _restore_auth_keys_file():
+    """Restore auth.KEYS_FILE after all tests in this module complete."""
+    yield
+    _auth_module.KEYS_FILE = _orig_keys_file
+    if _orig_home:
+        os.environ["HOME"] = _orig_home
 
 
 # ---------------------------------------------------------------------------
@@ -297,6 +317,8 @@ class TestDowngradeKey:
 # ---------------------------------------------------------------------------
 
 def cleanup():
+    # Restore auth.KEYS_FILE to prevent cross-test contamination
+    _auth_module.KEYS_FILE = _orig_keys_file
     if _orig_home:
         os.environ["HOME"] = _orig_home
     elif "HOME" in os.environ:
