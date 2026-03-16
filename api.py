@@ -1344,7 +1344,8 @@ async def mcp_server_card():
 
 try:
     from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
-    from starlette.routing import Route
+    from starlette.routing import Mount
+    from starlette.types import ASGIApp, Receive, Scope, Send
     from server import build_mcp_server as _build_mcp_server, TOOL_DEFS
 
     _mcp_server = _build_mcp_server()
@@ -1354,32 +1355,31 @@ try:
         stateless=True,
     )
 
-    async def _handle_mcp_request(request):
-        """Streamable HTTP endpoint for MCP protocol with API key auth."""
-        from starlette.responses import JSONResponse as StarletteJSONResponse
+    async def _mcp_asgi_app(scope: Scope, receive: Receive, send: Send):
+        """Raw ASGI app: auth check then delegate to MCP session manager."""
+        import json as _json
 
-        auth_header = request.headers.get("authorization", "")
-        if not auth_header.startswith("Bearer "):
-            return StarletteJSONResponse(
-                status_code=401,
-                content={"error": {"type": "auth_error", "message": "Missing Authorization header. Use: Bearer rn_live_...", "action": "Add header: Authorization: Bearer <your-api-key>"}},
-            )
-        key_info = validate_key(auth_header[7:].strip())
+        # Extract auth header from ASGI scope
+        headers = dict(scope.get("headers", []))
+        auth_value = headers.get(b"authorization", b"").decode()
+
+        if not auth_value.startswith("Bearer "):
+            body = _json.dumps({"error": {"type": "auth_error", "message": "Missing Authorization header. Use: Bearer rn_live_...", "action": "Add header: Authorization: Bearer <your-api-key>"}}).encode()
+            await send({"type": "http.response.start", "status": 401, "headers": [[b"content-type", b"application/json"]]})
+            await send({"type": "http.response.body", "body": body})
+            return
+
+        key_info = validate_key(auth_value[7:].strip())
         if not key_info:
-            return StarletteJSONResponse(
-                status_code=401,
-                content={"error": {"type": "auth_error", "message": "Invalid or revoked API key.", "action": "Check your API key or request a new one."}},
-            )
+            body = _json.dumps({"error": {"type": "auth_error", "message": "Invalid or revoked API key.", "action": "Check your API key or request a new one."}}).encode()
+            await send({"type": "http.response.start", "status": 401, "headers": [[b"content-type", b"application/json"]]})
+            await send({"type": "http.response.body", "body": body})
+            return
 
-        await _session_manager.handle_request(
-            request.scope, request.receive, request._send
-        )
+        await _session_manager.handle_request(scope, receive, send)
 
-    # Insert raw Starlette route at the FRONT of the router — accepts all methods
-    app.router.routes.insert(0, Route("/mcp", endpoint=_handle_mcp_request, methods=["GET", "POST", "DELETE"]))
-
-    # Start the session manager as a background task
-    import asyncio
+    # Mount as raw ASGI app — handles GET, POST, DELETE at /mcp
+    app.mount("/mcp", _mcp_asgi_app)
 
     @app.on_event("startup")
     async def _start_mcp_session_manager():
