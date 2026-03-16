@@ -13,10 +13,10 @@ import requests
 logger = logging.getLogger("renoun.binance")
 
 BINANCE_ENDPOINTS = [
-    "https://api.binance.com",         # Primary global
-    "https://api1.binance.com",        # Backup 1
-    "https://api2.binance.com",        # Backup 2
-    "https://data-api.binance.vision", # Data API (original, may be blocked on some infra)
+    "https://data-api.binance.vision", # Data API — works from US/Railway IPs
+    "https://api.binance.com",         # Global (451 from US IPs)
+    "https://api1.binance.com",        # Backup 1 (451 from US IPs)
+    "https://api2.binance.com",        # Backup 2 (451 from US IPs)
 ]
 KLINES_PATH = "/api/v3/klines"
 
