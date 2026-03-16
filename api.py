@@ -23,9 +23,13 @@ Endpoints:
 Patent Pending #63/923,592 — core engine is proprietary.
 """
 
+import logging
 import time
+import traceback
 from datetime import datetime, timezone
 from typing import Optional
+
+logger = logging.getLogger("renoun.api")
 
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -304,6 +308,42 @@ async def status():
     }
 
 
+@app.get("/v1/debug/binance", tags=["Debug"])
+async def debug_binance():
+    """Test Binance API connectivity from this server. No auth required."""
+    import requests as _requests
+    from binance_client import BINANCE_ENDPOINTS
+
+    results = {}
+    for endpoint in BINANCE_ENDPOINTS:
+        start = time.time()
+        try:
+            url = f"{endpoint}/api/v3/klines"
+            resp = _requests.get(
+                url,
+                params={"symbol": "BTCUSDT", "interval": "1h", "limit": 1},
+                timeout=10,
+                headers={"User-Agent": "ReNoUn/1.0"},
+            )
+            elapsed = (time.time() - start) * 1000
+            results[endpoint] = {
+                "status": resp.status_code,
+                "response_time_ms": round(elapsed, 1),
+                "ok": resp.status_code == 200,
+                "body_length": len(resp.content),
+            }
+        except Exception as e:
+            elapsed = (time.time() - start) * 1000
+            results[endpoint] = {
+                "status": "error",
+                "response_time_ms": round(elapsed, 1),
+                "ok": False,
+                "error": str(e),
+            }
+
+    return {"binance_connectivity": results}
+
+
 @app.post("/v1/analyze")
 async def analyze(body: AnalyzeRequest, key_info: dict = Depends(require_auth)):
     """Full 17-channel structural analysis."""
@@ -550,62 +590,84 @@ async def regime_live(
         return JSONResponse(content=cached, headers=headers)
 
     # Cache miss — fetch from Binance
-    from binance_client import fetch_klines
-    klines = fetch_klines(symbol, interval=timeframe, limit=100)
+    try:
+        from binance_client import fetch_klines
+        klines = fetch_klines(symbol, interval=timeframe, limit=100)
+    except Exception as e:
+        logger.error(f"Binance fetch crashed for {symbol}: {e}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=502, detail={
+            "error": {"type": "upstream_error",
+                      "message": f"Binance fetch failed for {symbol}: {str(e)}",
+                      "action": "Try POST /v1/regime with your own klines instead."}
+        })
+
     if not klines:
         raise HTTPException(status_code=502, detail={
             "error": {"type": "upstream_error",
-                      "message": f"Failed to fetch klines for {symbol} from Binance.",
-                      "action": "Check symbol is a valid Binance pair (e.g. BTCUSDT)."}
+                      "message": f"Failed to fetch klines for {symbol} from Binance. All endpoints returned empty data.",
+                      "action": "Check symbol is a valid Binance pair (e.g. BTCUSDT). Or use POST /v1/regime with your own klines."}
         })
 
-    start = time.time()
-    analysis = tool_finance_analyze({
-        "klines": klines, "symbol": symbol,
-        "timeframe": timeframe, "include_exposure": True,
-    })
-    elapsed_ms = (time.time() - start) * 1000
+    try:
+        start = time.time()
+        analysis = tool_finance_analyze({
+            "klines": klines, "symbol": symbol,
+            "timeframe": timeframe, "include_exposure": True,
+        })
+        elapsed_ms = (time.time() - start) * 1000
 
-    limiter.record(key_info["key_id"], key_info["tier"])
-    if key_info["tier"] == "agent":
-        tier_config = get_tier_config("agent")
-        metered_tracker.record_call(key_info["key_id"], "/v1/regime/live", tier_config)
+        limiter.record(key_info["key_id"], key_info["tier"])
+        if key_info["tier"] == "agent":
+            tier_config = get_tier_config("agent")
+            metered_tracker.record_call(key_info["key_id"], "/v1/regime/live", tier_config)
 
-    if "error" in analysis:
+        if "error" in analysis:
+            log_request(key_id=key_info["key_id"], tier=key_info["tier"],
+                        endpoint="/v1/regime/live", response_time_ms=elapsed_ms,
+                        status_code=400, error=analysis["error"]["message"])
+            return JSONResponse(status_code=400, content=analysis)
+
+        # Record DHS for momentum tracking before building response
+        dhs_value = analysis.get("dialectical_health", 0.5)
+        regime_cache.record_dhs(symbol, dhs_value)
+        dhs_history = regime_cache.get_dhs_history(symbol)
+
+        result = analysis_to_regime_response(
+            analysis, symbol, timeframe, include_full,
+            recent_dhs_values=dhs_history,
+        )
+        regime_cache.set(symbol, timeframe, result)
+
+        usage = limiter.get_usage(key_info["key_id"], key_info["tier"])
         log_request(key_id=key_info["key_id"], tier=key_info["tier"],
-                    endpoint="/v1/regime/live", response_time_ms=elapsed_ms,
-                    status_code=400, error=analysis["error"]["message"])
-        return JSONResponse(status_code=400, content=analysis)
+                    endpoint="/v1/regime/live", response_time_ms=elapsed_ms, status_code=200)
 
-    # Record DHS for momentum tracking before building response
-    dhs_value = analysis.get("dialectical_health", 0.5)
-    regime_cache.record_dhs(symbol, dhs_value)
-    dhs_history = regime_cache.get_dhs_history(symbol)
+        headers = {
+            "X-ReNoUn-Regime": result["regime"],
+            "X-ReNoUn-Action": result["action"],
+            "X-ReNoUn-Cache": "MISS",
+            "X-RateLimit-Remaining": str(usage["remaining"]),
+            "X-Response-Time-Ms": str(round(elapsed_ms, 2)),
+        }
+        stability = result.get("stability", {})
+        if stability:
+            headers["X-ReNoUn-Stability"] = str(stability.get("stability_score", ""))
+            headers["X-ReNoUn-Halflife"] = str(int(stability.get("halflife_minutes", 0)))
+            headers["X-ReNoUn-Urgency"] = stability.get("urgency", "")
 
-    result = analysis_to_regime_response(
-        analysis, symbol, timeframe, include_full,
-        recent_dhs_values=dhs_history,
-    )
-    regime_cache.set(symbol, timeframe, result)
+        return JSONResponse(content=result, headers=headers)
 
-    usage = limiter.get_usage(key_info["key_id"], key_info["tier"])
-    log_request(key_id=key_info["key_id"], tier=key_info["tier"],
-                endpoint="/v1/regime/live", response_time_ms=elapsed_ms, status_code=200)
-
-    headers = {
-        "X-ReNoUn-Regime": result["regime"],
-        "X-ReNoUn-Action": result["action"],
-        "X-ReNoUn-Cache": "MISS",
-        "X-RateLimit-Remaining": str(usage["remaining"]),
-        "X-Response-Time-Ms": str(round(elapsed_ms, 2)),
-    }
-    stability = result.get("stability", {})
-    if stability:
-        headers["X-ReNoUn-Stability"] = str(stability.get("stability_score", ""))
-        headers["X-ReNoUn-Halflife"] = str(int(stability.get("halflife_minutes", 0)))
-        headers["X-ReNoUn-Urgency"] = stability.get("urgency", "")
-
-    return JSONResponse(content=result, headers=headers)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unhandled error in regime_live for {symbol}: {e}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail={
+            "error": {"type": "internal_error",
+                      "message": f"Analysis failed: {str(e)}",
+                      "action": "This error has been logged. Try POST /v1/regime with your own klines."}
+        })
 
 
 @app.post("/v1/regime",
@@ -653,11 +715,16 @@ async def regime_batch(body: RegimeBatchRequest, key_info: dict = Depends(requir
                         endpoint="/v1/regime/batch", status_code=200)
             continue
 
-        klines = fetch_klines(symbol, interval=body.timeframe, limit=100)
+        try:
+            klines = fetch_klines(symbol, interval=body.timeframe, limit=100)
+        except Exception as e:
+            logger.error(f"Binance fetch crashed for {symbol} in batch: {e}")
+            klines = []
+
         if not klines:
             regimes[symbol] = {
                 "regime": "unstable", "action": "avoid", "dhs": 0.0, "exposure": 0.0,
-                "constellation": "NONE", "error": f"Failed to fetch {symbol}",
+                "constellation": "NONE", "error": f"Failed to fetch {symbol} from Binance",
             }
             limiter.record(key_info["key_id"], key_info["tier"])
             if key_info["tier"] == "agent":
@@ -665,10 +732,24 @@ async def regime_batch(body: RegimeBatchRequest, key_info: dict = Depends(requir
                 metered_tracker.record_call(key_info["key_id"], "/v1/regime/batch", tier_config)
             continue
 
-        analysis = tool_finance_analyze({
-            "klines": klines, "symbol": symbol,
-            "timeframe": body.timeframe, "include_exposure": True,
-        })
+        try:
+            analysis = tool_finance_analyze({
+                "klines": klines, "symbol": symbol,
+                "timeframe": body.timeframe, "include_exposure": True,
+            })
+        except Exception as e:
+            logger.error(f"Analysis crashed for {symbol} in batch: {e}")
+            logger.error(traceback.format_exc())
+            regimes[symbol] = {
+                "regime": "unstable", "action": "avoid", "dhs": 0.0, "exposure": 0.0,
+                "constellation": "NONE", "error": f"Analysis failed for {symbol}: {str(e)}",
+            }
+            limiter.record(key_info["key_id"], key_info["tier"])
+            if key_info["tier"] == "agent":
+                tier_config = get_tier_config("agent")
+                metered_tracker.record_call(key_info["key_id"], "/v1/regime/batch", tier_config)
+            continue
+
         limiter.record(key_info["key_id"], key_info["tier"])
         if key_info["tier"] == "agent":
             tier_config = get_tier_config("agent")

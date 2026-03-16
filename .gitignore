@@ -43,6 +43,7 @@ RENOUN_V5_BUILD_REPORT.md
 SIGNAL_BOT_REBUILD.md
 VALIDATION_CAMPAIGN.md
 build_health_report.md
+RAILWAY_DEBUG.md
 
 # Internal tools & scripts
 run_hhrlhf_eval.py

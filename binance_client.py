@@ -5,38 +5,61 @@ Fetches OHLCV klines from Binance's public API (no auth required).
 Extracted from signal_bot for use by the API server in production.
 """
 
+import logging
 from typing import Dict, List
 
 import requests
 
-BINANCE_BASE = "https://data-api.binance.vision"
-KLINES_ENDPOINT = "/api/v3/klines"
+logger = logging.getLogger("renoun.binance")
+
+BINANCE_ENDPOINTS = [
+    "https://api.binance.com",         # Primary global
+    "https://api1.binance.com",        # Backup 1
+    "https://api2.binance.com",        # Backup 2
+    "https://data-api.binance.vision", # Data API (original, may be blocked on some infra)
+]
+KLINES_PATH = "/api/v3/klines"
+
+HEADERS = {"User-Agent": "ReNoUn/1.0"}
 
 
 def fetch_klines(symbol: str, interval: str = "1h", limit: int = 100) -> List[Dict]:
     """
     Fetch OHLCV klines from Binance public API.
+    Tries multiple endpoints with fallback.
     Returns list of dicts compatible with ReNoUn finance engine.
     """
-    url = f"{BINANCE_BASE}{KLINES_ENDPOINT}"
     params = {
         "symbol": symbol,
         "interval": interval,
         "limit": limit,
     }
 
-    try:
-        resp = requests.get(url, params=params, timeout=10)
-        resp.raise_for_status()
-        raw = resp.json()
-    except requests.RequestException as e:
-        print(f"  ERROR fetching {symbol}: {e}")
+    last_error = None
+    for base in BINANCE_ENDPOINTS:
+        url = f"{base}{KLINES_PATH}"
+        try:
+            resp = requests.get(url, params=params, timeout=15, headers=HEADERS)
+            resp.raise_for_status()
+            raw = resp.json()
+            logger.info(f"Binance fetch OK: {base} for {symbol} ({len(raw)} klines)")
+            break
+        except requests.RequestException as e:
+            last_error = e
+            logger.warning(f"Binance endpoint failed: {base} — {e}")
+            continue
+    else:
+        # All endpoints failed
+        logger.error(f"All Binance endpoints failed for {symbol}: {last_error}")
         return []
 
+    # Binance kline format:
+    # [open_time, open, high, low, close, volume, close_time,
+    #  quote_volume, trades, taker_buy_base_vol, taker_buy_quote_vol, ignore]
     klines = []
     for k in raw:
         klines.append({
-            "timestamp": k[0] / 1000,
+            "timestamp": k[0] / 1000,  # ms → seconds
             "open": float(k[1]),
             "high": float(k[2]),
             "low": float(k[3]),
