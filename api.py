@@ -550,7 +550,7 @@ async def regime_live(
         return JSONResponse(content=cached, headers=headers)
 
     # Cache miss — fetch from Binance
-    from signal_bot.renoun_signal_bot import fetch_klines
+    from binance_client import fetch_klines
     klines = fetch_klines(symbol, interval=timeframe, limit=100)
     if not klines:
         raise HTTPException(status_code=502, detail={
@@ -634,7 +634,7 @@ async def regime_batch(body: RegimeBatchRequest, key_info: dict = Depends(requir
     """Regime classification for multiple assets with portfolio aggregate."""
     check_tool_access(key_info, "regime_batch")
 
-    from signal_bot.renoun_signal_bot import fetch_klines
+    from binance_client import fetch_klines
     from datetime import datetime, timezone
 
     regimes = {}
