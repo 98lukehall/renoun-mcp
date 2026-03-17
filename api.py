@@ -1366,8 +1366,33 @@ try:
         headers = dict(scope.get("headers", []))
         auth_value = headers.get(b"authorization", b"").decode()
 
+        method = scope.get("method", "GET")
+
+        # Unauthenticated GET → friendly discovery page (browsers, crawlers, agents)
+        if not auth_value.startswith("Bearer ") and method == "GET":
+            body = _json.dumps({
+                "name": "ReNoUn MCP Server",
+                "description": "Crypto regime classifier for trading agents. Bounded/active/unstable with 98% accuracy.",
+                "protocol": "MCP (Model Context Protocol)",
+                "transport": "streamable-http",
+                "registry": "https://registry.modelcontextprotocol.io",
+                "registry_name": "io.github.98lukehall/renoun",
+                "tools": 9,
+                "auth": {
+                    "type": "bearer",
+                    "provision": "POST /v1/keys/provision",
+                    "free_tier": "50 calls/day, no credit card",
+                    "example": "curl -X POST /v1/keys/provision -H 'Content-Type: application/json' -d '{\"email\":\"you@example.com\",\"tier\":\"agent\",\"agent_name\":\"my-agent\"}'"
+                },
+                "docs": "https://harrisoncollab.com/agents",
+                "status": "https://web-production-817e2.up.railway.app/v1/status"
+            }, indent=2).encode()
+            await send({"type": "http.response.start", "status": 200, "headers": [[b"content-type", b"application/json"]]})
+            await send({"type": "http.response.body", "body": body})
+            return
+
         if not auth_value.startswith("Bearer "):
-            body = _json.dumps({"error": {"type": "auth_error", "message": "Missing Authorization header. Use: Bearer rn_live_...", "action": "Add header: Authorization: Bearer <your-api-key>"}}).encode()
+            body = _json.dumps({"error": {"type": "auth_error", "message": "Missing Authorization header. Use: Bearer rn_agent_...", "action": "Add header: Authorization: Bearer <your-api-key>"}}).encode()
             await send({"type": "http.response.start", "status": 401, "headers": [[b"content-type", b"application/json"]]})
             await send({"type": "http.response.body", "body": body})
             return
