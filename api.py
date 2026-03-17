@@ -1344,7 +1344,6 @@ async def mcp_server_card():
 
 try:
     from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
-    from starlette.routing import Mount
     from starlette.types import ASGIApp, Receive, Scope, Send
     from server import build_mcp_server as _build_mcp_server, TOOL_DEFS
 
@@ -1358,6 +1357,10 @@ try:
     async def _mcp_asgi_app(scope: Scope, receive: Receive, send: Send):
         """Raw ASGI app: auth check then delegate to MCP session manager."""
         import json as _json
+
+        # Only handle http requests
+        if scope["type"] != "http":
+            return
 
         # Extract auth header from ASGI scope
         headers = dict(scope.get("headers", []))
@@ -1378,8 +1381,20 @@ try:
 
         await _session_manager.handle_request(scope, receive, send)
 
-    # Mount as raw ASGI app — handles GET, POST, DELETE at /mcp
-    app.mount("/mcp", _mcp_asgi_app)
+    # Raw ASGI middleware class — intercepts /mcp BEFORE Starlette routing
+    # so we get scope/receive/send directly (no 307 redirect, no Request wrapper)
+    class _MCPInterceptMiddleware:
+        """ASGI middleware that routes /mcp to MCP session manager."""
+        def __init__(self, app: ASGIApp):
+            self.app = app
+
+        async def __call__(self, scope: Scope, receive: Receive, send: Send):
+            if scope["type"] == "http" and scope.get("path", "").rstrip("/") == "/mcp":
+                await _mcp_asgi_app(scope, receive, send)
+            else:
+                await self.app(scope, receive, send)
+
+    app.add_middleware(_MCPInterceptMiddleware)
 
     @app.on_event("startup")
     async def _start_mcp_session_manager():
