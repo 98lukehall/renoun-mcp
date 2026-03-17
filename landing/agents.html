@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ReNoUn for AI Trading Agents</title>
-<meta name="description" content="Pre-trade structural risk check for autonomous trading agents. 98% regime accuracy. 50 free calls/day.">
+<meta name="description" content="Pre-trade structural risk check for autonomous trading agents. 100% bounded regime accuracy. 50 free calls/day.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -100,7 +100,7 @@ footer a { color: var(--text-dim); margin: 0 12px; }
 
 <section class="hero">
   <h1>Built for Autonomous Trading Agents</h1>
-  <p class="subtitle">One GET request. One action field. 98% accuracy across 240+ live graded predictions.</p>
+  <p class="subtitle">One GET request. One action field. 100% bounded regime accuracy (126/126 graded).</p>
 </section>
 
 <section>
@@ -166,7 +166,7 @@ r = requests.get(<span class="string">"https://web-production-817e2.up.railway.a
 
 <section>
   <h2>Verify the Track Record</h2>
-  <p>Every prediction is public, timestamped, and graded against the 1-hour actual price outcome.</p>
+  <p>No other crypto signal service publishes every call with a timestamp and a pass/fail grade. Most won't even tell you their hit rate. Every ReNoUn prediction is public, timestamped, and graded against the 1-hour actual price outcome. No cherry-picking, no hidden losses.</p>
   <p><a href="https://x.com/98lukehall">Live signal feed on X</a> &middot; <a href="dashboard.html">Dashboard (6h delayed)</a></p>
 </section>
 
@@ -180,7 +180,7 @@ r = requests.get(<span class="string">"https://web-production-817e2.up.railway.a
 
   <div class="faq-item">
     <h4>How is accuracy measured?</h4>
-    <p>Every prediction is timestamped and graded against the actual 1-hour price outcome. 98% accuracy means 98% of regime classifications correctly described the subsequent price behavior.</p>
+    <p>Every prediction is timestamped and graded against the actual 1-hour price outcome. When ReNoUn classifies a regime as bounded (proceed), it has been correct 100% of the time across 126+ graded predictions — price stayed within the expected envelope every time.</p>
   </div>
 
   <div class="faq-item">

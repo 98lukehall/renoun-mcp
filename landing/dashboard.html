@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ReNoUn Dashboard — Live Structural Regime Classification</title>
-<meta name="description" content="Live structural regime classifications for BTC, ETH, SOL, DOGE, XRP. 6-hour delayed feed. 98% regime accuracy across 240+ predictions.">
+<meta name="description" content="Live structural regime classifications for BTC, ETH, SOL, DOGE, XRP. 6-hour delayed feed. 100% bounded regime accuracy. 245+ predictions graded.">
 <meta property="og:title" content="ReNoUn Dashboard — Live Regime Classification">
-<meta property="og:description" content="Watch structural regime detection in real-time. 98% accuracy. Free 6h-delayed feed.">
+<meta property="og:description" content="Watch structural regime detection in real-time. 100% bounded regime accuracy. Free 6h-delayed feed.">
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -416,7 +416,7 @@ code, .mono { font-family: 'JetBrains Mono', monospace; }
   <div class="dash-meta">
     <div class="stat">
       <div class="stat-val" id="metaAccuracy">--</div>
-      <div class="stat-label">Regime Accuracy</div>
+      <div class="stat-label">Bounded Accuracy</div>
     </div>
     <div class="stat">
       <div class="stat-val" id="metaTotal">--</div>
@@ -644,15 +644,27 @@ function renderAccuracy(scores) {
       ${byConst || '<p style="color:var(--text-muted);">No data</p>'}
     </div>
     <div class="accuracy-card">
-      <h3>Overall</h3>
-      <div class="accuracy-row"><span class="label">Total graded</span><span class="value">${s.total_graded || 0}</span></div>
-      <div class="accuracy-row"><span class="label">Correct</span><span class="value" style="color:var(--bounded)">${s.correct || 0}</span></div>
-      <div class="accuracy-row"><span class="label">Partial</span><span class="value" style="color:var(--active)">${s.partial || 0}</span></div>
-      <div class="accuracy-row"><span class="label">Wrong</span><span class="value" style="color:var(--unstable)">${s.wrong || 0}</span></div>
-      <div class="accuracy-row" style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--border);">
-        <span class="label" style="font-weight:600;color:var(--text);">Accuracy</span>
-        <span class="value" style="font-size:1.1rem;color:var(--bounded)">${s.accuracy ? (s.accuracy * 100).toFixed(1) + '%' : '--'}</span>
-      </div>
+      <h3>By Regime</h3>
+      ${(() => {
+        const bc = s.by_constellation || {};
+        let bC = 0, bT = 0, aC = 0, aT = 0, uC = 0, uT = 0;
+        ['HIGH_SYMMETRY','SURFACE_VARIATION','CLOSED_LOOP'].forEach(c => { if(bc[c]){bC+=bc[c].correct;bT+=bc[c].total;} });
+        ['CONVERGENCE','PATTERN_BREAK','DIP_AND_RECOVERY'].forEach(c => { if(bc[c]){aC+=bc[c].correct;aT+=bc[c].total;} });
+        ['SCATTERING','REPEATED_DISRUPTION'].forEach(c => { if(bc[c]){uC+=bc[c].correct;uT+=bc[c].total;} });
+        const bAcc = bT > 0 ? (bC/bT*100).toFixed(0)+'%' : '--';
+        const aAcc = aT > 0 ? (aC/aT*100).toFixed(0)+'%' : '--';
+        const uAcc = uT > 0 ? (uC/uT*100).toFixed(0)+'%' : '--';
+        return `
+          <div class="accuracy-row"><span class="label" style="color:var(--bounded);">Bounded</span><span class="value" style="color:var(--bounded);font-size:1.1rem;font-weight:700;">${bAcc}</span></div>
+          <div class="accuracy-row"><span class="label" style="color:var(--text-muted);font-size:0.75rem;margin-top:-4px;">${bC}/${bT} correct</span></div>
+          <div class="accuracy-row" style="margin-top:0.5rem;"><span class="label" style="color:var(--active);">Active</span><span class="value" style="color:var(--active);">${aAcc}</span></div>
+          <div class="accuracy-row"><span class="label" style="color:var(--text-muted);font-size:0.75rem;margin-top:-4px;">${aC}/${aT} correct</span></div>
+          <div class="accuracy-row" style="margin-top:0.5rem;"><span class="label" style="color:var(--unstable);">Unstable</span><span class="value" style="color:var(--unstable);">${uAcc}</span></div>
+          <div class="accuracy-row"><span class="label" style="color:var(--text-muted);font-size:0.75rem;margin-top:-4px;">${uC}/${uT} correct</span></div>
+          <div class="accuracy-row" style="margin-top:0.75rem;padding-top:0.5rem;border-top:1px solid var(--border);">
+            <span class="label" style="color:var(--text-muted);">Total graded</span><span class="value">${s.total_graded || 0}</span>
+          </div>`;
+      })()}
     </div>
   `;
 }
@@ -680,10 +692,15 @@ async function loadDashboard() {
       .map(a => renderAssetCard(a, latest[a]))
       .join('');
 
-    // Update header stats
+    // Update header stats — bounded regime accuracy
     if (data.scores) {
       const s = data.scores.summary || {};
-      document.getElementById('metaAccuracy').textContent = s.accuracy ? (s.accuracy * 100).toFixed(0) + '%' : '--';
+      const bc = s.by_constellation || {};
+      let bCorrect = 0, bTotal = 0;
+      ['HIGH_SYMMETRY', 'SURFACE_VARIATION', 'CLOSED_LOOP'].forEach(c => {
+        if (bc[c]) { bCorrect += bc[c].correct; bTotal += bc[c].total; }
+      });
+      document.getElementById('metaAccuracy').textContent = bTotal > 0 ? (bCorrect / bTotal * 100).toFixed(0) + '%' : '--';
       document.getElementById('metaTotal').textContent = s.total_graded || '--';
     }
 

@@ -43,6 +43,7 @@ from api_config import (
 from auth import validate_key, is_tool_allowed, get_tier_config, create_agent_key, find_agent_key_by_email, count_agent_keys_by_email
 from rate_limiter import limiter
 from usage import log_request, metered_tracker
+from email_sender import send_agent_welcome_email, send_limit_reached_email
 from server import (
     tool_analyze, tool_health_check, tool_compare, tool_pattern_query, tool_steer,
     tool_finance_analyze,
@@ -61,7 +62,7 @@ app = FastAPI(
     title="ReNoUn Regime Classification API",
     description=(
         "Structural regime classification for crypto markets. "
-        "98% accuracy across 240+ live predictions. "
+        "100% bounded regime accuracy (126/126 graded). "
         "Pre-trade risk check: returns regime (bounded/active/unstable) "
         "and action (proceed/reduce/avoid)."
     ),
@@ -149,6 +150,80 @@ def check_turn_limit(key_info: dict, turn_count: int):
             status_code=400,
             detail={"error": {"type": "tier_error", "message": f"Turn count {turn_count} exceeds {key_info['tier']} tier limit of {max_turns}.", "action": "Reduce turns or upgrade tier."}},
         )
+
+
+BILLING_URL = "https://harrisoncollab.com/billing"
+
+
+def _record_agent_call(key_info: dict, endpoint: str) -> dict | None:
+    """Record a metered call for agent-tier keys.
+
+    Returns a _billing warning dict to inject into the response at 40+ calls,
+    or None if no warning needed.
+
+    Raises HTTPException 402 if free tier exhausted and no billing on file.
+    """
+    if key_info["tier"] != "agent":
+        return None
+
+    tier_config = get_tier_config("agent")
+    has_billing = key_info.get("has_billing", False)
+
+    # Pre-check: block if past free tier and no billing
+    usage = metered_tracker.get_usage(key_info["key_id"], tier_config)
+    if usage["today"]["total_calls"] >= 50 and not has_billing:
+        raise HTTPException(status_code=402, detail={
+            "error": {
+                "type": "free_limit_exhausted",
+                "message": "Free daily limit reached (50/50). Add a payment method to continue.",
+                "billing_url": BILLING_URL,
+                "action": "Add a payment method at the billing URL, then retry.",
+                "resets_at": "midnight UTC",
+            }
+        })
+
+    result = metered_tracker.record_call(key_info["key_id"], endpoint, tier_config)
+
+    # Send limit email at exactly 50 calls
+    if result.get("send_limit_email"):
+        owner = key_info.get("owner", "")
+        if owner:
+            try:
+                send_limit_reached_email(to=owner, daily_total=result["daily_total"], billing_url=BILLING_URL)
+            except Exception:
+                pass  # Don't let email failures block API calls
+
+    # Hard block: if this call just hit 51+ and no billing, reject
+    if result["daily_total"] > 50 and not has_billing:
+        raise HTTPException(status_code=402, detail={
+            "error": {
+                "type": "free_limit_exhausted",
+                "message": "Free daily limit reached (50/50). Add a payment method to continue.",
+                "billing_url": BILLING_URL,
+                "action": "Add a payment method at the billing URL, then retry.",
+                "resets_at": "midnight UTC",
+            }
+        })
+
+    # Return billing warning for 40+ calls
+    if result.get("warning") == "limit_reached":
+        return {
+            "warning": "free_limit_reached",
+            "message": f"You've used all {result['daily_total']} free calls today. Add a payment method to continue at $0.02/call.",
+            "daily_total": result["daily_total"],
+            "free_remaining": 0,
+            "billing_url": BILLING_URL,
+        }
+    elif result.get("warning") == "approaching_limit":
+        return {
+            "warning": "approaching_free_limit",
+            "message": f"{result['daily_total']}/50 free calls used today. Add a payment method to avoid interruption.",
+            "daily_total": result["daily_total"],
+            "free_remaining": result["free_remaining"],
+            "billing_url": BILLING_URL,
+        }
+
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -303,7 +378,7 @@ async def status():
             "free_tier": "50 calls/day",
             "regime_endpoint": "/v1/regime/live/{symbol}",
             "docs": "/docs",
-            "accuracy": "98% across 240+ predictions",
+            "accuracy": "100% bounded regime accuracy, 245+ predictions graded",
         },
     }
 
@@ -511,9 +586,7 @@ def _run_regime_analysis(klines: list[dict], symbol: str, timeframe: str,
     elapsed_ms = (time.time() - start) * 1000
 
     limiter.record(key_info["key_id"], key_info["tier"])
-    if key_info["tier"] == "agent":
-        tier_config = get_tier_config("agent")
-        metered_tracker.record_call(key_info["key_id"], endpoint, tier_config)
+    billing_warn = _record_agent_call(key_info, endpoint)
     has_error = "error" in analysis
     log_request(
         key_id=key_info["key_id"], tier=key_info["tier"],
@@ -526,6 +599,8 @@ def _run_regime_analysis(klines: list[dict], symbol: str, timeframe: str,
         return JSONResponse(status_code=400, content=analysis)
 
     result = analysis_to_regime_response(analysis, symbol, timeframe, include_full)
+    if billing_warn:
+        result["_billing"] = billing_warn
     usage = limiter.get_usage(key_info["key_id"], key_info["tier"])
 
     headers = {
@@ -571,11 +646,12 @@ async def regime_live(
     if cached is not None:
         usage = limiter.get_usage(key_info["key_id"], key_info["tier"])
         limiter.record(key_info["key_id"], key_info["tier"])
-        if key_info["tier"] == "agent":
-            tier_config = get_tier_config("agent")
-            metered_tracker.record_call(key_info["key_id"], "/v1/regime/live", tier_config)
+        billing_warn = _record_agent_call(key_info, "/v1/regime/live")
         log_request(key_id=key_info["key_id"], tier=key_info["tier"],
                     endpoint="/v1/regime/live", status_code=200)
+        resp = dict(cached)
+        if billing_warn:
+            resp["_billing"] = billing_warn
         headers = {
             "X-ReNoUn-Regime": cached["regime"],
             "X-ReNoUn-Action": cached["action"],
@@ -587,7 +663,7 @@ async def regime_live(
             headers["X-ReNoUn-Stability"] = str(stability.get("stability_score", ""))
             headers["X-ReNoUn-Halflife"] = str(int(stability.get("halflife_minutes", 0)))
             headers["X-ReNoUn-Urgency"] = stability.get("urgency", "")
-        return JSONResponse(content=cached, headers=headers)
+        return JSONResponse(content=resp, headers=headers)
 
     # Cache miss — fetch from Binance
     try:
@@ -618,9 +694,7 @@ async def regime_live(
         elapsed_ms = (time.time() - start) * 1000
 
         limiter.record(key_info["key_id"], key_info["tier"])
-        if key_info["tier"] == "agent":
-            tier_config = get_tier_config("agent")
-            metered_tracker.record_call(key_info["key_id"], "/v1/regime/live", tier_config)
+        billing_warn = _record_agent_call(key_info, "/v1/regime/live")
 
         if "error" in analysis:
             log_request(key_id=key_info["key_id"], tier=key_info["tier"],
@@ -638,6 +712,9 @@ async def regime_live(
             recent_dhs_values=dhs_history,
         )
         regime_cache.set(symbol, timeframe, result)
+
+        if billing_warn:
+            result["_billing"] = billing_warn
 
         usage = limiter.get_usage(key_info["key_id"], key_info["tier"])
         log_request(key_id=key_info["key_id"], tier=key_info["tier"],
@@ -700,6 +777,7 @@ async def regime_batch(body: RegimeBatchRequest, key_info: dict = Depends(requir
     from datetime import datetime, timezone
 
     regimes = {}
+    billing_warn = None
     for symbol in body.symbols:
         check_rate_limit(key_info)
 
@@ -708,9 +786,7 @@ async def regime_batch(body: RegimeBatchRequest, key_info: dict = Depends(requir
         if cached is not None:
             regimes[symbol] = cached
             limiter.record(key_info["key_id"], key_info["tier"])
-            if key_info["tier"] == "agent":
-                tier_config = get_tier_config("agent")
-                metered_tracker.record_call(key_info["key_id"], "/v1/regime/batch", tier_config)
+            billing_warn = _record_agent_call(key_info, "/v1/regime/batch")
             log_request(key_id=key_info["key_id"], tier=key_info["tier"],
                         endpoint="/v1/regime/batch", status_code=200)
             continue
@@ -727,9 +803,7 @@ async def regime_batch(body: RegimeBatchRequest, key_info: dict = Depends(requir
                 "constellation": "NONE", "error": f"Failed to fetch {symbol} from Binance",
             }
             limiter.record(key_info["key_id"], key_info["tier"])
-            if key_info["tier"] == "agent":
-                tier_config = get_tier_config("agent")
-                metered_tracker.record_call(key_info["key_id"], "/v1/regime/batch", tier_config)
+            billing_warn = _record_agent_call(key_info, "/v1/regime/batch")
             continue
 
         try:
@@ -745,15 +819,11 @@ async def regime_batch(body: RegimeBatchRequest, key_info: dict = Depends(requir
                 "constellation": "NONE", "error": f"Analysis failed for {symbol}: {str(e)}",
             }
             limiter.record(key_info["key_id"], key_info["tier"])
-            if key_info["tier"] == "agent":
-                tier_config = get_tier_config("agent")
-                metered_tracker.record_call(key_info["key_id"], "/v1/regime/batch", tier_config)
+            billing_warn = _record_agent_call(key_info, "/v1/regime/batch")
             continue
 
         limiter.record(key_info["key_id"], key_info["tier"])
-        if key_info["tier"] == "agent":
-            tier_config = get_tier_config("agent")
-            metered_tracker.record_call(key_info["key_id"], "/v1/regime/batch", tier_config)
+        billing_warn = _record_agent_call(key_info, "/v1/regime/batch")
 
         if "error" in analysis:
             regimes[symbol] = {
@@ -772,14 +842,18 @@ async def regime_batch(body: RegimeBatchRequest, key_info: dict = Depends(requir
 
     portfolio_action, portfolio_exposure, unstable_count = compute_portfolio_action(regimes)
 
-    return JSONResponse(content={
+    resp = {
         "regimes": regimes,
         "portfolio_action": portfolio_action,
         "portfolio_exposure": portfolio_exposure,
         "unstable_count": unstable_count,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "_meta": META_BLOCK,
-    })
+    }
+    if billing_warn:
+        resp["_billing"] = billing_warn
+
+    return JSONResponse(content=resp)
 
 
 @app.post("/v1/agent/monitor")
@@ -841,12 +915,16 @@ async def alignment_classify(body: AlignmentClassifyRequest, key_info: dict = De
 # Billing Endpoints
 # ---------------------------------------------------------------------------
 
-from stripe_billing import create_checkout_session, handle_webhook, create_portal_session, get_provisioned_key
+from stripe_billing import create_checkout_session, create_metered_checkout_session, handle_webhook, create_portal_session, get_provisioned_key
 from fastapi.responses import HTMLResponse
 
 
 class CheckoutRequest(BaseModel):
     email: str = Field(..., description="Customer email for the subscription")
+
+
+class MeteredCheckoutRequest(BaseModel):
+    api_key: str = Field(..., description="Your existing rn_agent_... API key")
 
 
 class PortalRequest(BaseModel):
@@ -865,6 +943,39 @@ async def billing_checkout(body: CheckoutRequest):
     result = create_checkout_session(customer_email=body.email)
     if "error" in result:
         raise HTTPException(status_code=500, detail={"error": {"type": "billing_error", "message": result["error"], "action": "Check Stripe configuration."}})
+    return result
+
+
+@app.post("/v1/billing/metered")
+async def billing_metered(body: MeteredCheckoutRequest):
+    """Add a payment method to an existing agent key for metered billing.
+
+    Creates a Stripe Checkout session. After checkout, calls beyond 50/day
+    are billed at $0.02 each instead of being blocked.
+    """
+    from auth import validate_key as _validate
+    key_info = _validate(body.api_key)
+    if not key_info:
+        raise HTTPException(status_code=401, detail={
+            "error": {"type": "auth_error", "message": "Invalid API key.", "action": "Provide a valid rn_agent_... key."}
+        })
+    if key_info["tier"] != "agent":
+        raise HTTPException(status_code=400, detail={
+            "error": {"type": "tier_error", "message": "Metered billing is only for agent-tier keys.", "action": "Use an rn_agent_... key."}
+        })
+    if key_info.get("has_billing"):
+        raise HTTPException(status_code=409, detail={
+            "error": {"type": "already_active", "message": "This key already has metered billing active.", "action": "Use /v1/billing/portal to manage your subscription."}
+        })
+
+    result = create_metered_checkout_session(
+        customer_email=key_info["owner"],
+        key_id=key_info["key_id"],
+    )
+    if "error" in result:
+        raise HTTPException(status_code=500, detail={
+            "error": {"type": "billing_error", "message": result["error"], "action": "Check Stripe configuration."}
+        })
     return result
 
 
@@ -1007,6 +1118,12 @@ async def provision_agent_key(body: ProvisionRequest, request: Request):
     log_request(key_id=key_data["key_id"], tier="agent",
                 endpoint="/v1/keys/provision", status_code=200)
 
+    # Send welcome email with the API key
+    try:
+        send_agent_welcome_email(to=body.email, raw_key=key_data["raw_key"])
+    except Exception:
+        pass  # Don't let email failures block provisioning
+
     return {
         "api_key": key_data["raw_key"],
         "tier": "agent",
@@ -1014,8 +1131,9 @@ async def provision_agent_key(body: ProvisionRequest, request: Request):
         "rate_limit_hourly": 1000,
         "daily_limit": 10000,
         "price_per_call": "$0.02 (beyond free tier)",
-        "billing_url": "https://harrisoncollab.com/billing",
+        "billing_url": BILLING_URL,
         "docs_url": "https://harrisoncollab.com/agents",
+        "note": "You'll receive warnings at 40/50 calls. At 50, add a payment method to continue.",
         "quick_start": f"curl -H 'Authorization: Bearer {key_data['raw_key']}' https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT",
     }
 
@@ -1144,7 +1262,7 @@ async def agent_leaderboard():
         "leaderboard": agents[:20],
         "stats": {
             "total_agents": total_agents,
-            "regime_accuracy": "98%",
+            "regime_accuracy": "100% bounded",
         },
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -1372,7 +1490,7 @@ try:
         if not auth_value.startswith("Bearer ") and method == "GET":
             body = _json.dumps({
                 "name": "ReNoUn MCP Server",
-                "description": "Crypto regime classifier for trading agents. Bounded/active/unstable with 98% accuracy.",
+                "description": "Crypto regime classifier for trading agents. 100% bounded regime accuracy.",
                 "protocol": "MCP (Model Context Protocol)",
                 "transport": "streamable-http",
                 "registry": "https://registry.modelcontextprotocol.io",

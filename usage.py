@@ -61,10 +61,16 @@ def log_request(
 class MeteredUsageTracker:
     """In-memory daily usage tracking for agent-tier metered billing."""
 
+    WARN_THRESHOLD = 40   # API response warning starts here
+    LIMIT_THRESHOLD = 50  # Free tier cap — email sent here
+
     def __init__(self):
         self._lock = threading.Lock()
         # {key_id: {"date": "YYYY-MM-DD", "total": int, "by_endpoint": {str: int}}}
         self._daily = {}
+        # Track whether we already sent the limit email today per key
+        # {key_id: "YYYY-MM-DD"}
+        self._limit_email_sent = {}
 
     def _get_today(self) -> str:
         return datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -83,6 +89,8 @@ class MeteredUsageTracker:
           daily_total: int — total calls today
           daily_remaining: int — calls remaining before daily limit
           free_remaining: int — free calls remaining
+          warning: str|None — "approaching_limit" at 40+, "limit_reached" at 50+
+          send_limit_email: bool — True exactly once when total hits 50
         """
         with self._lock:
             counter = self._get_counter(key_id)
@@ -99,31 +107,58 @@ class MeteredUsageTracker:
             if is_billable:
                 self._report_stripe_usage(key_id)
 
+            # Determine warning level
+            warning = None
+            if total >= free_daily:
+                warning = "limit_reached"
+            elif total >= self.WARN_THRESHOLD:
+                warning = "approaching_limit"
+
+            # Should we send the limit email? Only once per key per day.
+            send_limit_email = False
+            if total == free_daily:
+                today = self._get_today()
+                if self._limit_email_sent.get(key_id) != today:
+                    self._limit_email_sent[key_id] = today
+                    send_limit_email = True
+
             return {
                 "is_billable": is_billable,
                 "daily_total": total,
                 "daily_remaining": max(0, daily_limit - total),
                 "free_remaining": max(0, free_daily - total),
+                "warning": warning,
+                "send_limit_email": send_limit_email,
             }
 
     def _report_stripe_usage(self, key_id: str):
-        """Report a single usage event to Stripe (if configured)."""
+        """Report a single usage event to Stripe Billing Meter (if configured).
+
+        Uses the new Stripe Billing Meter API (stripe.billing.MeterEvent.create)
+        which requires a Billing Meter with event_name='api_requests'.
+        The customer is identified by their stripe_customer_id on the key.
+        """
         try:
             import stripe
             if not os.environ.get("STRIPE_SECRET_KEY"):
                 return
-            # Look up subscription item ID for this key
+            # Look up Stripe customer ID for this key
             from auth import _load_keys
             data = _load_keys()
-            sub_item_id = None
+            customer_id = None
             for entry in data["keys"]:
-                if entry["key_id"] == key_id and entry.get("stripe_subscription_item_id"):
-                    sub_item_id = entry["stripe_subscription_item_id"]
+                if entry["key_id"] == key_id and entry.get("stripe_customer_id"):
+                    customer_id = entry["stripe_customer_id"]
                     break
-            if sub_item_id:
+            if customer_id:
                 stripe.api_key = os.environ["STRIPE_SECRET_KEY"]
-                stripe.SubscriptionItem.create_usage_record(
-                    sub_item_id, quantity=1, timestamp=int(time.time()),
+                stripe.billing.MeterEvent.create(
+                    event_name="api_requests",
+                    payload={
+                        "stripe_customer_id": customer_id,
+                        "value": "1",
+                    },
+                    timestamp=int(time.time()),
                 )
         except Exception:
             pass  # Don't let Stripe errors block API calls

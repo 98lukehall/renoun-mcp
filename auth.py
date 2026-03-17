@@ -193,6 +193,7 @@ def validate_key(raw_key: str) -> Optional[dict]:
                 "tier": entry["tier"],
                 "owner": entry.get("owner", ""),
                 "created_at": entry.get("created_at", ""),
+                "has_billing": bool(entry.get("stripe_subscription_item_id")),
             }
     return None
 

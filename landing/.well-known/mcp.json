@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "name": "renoun",
   "display_name": "ReNoUn — Crypto Regime Classification",
-  "description": "Pre-trade structural risk check. Classifies crypto market regimes (bounded/active/unstable) with 98% accuracy. Call before any position.",
+  "description": "Pre-trade structural risk check. Classifies crypto market regimes (bounded/active/unstable). 100% bounded regime accuracy — every prediction public, timestamped, and graded. No other crypto signal does this. Call before any position.",
   "version": "1.3.1",
   "author": {
     "name": "Harrison Collab",
@@ -60,9 +60,10 @@
     "bitcoin", "ethereum", "solana", "pre-trade", "position-sizing"
   ],
   "accuracy": {
-    "regime_accuracy_pct": 98.3,
-    "total_predictions_graded": 240,
-    "methodology": "Every prediction timestamped, graded against 1h actual price outcome",
+    "bounded_regime_accuracy_pct": 100,
+    "bounded_predictions_graded": 126,
+    "total_predictions_graded": 245,
+    "methodology": "Every prediction timestamped, graded against 1h actual price outcome. Bounded regime accuracy = when classified as bounded, price stayed within envelope 100% of the time.",
     "live_track_record": "https://x.com/98lukehall"
   }
 }

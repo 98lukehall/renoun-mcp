@@ -166,9 +166,177 @@ def _welcome_email_html(raw_key: str, tier: str) -> str:
 </html>"""
 
 
+def _agent_welcome_email_html(raw_key: str) -> str:
+    """Generate the welcome email HTML for a free agent API key."""
+    return """<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#0B1D3A;font-family:'Inter',-apple-system,Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1D3A;padding:40px 20px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#0F2847;border-radius:12px;border:1px solid #1A3A5C;overflow:hidden;">
+
+<!-- Header -->
+<tr><td style="background:#0B1D3A;padding:32px 40px;text-align:center;border-bottom:1px solid #1A3A5C;">
+  <h1 style="margin:0;color:#FFFFF0;font-size:24px;font-weight:700;letter-spacing:-0.02em;">ReNoUn</h1>
+  <p style="margin:8px 0 0;color:#8B92A0;font-size:14px;">Structural Regime Classifier for Crypto Markets</p>
+</td></tr>
+
+<!-- Body -->
+<tr><td style="padding:40px;">
+  <h2 style="margin:0 0 16px;color:#FFFFF0;font-size:20px;font-weight:600;">Your free API key is ready</h2>
+  <p style="margin:0 0 24px;color:#A0AEC0;font-size:15px;line-height:1.6;">
+    You have <strong style="color:#FFFFF0;">50 free calls per day</strong> — no credit card required. Call the regime endpoint before any trade to know if conditions are bounded, active, or unstable.
+  </p>
+
+  <!-- API Key Box -->
+  <div style="background:#162D4A;border:1px solid #1A3A5C;border-radius:8px;padding:16px 20px;margin:0 0 24px;">
+    <p style="margin:0 0 6px;color:#8B92A0;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Your API Key</p>
+    <code style="font-family:'JetBrains Mono',Consolas,monospace;font-size:13px;color:#7CDB8A;word-break:break-all;line-height:1.5;">""" + raw_key + """</code>
+  </div>
+
+  <p style="margin:0 0 8px;color:#A0AEC0;font-size:14px;">
+    <strong style="color:#FFFFF0;">Store this key securely</strong> — it cannot be recovered.
+  </p>
+
+  <!-- Free Tier Info -->
+  <div style="background:#162D4A;border:1px solid #1A3A5C;border-radius:8px;padding:16px 20px;margin:24px 0;">
+    <p style="margin:0;color:#A0AEC0;font-size:14px;line-height:1.6;">
+      <strong style="color:#7CDB8A;">&#10003; Free Tier</strong> — 50 calls/day<br>
+      <strong style="color:#FFD700;">&#9889; Need more?</strong> — $0.02/call beyond free tier. We'll email you when you hit 50 calls so you can add a payment method.
+    </p>
+  </div>
+
+  <!-- Quick Start -->
+  <h3 style="margin:0 0 12px;color:#FFFFF0;font-size:16px;font-weight:600;">Quick Start</h3>
+  <div style="background:#0B1D3A;border-radius:8px;padding:16px 20px;margin:0 0 24px;overflow-x:auto;">
+    <pre style="margin:0;color:#e0e0e0;font-family:'JetBrains Mono',Consolas,monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;">curl -H "Authorization: Bearer """ + raw_key + """" \\
+  https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT</pre>
+  </div>
+
+  <p style="margin:0 0 8px;color:#A0AEC0;font-size:14px;">
+    <strong>Docs:</strong> <a href="https://harrisoncollab.com/agents" style="color:#7CDB8A;">harrisoncollab.com/agents</a>
+  </p>
+  <p style="margin:0;color:#A0AEC0;font-size:14px;">
+    <strong>Dashboard:</strong> <a href="https://harrisoncollab.com/dashboard" style="color:#7CDB8A;">harrisoncollab.com/dashboard</a>
+  </p>
+</td></tr>
+
+<!-- Footer -->
+<tr><td style="padding:24px 40px;border-top:1px solid #1A3A5C;text-align:center;">
+  <p style="margin:0;color:#8B92A0;font-size:12px;">
+    Harrison Collab &bull; <a href="https://harrisoncollab.com" style="color:#7CDB8A;">harrisoncollab.com</a>
+    <br>No other crypto signal service grades every prediction publicly.
+  </p>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+
+def _approaching_limit_email_html(email: str, daily_total: int, billing_url: str) -> str:
+    """Generate the 40-call warning email HTML."""
+    return f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#0B1D3A;font-family:'Inter',-apple-system,Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1D3A;padding:40px 20px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#0F2847;border-radius:12px;border:1px solid #1A3A5C;overflow:hidden;">
+
+<!-- Header -->
+<tr><td style="background:#0B1D3A;padding:24px 40px;text-align:center;border-bottom:1px solid #1A3A5C;">
+  <h1 style="margin:0;color:#FFFFF0;font-size:22px;font-weight:700;">ReNoUn</h1>
+</td></tr>
+
+<!-- Body -->
+<tr><td style="padding:40px;">
+  <h2 style="margin:0 0 16px;color:#FFD700;font-size:20px;font-weight:600;">&#9889; Free daily limit reached</h2>
+  <p style="margin:0 0 24px;color:#A0AEC0;font-size:15px;line-height:1.6;">
+    You've used all {daily_total} free calls for today. To keep calling without interruption, add a payment method now. Beyond 50 calls, each call is just <strong style="color:#FFFFF0;">$0.02</strong>.
+  </p>
+
+  <!-- CTA -->
+  <div style="text-align:center;margin:32px 0;">
+    <a href="{billing_url}" style="display:inline-block;background:#7CDB8A;color:#0B1D3A;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;">Add Payment Method</a>
+  </div>
+
+  <p style="margin:0;color:#8B92A0;font-size:13px;text-align:center;">
+    You won't be charged anything until you exceed 50 calls in a day.<br>
+    If you don't add a payment method, calls will stop at 50.
+  </p>
+</td></tr>
+
+<!-- Footer -->
+<tr><td style="padding:24px 40px;border-top:1px solid #1A3A5C;text-align:center;">
+  <p style="margin:0;color:#8B92A0;font-size:12px;">
+    Harrison Collab &bull; <a href="https://harrisoncollab.com" style="color:#7CDB8A;">harrisoncollab.com</a>
+  </p>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
+def send_agent_welcome_email(to: str, raw_key: str) -> dict:
+    """Send welcome email with free agent API key.
+
+    Returns dict with success status. Falls back to console logging
+    if email is not configured.
+    """
+    if not is_email_configured():
+        print(f"[email] Resend not configured. Would send agent welcome email to {to}")
+        print(f"[email] API key: {raw_key[:20]}...")
+        return {"success": False, "reason": "email_not_configured"}
+
+    html = _agent_welcome_email_html(raw_key)
+    result = _send_resend(
+        to=to,
+        subject="Your ReNoUn API Key — 50 free calls/day",
+        html=html,
+    )
+
+    if result["success"]:
+        print(f"[email] Agent welcome email sent to {to} (id: {result['id']})")
+    else:
+        print(f"[email] Failed to send agent welcome to {to}: {result['error']}")
+
+    return result
+
+
+def send_limit_reached_email(to: str, daily_total: int, billing_url: str = "https://harrisoncollab.com/billing") -> dict:
+    """Send the 50-call limit-reached email with Stripe billing link.
+
+    Returns dict with success status.
+    """
+    if not is_email_configured():
+        print(f"[email] Resend not configured. Would send limit-reached email to {to} ({daily_total}/50)")
+        return {"success": False, "reason": "email_not_configured"}
+
+    html = _approaching_limit_email_html(to, daily_total, billing_url)
+    result = _send_resend(
+        to=to,
+        subject="ReNoUn: Free daily limit reached — add payment to continue",
+        html=html,
+    )
+
+    if result["success"]:
+        print(f"[email] Limit-reached email sent to {to} (id: {result['id']})")
+    else:
+        print(f"[email] Failed to send limit-reached email to {to}: {result['error']}")
+
+    return result
+
 
 def send_welcome_email(to: str, raw_key: str, tier: str = "pro") -> dict:
     """Send the welcome email with API key to a new subscriber.

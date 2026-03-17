@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReNoUn — Add Payment Method</title>
+<meta name="description" content="Add a payment method to your ReNoUn API key. Continue calling beyond 50 free calls/day at $0.02/call.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0A0E17; --bg-card: #111827; --border: #1F2937;
+  --text: #F9FAFB; --text-dim: #9CA3AF; --text-muted: #6B7280;
+  --accent: #7CDB8A; --accent-hover: #6BC77A;
+  --red: #EF4444; --yellow: #F59E0B;
+  --radius: 12px;
+}
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; min-height: 100vh; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+/* Nav */
+nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid var(--border); }
+nav .logo { font-weight: 700; font-size: 18px; color: var(--text); }
+nav .links a { color: var(--text-dim); margin-left: 24px; font-size: 14px; }
+nav .links a:hover { color: var(--text); text-decoration: none; }
+
+/* Layout */
+.container { max-width: 520px; margin: 0 auto; padding: 80px 24px 60px; }
+h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 12px; }
+.subtitle { font-size: 16px; color: var(--text-dim); margin-bottom: 40px; line-height: 1.6; }
+
+/* Form */
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+.form-group input {
+  width: 100%; padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 14px;
+  outline: none; transition: border-color 0.2s;
+}
+.form-group input:focus { border-color: var(--accent); }
+.form-group input::placeholder { color: var(--text-muted); }
+
+.btn {
+  display: block; width: 100%; padding: 14px; background: var(--accent); color: #0A0E17;
+  border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer;
+  transition: background 0.2s; margin-top: 24px;
+}
+.btn:hover { background: var(--accent-hover); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Info box */
+.info-box {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; margin: 32px 0;
+}
+.info-box h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.info-box ul { list-style: none; padding: 0; }
+.info-box li { font-size: 14px; color: var(--text-dim); padding: 4px 0; }
+.info-box li::before { content: "\2713 "; color: var(--accent); font-weight: 700; margin-right: 8px; }
+
+/* Status messages */
+.status { padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; display: none; }
+.status.show { display: block; }
+.status.success { background: rgba(124,219,138,0.1); border: 1px solid rgba(124,219,138,0.3); color: var(--accent); }
+.status.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+.status.cancelled { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--yellow); }
+
+/* Fine print */
+.fine-print { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 16px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">ReNoUn</a>
+  <div class="links">
+    <a href="/agents.html">Docs</a>
+    <a href="/dashboard.html">Dashboard</a>
+    <a href="/pricing.html">Pricing</a>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Status messages for return from Stripe -->
+  <div class="status success" id="statusSuccess">
+    Payment method added successfully. Your API key now supports unlimited metered calls at $0.02 each beyond 50/day. You can close this page.
+  </div>
+  <div class="status cancelled" id="statusCancelled">
+    Checkout was cancelled. Your free tier (50 calls/day) is still active.
+  </div>
+  <div class="status error" id="statusError"></div>
+
+  <h1>Add Payment Method</h1>
+  <p class="subtitle">
+    Paste your API key below to add metered billing. You won't be charged until you exceed 50 free calls in a day.
+  </p>
+
+  <form id="billingForm" onsubmit="return handleSubmit(event)">
+    <div class="form-group">
+      <label for="apiKey">API Key</label>
+      <input type="text" id="apiKey" name="api_key" placeholder="rn_agent_..." required autocomplete="off" spellcheck="false">
+    </div>
+    <button type="submit" class="btn" id="submitBtn">Continue to Stripe</button>
+  </form>
+
+  <div class="info-box">
+    <h3>How metered billing works</h3>
+    <ul>
+      <li>50 calls/day are always free</li>
+      <li>Beyond 50, each call is $0.02</li>
+      <li>Billed monthly via Stripe</li>
+      <li>Cancel anytime — reverts to free tier</li>
+      <li>No minimum commitment</li>
+    </ul>
+  </div>
+
+  <p class="fine-print">
+    Powered by Stripe. Your card details are never stored on our servers.<br>
+    Questions? <a href="mailto:luke@harrisoncollab.com">luke@harrisoncollab.com</a>
+  </p>
+</div>
+
+<script>
+const API_BASE = 'https://web-production-817e2.up.railway.app';
+
+// Check URL params for return status
+const params = new URLSearchParams(window.location.search);
+if (params.get('status') === 'success') {
+  document.getElementById('statusSuccess').classList.add('show');
+  document.getElementById('billingForm').style.display = 'none';
+} else if (params.get('status') === 'cancelled') {
+  document.getElementById('statusCancelled').classList.add('show');
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const errEl = document.getElementById('statusError');
+  const apiKey = document.getElementById('apiKey').value.trim();
+
+  if (!apiKey.startsWith('rn_agent_')) {
+    errEl.textContent = 'Please enter a valid agent API key (starts with rn_agent_).';
+    errEl.classList.add('show');
+    return false;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Redirecting to Stripe...';
+  errEl.classList.remove('show');
+
+  try {
+    const resp = await fetch(`${API_BASE}/v1/billing/metered`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: apiKey }),
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      const msg = data?.error?.message || data?.detail?.error?.message || 'Something went wrong.';
+      errEl.textContent = msg;
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Continue to Stripe';
+      return false;
+    }
+
+    if (data.checkout_url) {
+      window.location.href = data.checkout_url;
+    } else {
+      errEl.textContent = 'No checkout URL returned. Is Stripe configured?';
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Continue to Stripe';
+    }
+  } catch (err) {
+    errEl.textContent = `Network error: ${err.message}`;
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Continue to Stripe';
+  }
+
+  return false;
+}
+</script>
+
+</body>
+</html>

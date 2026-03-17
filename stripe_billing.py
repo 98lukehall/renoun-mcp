@@ -64,6 +64,7 @@ def _load_stripe_config() -> dict:
         "secret_key": os.environ.get("STRIPE_SECRET_KEY", file_config.get("stripe_secret_key", "")),
         "webhook_secret": os.environ.get("STRIPE_WEBHOOK_SECRET", file_config.get("stripe_webhook_secret", "")),
         "price_id": os.environ.get("STRIPE_PRICE_ID", file_config.get("stripe_price_id", "")),
+        "metered_price_id": os.environ.get("STRIPE_METERED_PRICE_ID", file_config.get("stripe_metered_price_id", "")),
         "success_url": os.environ.get("STRIPE_SUCCESS_URL", file_config.get("stripe_success_url", "https://web-production-817e2.up.railway.app/welcome?session_id={CHECKOUT_SESSION_ID}")),
         "cancel_url": os.environ.get("STRIPE_CANCEL_URL", file_config.get("stripe_cancel_url", "https://renoun.dev/pricing")),
     }
@@ -157,6 +158,65 @@ def create_checkout_session(customer_email: str, metadata: Optional[dict] = None
         return {"error": f"Stripe error: {str(e)}"}
 
 
+def create_metered_checkout_session(customer_email: str, key_id: str) -> dict:
+    """Create a Stripe Checkout session for metered agent billing.
+
+    The user already has a free agent key. This adds a payment method
+    so they can exceed 50 calls/day at $0.02/call.
+
+    The key_id is passed in metadata so the webhook can link the
+    subscription back to the existing agent key.
+    """
+    if not STRIPE_CONFIG["secret_key"]:
+        return {"error": "Stripe not configured. Set STRIPE_SECRET_KEY."}
+
+    metered_price_id = STRIPE_CONFIG.get("metered_price_id")
+    if not metered_price_id:
+        return {"error": "Metered Price ID not configured. Set STRIPE_METERED_PRICE_ID."}
+
+    try:
+        session = stripe.checkout.Session.create(
+            mode="subscription",
+            payment_method_types=["card"],
+            customer_email=customer_email,
+            line_items=[{
+                "price": metered_price_id,
+            }],
+            success_url=STRIPE_CONFIG.get("success_url", "").replace(
+                "{CHECKOUT_SESSION_ID}", "{CHECKOUT_SESSION_ID}"
+            ) or f"https://harrisoncollab.com/billing?status=success",
+            cancel_url="https://harrisoncollab.com/billing?status=cancelled",
+            metadata={
+                "type": "metered_agent",
+                "key_id": key_id,
+            },
+        )
+        return {
+            "checkout_url": session.url,
+            "session_id": session.id,
+        }
+    except stripe.StripeError as e:
+        return {"error": f"Stripe error: {str(e)}"}
+
+
+def _link_agent_key_to_stripe(key_id: str, customer_id: str, subscription_id: str):
+    """Link a Stripe subscription to an existing agent key and store the subscription item ID."""
+    data = _load_keys()
+    for entry in data["keys"]:
+        if entry["key_id"] == key_id and entry.get("tier") == "agent":
+            entry["stripe_customer_id"] = customer_id
+            entry["stripe_subscription_id"] = subscription_id
+            # Fetch the subscription item ID for metered usage reporting
+            try:
+                sub = stripe.Subscription.retrieve(subscription_id)
+                if sub.get("items") and sub["items"].get("data"):
+                    entry["stripe_subscription_item_id"] = sub["items"]["data"][0]["id"]
+            except Exception:
+                pass
+            break
+    _save_keys(data)
+
+
 # ---------------------------------------------------------------------------
 # Webhook Handler
 # ---------------------------------------------------------------------------
@@ -207,13 +267,26 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
 
 
 def _handle_checkout_completed(session: dict) -> dict:
-    """New subscription: create a pro API key and link it to the customer."""
+    """Handle checkout completion — either new pro key or metered agent upgrade."""
     checkout_session_id = session.get("id", "")
     customer_id = session.get("customer", "")
     customer_email = session.get("customer_email", session.get("customer_details", {}).get("email", ""))
     subscription_id = session.get("subscription", "")
+    metadata = session.get("metadata", {})
 
-    # Check if customer already has an active key
+    # --- Metered agent upgrade: link billing to existing key ---
+    if metadata.get("type") == "metered_agent" and metadata.get("key_id"):
+        agent_key_id = metadata["key_id"]
+        _link_agent_key_to_stripe(agent_key_id, customer_id, subscription_id)
+        return {
+            "action": "agent_billing_linked",
+            "key_id": agent_key_id,
+            "customer_id": customer_id,
+            "customer_email": customer_email,
+            "note": "Metered billing active. Calls beyond 50/day billed at $0.02 each.",
+        }
+
+    # --- Pro subscription: create new key ---
     existing = _find_key_by_customer(customer_id)
     if existing:
         return {
@@ -222,15 +295,12 @@ def _handle_checkout_completed(session: dict) -> dict:
             "customer_id": customer_id,
         }
 
-    # Create new pro key
     result = create_key(tier="pro", owner=customer_email)
     key_id = result["key_id"]
     raw_key = result["raw_key"]
 
-    # Link to Stripe
     _link_key_to_stripe(key_id, customer_id, subscription_id)
 
-    # Store for success page retrieval
     if checkout_session_id:
         _provisioned_keys[checkout_session_id] = {
             "raw_key": raw_key,
@@ -239,7 +309,6 @@ def _handle_checkout_completed(session: dict) -> dict:
             "tier": "pro",
         }
 
-    # Send welcome email with API key
     try:
         from email_sender import send_welcome_email
         email_result = send_welcome_email(to=customer_email, raw_key=raw_key, tier="pro")
