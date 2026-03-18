@@ -61,8 +61,8 @@
   ],
   "accuracy": {
     "bounded_regime_accuracy_pct": 100,
-    "bounded_predictions_graded": 126,
-    "total_predictions_graded": 245,
+    "bounded_predictions_graded": 128,
+    "total_predictions_graded": 265,
     "methodology": "Every prediction timestamped, graded against 1h actual price outcome. Bounded regime accuracy = when classified as bounded, price stayed within envelope 100% of the time.",
     "live_track_record": "https://x.com/98lukehall"
   }

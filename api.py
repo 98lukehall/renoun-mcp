@@ -62,11 +62,11 @@ app = FastAPI(
     title="ReNoUn Regime Classification API",
     description=(
         "Structural regime classification for crypto markets. "
-        "100% bounded regime accuracy (126/126 graded). "
+        "100% bounded regime accuracy (126+ graded). "
         "Pre-trade risk check: returns regime (bounded/active/unstable) "
         "and action (proceed/reduce/avoid)."
     ),
-    version="1.3.1",
+    version="1.4.0",
     contact={"name": "Harrison Collab", "email": "98lukehall@gmail.com", "url": "https://harrisoncollab.com"},
     license_info={"name": "Proprietary — Patent Pending #63/923,592"},
     docs_url="/docs",
@@ -369,7 +369,7 @@ async def status():
     return {
         "status": "ok",
         "server": "renoun",
-        "version": "1.3.1",
+        "version": "1.4.0",
         "engine_version": ENGINE_VERSION,
         "tool_version": TOOL_VERSION,
         "schema_version": SCHEMA_VERSION,

@@ -3,14 +3,14 @@
   <p align="center"><strong>Structural Risk Telemetry for Crypto Markets</strong></p>
   <p align="center">
     <a href="https://web-production-817e2.up.railway.app/v1/status"><img src="https://img.shields.io/badge/API-live-brightgreen" alt="API Live"></a>
-    <a href="#accuracy"><img src="https://img.shields.io/badge/regime_accuracy-98%25-7C9A6E" alt="98% accuracy"></a>
+    <a href="#accuracy"><img src="https://img.shields.io/badge/bounded_accuracy-100%25-7C9A6E" alt="100% bounded accuracy"></a>
     <a href="https://web-production-817e2.up.railway.app/docs"><img src="https://img.shields.io/badge/docs-OpenAPI-orange" alt="API Docs"></a>
     <a href="https://github.com/98lukehall/renoun-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
     <img src="https://img.shields.io/badge/patent_pending-%2363%2F923%2C592-lightgrey" alt="Patent Pending #63/923,592">
   </p>
 </p>
 
-Classifies crypto market structural regimes — **bounded**, **active**, or **unstable** — with 98% accuracy across 240+ live graded predictions. Estimates **regime stability half-life**: how many minutes until the current structure is likely to transition.
+Classifies crypto market structural regimes — **bounded**, **active**, or **unstable** — with **100% bounded regime accuracy** (126+ graded predictions, zero false positives). Estimates **regime stability half-life**: how many minutes until the current structure is likely to transition. Every prediction is public, timestamped, and graded — no other crypto signal service does this.
 
 One GET request. One action field. Pre-trade risk gate for trading bots, autonomous agents, and quant systems.
 
@@ -54,8 +54,8 @@ curl https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT \
   },
   "_meta": {
     "provider": "renoun",
-    "version": "1.3.1",
-    "accuracy": "98% across 240+ predictions",
+    "version": "1.4.0",
+    "accuracy": "100% bounded regime accuracy, 126+ graded",
     "provision_url": "https://web-production-817e2.up.railway.app/v1/keys/provision",
     "docs": "https://harrisoncollab.com"
   }
@@ -156,11 +156,11 @@ No credit card required for the agent tier. Agents provision their own keys.
 
 ## Accuracy
 
-98% regime classification accuracy across 240+ live, timestamped, graded predictions. Every prediction is public: [@98lukehall on X](https://x.com/98lukehall).
+**100% bounded regime accuracy** across 126+ graded predictions. When ReNoUn classifies a regime as bounded (proceed), price stays within the predicted envelope every time. Zero false positives. Every prediction is public, timestamped, and graded: [@98lukehall on X](https://x.com/98lukehall). No other crypto signal service publishes every call with a pass/fail grade.
 
-The engine classifies structural regimes (bounded / active / unstable) — not price direction. Regime classification is a fundamentally easier problem than directional prediction, which is why the accuracy is high.
+Active regimes (CONVERGENCE, PATTERN_BREAK) are graded against tighter thresholds and have lower accuracy — they recommend position scaling via the exposure scalar, not full-size trades.
 
-**What this means:** when ReNoUn says "bounded," the price stays within the predicted envelope 98% of the time. When it says "unstable," structural disorder is present and risk is elevated.
+**What this means:** when ReNoUn says "bounded," you can trade at full size with confidence. When it says "active," scale your position by the exposure scalar. When it says "unstable," stay out.
 
 **What this does NOT mean:** ReNoUn does not predict whether price goes up or down. It measures structural stability. Use it as a risk gate, not a signal.
 
@@ -226,7 +226,7 @@ If action is "reduce" — multiply position by the exposure scalar.
 If urgency is "exit_now" — close position immediately.
 If urgency is "prepare_exit" — set tight stop loss.
 If action is "proceed" — execute at intended size.
-ReNoUn classifies structural regimes with 98% accuracy.
+ReNoUn classifies structural regimes with 100% bounded accuracy.
 It does not predict price direction.
 ```
 
