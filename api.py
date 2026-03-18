@@ -103,7 +103,7 @@ async def require_auth(request: Request) -> dict:
     if not auth_header.startswith("Bearer "):
         raise HTTPException(
             status_code=401,
-            detail={"error": {"type": "auth_error", "message": "Missing or malformed Authorization header. Use: Bearer rn_live_...", "action": "Add header: Authorization: Bearer <your-api-key>"}},
+            detail={"error": {"type": "auth_error", "message": "Missing or malformed Authorization header. Use: Bearer rn_agent_... or rn_live_...", "action": "Add header: Authorization: Bearer <your-api-key>. Get a free key at /v1/keys/provision"}},
         )
 
     raw_key = auth_header[7:].strip()
@@ -1020,7 +1020,7 @@ async def billing_portal(body: PortalRequest):
 
     key_info = _validate(body.api_key)
     if not key_info:
-        raise HTTPException(status_code=401, detail={"error": {"type": "auth_error", "message": "Invalid API key.", "action": "Provide a valid rn_live_... key."}})
+        raise HTTPException(status_code=401, detail={"error": {"type": "auth_error", "message": "Invalid API key.", "action": "Provide a valid rn_agent_... or rn_live_... key."}})
 
     # Find the Stripe customer linked to this key
     from auth import _load_keys
@@ -1412,7 +1412,7 @@ async def mcp_server_card():
             "url": "/mcp",
             "authentication": {
                 "type": "bearer",
-                "description": "API key starting with rn_live_. Get one at https://harrisoncollab.com. Free tier: 50 calls/day.",
+                "description": "API key (rn_agent_... or rn_live_...). Get a free key: POST /v1/keys/provision. 50 free calls/day.",
             },
         },
         "tools": [

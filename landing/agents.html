@@ -54,11 +54,44 @@ section { padding: 60px 0; }
 section h2 { font-size: 28px; font-weight: 700; margin-bottom: 16px; }
 section p { color: var(--text-dim); font-size: 15px; margin-bottom: 16px; }
 
-/* CTA */
-.cta-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin: 40px 0; text-align: center; }
-.cta-block h3 { font-size: 20px; margin-bottom: 12px; }
-.cta-block p { color: var(--text-dim); font-size: 14px; margin-bottom: 20px; }
-.cta-code { background: #1a1a2e; border-radius: 8px; padding: 16px; display: inline-block; text-align: left; font-size: 12px; color: #e0e0e0; }
+/* CTA / Provision Widget */
+.provision-widget { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px; margin: 40px 0; }
+.provision-widget h3 { font-size: 22px; margin-bottom: 8px; text-align: center; }
+.provision-widget > p { color: var(--text-dim); font-size: 14px; margin-bottom: 24px; text-align: center; }
+.provision-form { display: flex; gap: 12px; flex-wrap: wrap; }
+.provision-form input {
+  flex: 1; min-width: 180px; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; outline: none;
+}
+.provision-form input:focus { border-color: var(--accent); }
+.provision-form input::placeholder { color: var(--text-muted); }
+.provision-btn {
+  padding: 12px 28px; background: var(--accent); color: #0A0E17; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; white-space: nowrap;
+}
+.provision-btn:hover { background: var(--accent-hover); }
+.provision-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.provision-result {
+  margin-top: 20px; padding: 20px; border-radius: 8px; display: none;
+}
+.provision-result.show { display: block; }
+.provision-result.success { background: rgba(124,154,110,0.1); border: 1px solid rgba(124,154,110,0.3); }
+.provision-result.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); }
+.provision-key-box {
+  background: #1a1a2e; border-radius: 8px; padding: 14px 18px; margin: 12px 0; display: flex;
+  align-items: center; justify-content: space-between; gap: 12px;
+}
+.provision-key-box code { color: #7CDB8A; font-size: 13px; word-break: break-all; flex: 1; }
+.copy-btn {
+  padding: 6px 14px; background: var(--border); color: var(--text-dim); border: none; border-radius: 6px;
+  font-size: 12px; cursor: pointer; white-space: nowrap; transition: background 0.2s;
+}
+.copy-btn:hover { background: var(--accent); color: #0A0E17; }
+.provision-curl {
+  background: #1a1a2e; border-radius: 8px; padding: 14px 18px; margin-top: 12px; position: relative;
+}
+.provision-curl pre { color: #e0e0e0; font-size: 12px; line-height: 1.6; white-space: pre-wrap; margin: 0; }
+.provision-curl .copy-btn { position: absolute; top: 8px; right: 8px; }
 
 /* Pricing */
 .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
@@ -156,12 +189,15 @@ r = requests.get(<span class="string">"https://web-production-817e2.up.railway.a
   </div>
 </section>
 
-<div class="cta-block">
-  <h3>Get Started in 10 Seconds</h3>
-  <p>Provision a free API key — no signup form, no credit card.</p>
-  <div class="cta-code"><pre>curl -X POST https://web-production-817e2.up.railway.app/v1/keys/provision \
-  -H "Content-Type: application/json" \
-  -d '{"email": "you@example.com", "agent_name": "my-bot"}'</pre></div>
+<div class="provision-widget" id="provisionWidget">
+  <h3>Get Your Free API Key</h3>
+  <p>No signup form. No credit card. 50 calls/day free.</p>
+  <form class="provision-form" id="provisionForm" onsubmit="return provisionKey(event)">
+    <input type="email" id="provEmail" placeholder="you@example.com" required>
+    <input type="text" id="provName" placeholder="Agent name (e.g. my-bot)" required>
+    <button type="submit" class="provision-btn" id="provBtn">Get Key</button>
+  </form>
+  <div class="provision-result" id="provResult"></div>
 </div>
 
 <section>
@@ -190,7 +226,7 @@ r = requests.get(<span class="string">"https://web-production-817e2.up.railway.a
 
   <div class="faq-item">
     <h4>What happens if I exceed 50 calls/day?</h4>
-    <p>You're billed $0.02 per call beyond the free tier. No interruption to service — billing happens automatically via Stripe.</p>
+    <p>Without a payment method, calls stop at 50. Add a payment method at <a href="billing.html">harrisoncollab.com/billing</a> and calls beyond 50 are billed at $0.02 each via Stripe — no interruption.</p>
   </div>
 
   <div class="faq-item">
@@ -209,6 +245,89 @@ r = requests.get(<span class="string">"https://web-production-817e2.up.railway.a
   <br><br>
   &copy; 2026 Harrison Collab. Patent Pending #63/923,592.
 </footer>
+
+<script>
+const API = 'https://web-production-817e2.up.railway.app';
+
+async function provisionKey(e) {
+  e.preventDefault();
+  const btn = document.getElementById('provBtn');
+  const result = document.getElementById('provResult');
+  const email = document.getElementById('provEmail').value.trim();
+  const name = document.getElementById('provName').value.trim();
+
+  btn.disabled = true;
+  btn.textContent = 'Provisioning...';
+  result.className = 'provision-result';
+  result.style.display = 'none';
+
+  try {
+    const resp = await fetch(`${API}/v1/keys/provision`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, agent_name: name }),
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      const msg = data?.detail?.error?.message || data?.error?.message || 'Provisioning failed.';
+      result.className = 'provision-result error show';
+      result.innerHTML = `<span style="color:var(--red);font-weight:600;">Error:</span> <span style="color:var(--text-dim);">${msg}</span>`;
+      btn.disabled = false;
+      btn.textContent = 'Get Key';
+      return false;
+    }
+
+    const key = data.api_key || '(key already provisioned)';
+    const isNew = key.startsWith('rn_agent_');
+    const curlCmd = `curl -H "Authorization: Bearer ${isNew ? key : 'YOUR_KEY'}" \\\n  ${API}/v1/regime/live/BTCUSDT`;
+
+    result.className = 'provision-result success show';
+    result.innerHTML = `
+      <div style="font-weight:600;color:var(--accent);margin-bottom:8px;">
+        ${isNew ? '&#10003; Your API key is ready' : '&#9888; Key already exists for this email + agent name'}
+      </div>
+      ${isNew ? `
+        <div class="provision-key-box">
+          <code id="keyText">${key}</code>
+          <button class="copy-btn" onclick="copyText('keyText', this)">Copy</button>
+        </div>
+        <p style="color:var(--text-muted);font-size:12px;margin:4px 0 16px;">Store this key securely — it cannot be recovered.</p>
+      ` : `
+        <p style="color:var(--text-dim);font-size:13px;margin-bottom:12px;">${data.note || ''}</p>
+      `}
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Try it now:</div>
+      <div class="provision-curl">
+        <pre id="curlText">${curlCmd}</pre>
+        <button class="copy-btn" onclick="copyText('curlText', this)">Copy</button>
+      </div>
+      <div style="margin-top:16px;font-size:13px;color:var(--text-muted);">
+        50 free calls/day &middot; $0.02/call after that &middot; <a href="billing.html">Add payment method</a>
+      </div>
+    `;
+
+    // Hide the form on success
+    if (isNew) {
+      document.getElementById('provisionForm').style.display = 'none';
+    }
+  } catch (err) {
+    result.className = 'provision-result error show';
+    result.innerHTML = `<span style="color:var(--red);font-weight:600;">Network error:</span> <span style="color:var(--text-dim);">${err.message}</span>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Get Key';
+  return false;
+}
+
+function copyText(elementId, btn) {
+  const text = document.getElementById(elementId).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  });
+}
+</script>
 
 </body>
 </html>
