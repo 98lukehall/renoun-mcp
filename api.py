@@ -53,6 +53,13 @@ from server import (
 from regime_cache import regime_cache
 from regime_service import analysis_to_regime_response, compute_portfolio_action, META_BLOCK
 
+# Start news monitor background thread
+try:
+    from news_monitor import start_news_monitor
+    start_news_monitor(interval_seconds=60)
+except ImportError:
+    pass  # news_monitor not available, regime works without it
+
 
 # ---------------------------------------------------------------------------
 # FastAPI App
@@ -419,6 +426,28 @@ async def debug_binance():
     return {"binance_connectivity": results}
 
 
+@app.get("/v1/debug/news", tags=["Debug"])
+async def debug_news():
+    """Current news alert state for all tracked assets. No auth required."""
+    try:
+        from news_monitor import news_cache as _nc
+        alerts = _nc.get_all()
+        return {
+            symbol: {
+                "level": alert.level,
+                "activity_score": alert.activity_score,
+                "volume_spike": alert.volume_spike,
+                "news_velocity": alert.news_velocity,
+                "trending": alert.trending,
+                "detail": alert.detail,
+                "last_checked": alert.last_checked,
+            }
+            for symbol, alert in alerts.items()
+        }
+    except ImportError:
+        return {"error": "News monitor not available"}
+
+
 @app.post("/v1/analyze")
 async def analyze(body: AnalyzeRequest, key_info: dict = Depends(require_auth)):
     """Full 17-channel structural analysis."""
@@ -598,7 +627,7 @@ def _run_regime_analysis(klines: list[dict], symbol: str, timeframe: str,
     if has_error:
         return JSONResponse(status_code=400, content=analysis)
 
-    result = analysis_to_regime_response(analysis, symbol, timeframe, include_full)
+    result = analysis_to_regime_response(analysis, symbol, timeframe, include_full, tier=key_info["tier"])
     if billing_warn:
         result["_billing"] = billing_warn
     usage = limiter.get_usage(key_info["key_id"], key_info["tier"])
@@ -710,6 +739,7 @@ async def regime_live(
         result = analysis_to_regime_response(
             analysis, symbol, timeframe, include_full,
             recent_dhs_values=dhs_history,
+            tier=key_info["tier"],
         )
         regime_cache.set(symbol, timeframe, result)
 
@@ -832,7 +862,8 @@ async def regime_batch(body: RegimeBatchRequest, key_info: dict = Depends(requir
             }
         else:
             result = analysis_to_regime_response(
-                analysis, symbol, body.timeframe, body.include_full
+                analysis, symbol, body.timeframe, body.include_full,
+                tier=key_info["tier"],
             )
             regime_cache.set(symbol, body.timeframe, result)
             regimes[symbol] = result

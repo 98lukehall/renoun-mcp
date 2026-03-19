@@ -1,7 +1,7 @@
 """
 ReNoUn API Usage Logger.
 
-Appends usage events to ~/.renoun/usage.log in JSONL format.
+Appends usage events to $RENOUN_DATA_DIR/usage.log in JSONL format.
 Each line is a complete JSON object — grep-friendly, easy to analyze.
 
 Also provides metered billing tracking for agent-tier keys:
@@ -18,7 +18,9 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 
-USAGE_LOG = Path.home() / ".renoun" / "usage.log"
+# Use persistent volume if available (Railway), fall back to home directory
+_DATA_DIR = os.environ.get("RENOUN_DATA_DIR", str(Path.home() / ".renoun"))
+USAGE_LOG = Path(_DATA_DIR) / "usage.log"
 
 
 def _ensure_log():

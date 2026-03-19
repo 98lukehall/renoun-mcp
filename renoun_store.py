@@ -2,7 +2,7 @@
 """
 ReNoUn Longitudinal Storage Manager.
 
-Manages ~/.renoun/history/ directory for storing, querying, and exporting
+Manages $RENOUN_DATA_DIR/history/ directory for storing, querying, and exporting
 analysis results over time.
 
 Usage:
@@ -18,6 +18,7 @@ Usage:
 Patent Pending #63/923,592 — core engine is proprietary.
 """
 
+import os
 import sys
 import json
 import csv as csv_module
@@ -26,7 +27,9 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from datetime import datetime, date
 
-HISTORY_DIR = Path.home() / ".renoun" / "history"
+# Use persistent volume if available (Railway), fall back to home directory
+_DATA_DIR = os.environ.get("RENOUN_DATA_DIR", str(Path.home() / ".renoun"))
+HISTORY_DIR = Path(_DATA_DIR) / "history"
 INDEX_FILE = HISTORY_DIR / "index.json"
 
 

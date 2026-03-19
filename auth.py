@@ -3,7 +3,7 @@
 ReNoUn API Key Management.
 
 Manages API keys with tiered access control.
-Keys stored in ~/.renoun/api_keys.json.
+Keys stored in $RENOUN_DATA_DIR/api_keys.json (default: ~/.renoun/).
 
 Usage:
     python3 auth.py create --tier pro --owner "user@email.com"
@@ -13,6 +13,7 @@ Usage:
 
 import json
 import hashlib
+import os
 import secrets
 import argparse
 from pathlib import Path
@@ -20,7 +21,9 @@ from datetime import datetime
 from typing import Optional
 
 
-KEYS_FILE = Path.home() / ".renoun" / "api_keys.json"
+# Use persistent volume if available (Railway), fall back to home directory
+_DATA_DIR = os.environ.get("RENOUN_DATA_DIR", str(Path.home() / ".renoun"))
+KEYS_FILE = Path(_DATA_DIR) / "api_keys.json"
 KEY_PREFIX = "rn_live_"
 AGENT_KEY_PREFIX = "rn_agent_"
 VALID_KEY_PREFIXES = (KEY_PREFIX, AGENT_KEY_PREFIX)
@@ -89,7 +92,14 @@ def _ensure_keys_file():
     """Ensure the keys file and parent directory exist."""
     KEYS_FILE.parent.mkdir(parents=True, exist_ok=True)
     if not KEYS_FILE.exists():
-        KEYS_FILE.write_text(json.dumps({"keys": []}, indent=2))
+        # Migrate from legacy location if it exists
+        legacy = Path.home() / ".renoun" / "api_keys.json"
+        if legacy.exists() and legacy != KEYS_FILE:
+            import shutil
+            shutil.copy2(legacy, KEYS_FILE)
+            print(f"[auth] Migrated keys from {legacy} to {KEYS_FILE}")
+        else:
+            KEYS_FILE.write_text(json.dumps({"keys": []}, indent=2))
 
 
 def _load_keys() -> dict:

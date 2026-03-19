@@ -1,7 +1,7 @@
 """
 Webhook registration and dispatch for regime change notifications.
 
-Storage: JSON file at ~/.renoun/webhooks.json
+Storage: JSON file at $RENOUN_DATA_DIR/webhooks.json (default: ~/.renoun/)
 Dispatch: Background thread with HMAC-SHA256 signing and retry logic.
 Architecture: Signal bot reads webhooks.json directly (shared filesystem).
 """
@@ -9,6 +9,7 @@ Architecture: Signal bot reads webhooks.json directly (shared filesystem).
 import json
 import hmac
 import hashlib
+import os
 import secrets
 import threading
 import time
@@ -19,7 +20,9 @@ from typing import Optional
 import requests as http_requests  # avoid conflict with fastapi Request
 
 
-WEBHOOKS_FILE = Path.home() / ".renoun" / "webhooks.json"
+# Use persistent volume if available (Railway), fall back to home directory
+_DATA_DIR = os.environ.get("RENOUN_DATA_DIR", str(Path.home() / ".renoun"))
+WEBHOOKS_FILE = Path(_DATA_DIR) / "webhooks.json"
 
 VALID_EVENTS = [
     "regime_change",
@@ -32,7 +35,14 @@ VALID_EVENTS = [
 def _ensure_file():
     WEBHOOKS_FILE.parent.mkdir(parents=True, exist_ok=True)
     if not WEBHOOKS_FILE.exists():
-        WEBHOOKS_FILE.write_text(json.dumps({"webhooks": []}, indent=2))
+        # Migrate from legacy location if it exists
+        legacy = Path.home() / ".renoun" / "webhooks.json"
+        if legacy.exists() and legacy != WEBHOOKS_FILE:
+            import shutil
+            shutil.copy2(legacy, WEBHOOKS_FILE)
+            print(f"[webhooks] Migrated from {legacy} to {WEBHOOKS_FILE}")
+        else:
+            WEBHOOKS_FILE.write_text(json.dumps({"webhooks": []}, indent=2))
 
 
 def _load() -> dict:

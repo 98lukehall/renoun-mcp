@@ -23,9 +23,38 @@ Returns:
     "instability_risk": "low",
     "time_horizon": "2-4 hours",
     "urgency": "none"
-  }
+  },
+  "news_alert": null,
+  "transition_warning": null
 }
 ```
+
+## News-Driven Alerts
+
+When abnormal activity is detected (volume spikes, news velocity, trending), the response includes a news_alert block:
+
+| Field | Meaning |
+|-------|---------|
+| level | none / elevated / extreme |
+| activity_score | 0.0-1.0 composite anomaly score |
+| volume_spike | Current vs 30min average (1.0 = normal) |
+| detail | Human-readable summary |
+
+An "extreme" alert overrides action to "avoid" even if structure is bounded.
+An "elevated" alert halves the stability halflife.
+
+## Transition Warning (Premium)
+
+Pro/Enterprise tier responses include a transition_warning block that detects when the current regime is drifting toward a different regime type — before the constellation flips.
+
+| Field | Meaning |
+|-------|---------|
+| drifting_toward | "active" / "unstable" / "bounded" / null |
+| drift_score | 0.0-1.0 (0 = stable, 1 = transition imminent) |
+| estimated_transition_minutes | Time to regime flip at current rate |
+| drivers | List of what's causing the drift |
+
+Free/agent tier: transition_warning is always null. Upgrade to Pro for early warnings.
 
 ## When to Call This Tool
 

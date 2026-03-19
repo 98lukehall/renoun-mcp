@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Ensure persistent data directory exists
+DATA_DIR="${RENOUN_DATA_DIR:-/root/.renoun}"
+mkdir -p "$DATA_DIR"
+echo "[entrypoint] Data directory: $DATA_DIR"
+
 # Download proprietary engine files from private GitHub repo at startup
 # GITHUB_TOKEN must be set as a Railway env var
 if [ -n "$GITHUB_TOKEN" ] && [ ! -f /app/core.py ]; then
@@ -13,7 +18,7 @@ headers = {
     'Accept': 'application/vnd.github.v3.raw',
 }
 base = 'https://api.github.com/repos/98lukehall/renoun-engine/contents'
-for fname in ['core.py', 'novelty_dual_pass.py']:
+for fname in ['core.py', 'novelty_dual_pass.py', 'regime_service.py', 'regime_halflife.py', 'regime_drift.py']:
     url = f'{base}/{fname}'
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req) as resp:
@@ -29,7 +34,7 @@ else
 fi
 
 # Bootstrap API keys from environment variables on every startup
-# This ensures keys survive container redeploys (no persistent volume needed)
+# With RENOUN_DATA_DIR + persistent volume, agent keys also survive redeploys
 # Set RENOUN_BOOTSTRAP_KEYS in Railway as a JSON array:
 #   [{"raw_key":"rn_live_...","tier":"pro","owner":"user@email.com"}]
 python3 -c "

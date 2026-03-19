@@ -6,6 +6,11 @@ alignment_bridge_v1.py
 temporal.py
 recovery.py
 
+# Proprietary regime logic (downloaded from private repo at runtime)
+regime_service.py
+regime_halflife.py
+regime_drift.py
+
 # Proprietary adapters & v5 engine internals
 adapters/
 
@@ -45,6 +50,15 @@ SIGNAL_BOT_REBUILD.md
 VALIDATION_CAMPAIGN.md
 build_health_report.md
 RAILWAY_DEBUG.md
+NEWS_FLAG_BUILD.md
+CLEANUP_*.md
+AUTO_POST_WEEKLY_THREAD.md
+AGENT_KEY_PERSISTENCE.md
+CHROME_REGISTRY_PROMPT.md
+MCP_REGISTRY_PUBLISH.md
+DISTRIBUTION_DRAFTS.md
+PRIVATIZE_REGIME_LOGIC.md
+RAILWAY_SETUP.md
 
 # Internal tools & scripts
 run_hhrlhf_eval.py
