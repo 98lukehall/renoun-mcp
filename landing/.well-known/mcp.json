@@ -3,7 +3,7 @@
   "name": "renoun",
   "display_name": "ReNoUn — Crypto Regime Classification",
   "description": "Pre-trade structural risk check. Classifies crypto market regimes (bounded/active/unstable). 100% bounded regime accuracy — every prediction public, timestamped, and graded. No other crypto signal does this. Call before any position.",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "author": {
     "name": "Harrison Collab",
     "url": "https://harrisoncollab.com",

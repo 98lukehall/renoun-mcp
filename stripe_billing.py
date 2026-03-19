@@ -3,16 +3,18 @@
 ReNoUn Stripe Billing Integration.
 
 Handles:
-  - Creating Stripe Checkout sessions for pro subscriptions
+  - Agent tier: 50 free calls/day, $0.02/call metered beyond that
+  - Pro tier: $4.99/mo subscription with 1,000 calls/day included
+  - Creating Stripe Checkout sessions (metered agent + pro subscription)
   - Processing webhook events (payment succeeded, subscription changes)
-  - Auto-provisioning API keys on successful payment
+  - Auto-provisioning/linking API keys on successful payment
   - Handling cancellations and downgrades
 
 Setup:
   1. Create a Stripe account at https://stripe.com
-  2. Create a Product ("ReNoUn Pro") with a $4.99/mo recurring Price
+  2. Create products: "ReNoUn API" (metered, $0.02/unit) + "ReNoUn Pro" ($4.99/mo)
   3. Set up a webhook endpoint pointing to https://your-domain.com/v1/billing/webhook
-  4. Add env vars: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID
+  4. Add env vars: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID, STRIPE_METERED_PRICE_ID
 
 Usage:
     python3 stripe_billing.py setup   # Print setup checklist

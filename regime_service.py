@@ -21,7 +21,7 @@ REGIME_MAP = {
 META_BLOCK = {
     "provider": "renoun",
     "version": TOOL_VERSION,
-    "accuracy": "100% bounded regime accuracy, 245+ predictions graded",
+    "accuracy": "100% bounded regime accuracy, 265+ predictions graded",
     "provision_url": "https://web-production-817e2.up.railway.app/v1/keys/provision",
     "docs": "https://harrisoncollab.com",
     "description": "Structural regime classification. 50 free calls/day.",
@@ -133,7 +133,7 @@ def analysis_to_regime_response(analysis_result: dict, symbol: str, timeframe: s
         "candles_analyzed": candles,
         "stability": _stability_block(stability),
         "model_version": TOOL_VERSION,
-        "accuracy_note": "100% bounded regime accuracy across 245+ graded predictions",
+        "accuracy_note": "100% bounded regime accuracy across 265+ graded predictions",
         "_meta": META_BLOCK,
     }
 

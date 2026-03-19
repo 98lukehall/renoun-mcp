@@ -295,42 +295,8 @@ class ReNoUnRiskGate(IStrategy):
 
         return proposed_stake
 
-    def confirm_trade_exit(
-        self,
-        pair: str,
-        trade: Trade,
-        order_type: str,
-        amount: float,
-        rate: float,
-        time_in_force: str,
-        exit_reason: str,
-        current_time: datetime,
-        **kwargs,
-    ) -> bool:
-        """
-        Honor ReNoUn exit urgency signals.
-
-        If the regime shifts to unstable with exit_now urgency,
-        allow the exit even if normal strategy logic wouldn't exit yet.
-        """
-        if not self.renoun_api_key or not self.renoun_honor_exit_urgency:
-            return True
-
-        # Always allow normal exits
-        if exit_reason != "force_exit":
-            return True
-
-        regime = check_regime(pair, self.renoun_api_key)
-        urgency = regime.get("stability", {}).get("urgency", "none")
-
-        if urgency == "exit_now":
-            logger.info(
-                f"RENOUN FORCE EXIT {pair}: urgency=exit_now. "
-                f"Closing position."
-            )
-            return True
-
-        return True
+    # confirm_trade_exit always returns True — regime-aware exits
+    # are handled by custom_exit below, which can initiate exits proactively.
 
     def custom_exit(
         self,

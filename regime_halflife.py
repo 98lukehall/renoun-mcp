@@ -38,7 +38,7 @@ class RegimeStability:
 
 
 # ── Historical transition probabilities ─────────────────────────────────
-# Derived from 240+ graded predictions. These are empirical base rates
+# Derived from 265+ graded predictions. These are empirical base rates
 # for how long each regime type persists before transitioning.
 
 BASE_HALFLIFE_MINUTES = {

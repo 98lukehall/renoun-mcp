@@ -155,7 +155,7 @@ def check_turn_limit(key_info: dict, turn_count: int):
 BILLING_URL = "https://harrisoncollab.com/billing"
 
 
-def _record_agent_call(key_info: dict, endpoint: str) -> dict | None:
+def _record_agent_call(key_info: dict, endpoint: str) -> Optional[dict]:
     """Record a metered call for agent-tier keys.
 
     Returns a _billing warning dict to inject into the response at 40+ calls,
@@ -1403,7 +1403,7 @@ async def mcp_server_card():
     """MCP server card for Smithery discovery. No auth required."""
     return {
         "name": "renoun",
-        "description": "Structural observability for AI conversations and financial risk management. 17-channel pattern detection, loop/convergence/scattering detection, real-time steering, and OHLCV risk overlay with validated 31/31 drawdown reduction.",
+        "description": "Structural risk telemetry for crypto markets. Classifies regimes (bounded/active/unstable) with 100% bounded regime accuracy across 265+ graded predictions. Estimates regime stability half-life. Pre-trade risk gate for trading agents.",
         "version": TOOL_VERSION,
         "homepage": "https://harrisoncollab.com",
         "repository": "https://github.com/98lukehall/renoun-mcp",
@@ -1438,7 +1438,7 @@ async def mcp_server_card():
             },
             {
                 "name": "renoun_finance_analyze",
-                "description": "Structural analysis of OHLCV financial data. Returns DHS, constellations, stress levels, and exposure recommendations. Validated 31/31 drawdown reduction across 9 crypto assets and 5 timeframes.",
+                "description": "Full 17-channel structural analysis of OHLCV data. Returns DHS, constellations, stress metrics, and exposure scalar. 100% bounded regime accuracy across 265+ graded predictions.",
             },
             {
                 "name": "renoun_agent_monitor",

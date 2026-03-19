@@ -41,7 +41,7 @@ TIERS = {
         "tools": ["renoun_analyze", "renoun_health_check", "renoun_compare", "renoun_pattern_query", "renoun_steer", "renoun_finance_analyze", "regime", "regime_live", "regime_batch"],
         "daily_limit": 1000,
         "max_turns": 500,
-        "price": "$4.99/mo",
+        "price": "1,000 calls/day included",
         "rate_limits": {
             "renoun_analyze": 60,            # calls/min
             "renoun_health_check": 120,      # calls/min

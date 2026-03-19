@@ -3,510 +3,197 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pricing — ReNoUn MCP Server | Free Trial | Harrison Collab</title>
-<meta name="description" content="ReNoUn pricing: $0 open source, $4.99/mo conversation analysis, $7.99/mo finance risk overlay. All paid plans include a 7-day free trial.">
+<title>Pricing — ReNoUn | Structural Regime Classification for Crypto</title>
+<meta name="description" content="ReNoUn pricing: 50 free calls/day, $0.02/call metered. Pre-trade structural risk gate for trading agents. No credit card required.">
 <link rel="canonical" href="https://harrisoncollab.com/pricing.html">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://harrisoncollab.com/pricing.html">
-<meta property="og:title" content="ReNoUn Pricing — Free Trial + $4.99/$7.99 Plans">
-<meta property="og:description" content="Open source free forever. Conversation Pro $4.99/mo. Finance Risk Overlay $7.99/mo. 7-day free trial on all paid plans.">
+<meta property="og:title" content="ReNoUn Pricing — 50 Free Calls/Day">
+<meta property="og:description" content="Pre-trade risk gate for crypto trading agents. 50 free calls/day. $0.02/call beyond that. No credit card required to start.">
 <meta property="og:image" content="https://harrisoncollab.com/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Harrison Collab">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ReNoUn Pricing — Free Trial Available">
-<meta name="twitter:description" content="Structural analysis from $0. Finance risk overlay from $7.99/mo with 7-day free trial.">
-<meta name="twitter:image" content="https://harrisoncollab.com/og-image.png">
-<meta name="keywords" content="ReNoUn pricing, MCP server pricing, AI structural analysis cost, crypto risk overlay subscription, conversation analysis API">
+<meta name="twitter:title" content="ReNoUn Pricing — Free to Start">
+<meta name="twitter:description" content="Structural regime classification. 50 free calls/day. $0.02/call metered.">
+<meta name="keywords" content="ReNoUn pricing, crypto risk API pricing, regime classification cost, trading agent API">
 <meta name="author" content="Luke Hall">
-<meta name="theme-color" content="#0B1D3A">
+<meta name="theme-color" content="#0A0E17">
 <link rel="icon" type="image/png" href="logo.png">
-<link rel="apple-touch-icon" href="logo.png">
-<!-- Breadcrumb Structured Data -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://harrisoncollab.com/"},
-    {"@type": "ListItem", "position": 2, "name": "Pricing", "item": "https://harrisoncollab.com/pricing.html"}
-  ]
-}
-</script>
-<!-- FAQ Structured Data -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type": "Question", "name": "What happens after the 7-day trial?", "acceptedAnswer": {"@type": "Answer", "text": "Your subscription continues at $4.99/month (Conversation Pro) or $7.99/month (Finance). Cancel anytime before the trial ends and you won't be charged."}},
-    {"@type": "Question", "name": "What's the difference between free and paid?", "acceptedAnswer": {"@type": "Answer", "text": "The open-source engine runs locally with core 17-channel analysis. Paid plans add hosted API access, real-time steering, longitudinal tracking, and the Finance plan adds the risk overlay with exposure scalar."}},
-    {"@type": "Question", "name": "What does the finance overlay do?", "acceptedAnswer": {"@type": "Answer", "text": "It takes OHLCV candle data and measures structural disorder in price action. It outputs an exposure scalar (0.0-1.0) that reduces position sizing during structural instability. 100% bounded regime accuracy (126+ graded)."}},
-    {"@type": "Question", "name": "Is this financial advice?", "acceptedAnswer": {"@type": "Answer", "text": "No. ReNoUn is a structural observability tool, not a trading signal. It measures disorder, not direction."}},
-    {"@type": "Question", "name": "Can I cancel anytime?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Cancel anytime from your account. No contracts, no commitments."}}
+    {"@type": "Question", "name": "How does metered billing work?", "acceptedAnswer": {"@type": "Answer", "text": "50 calls/day are free. Beyond that, each call is $0.02. Billed monthly via Stripe. You must add a payment method before exceeding the free tier — calls stop at 50 without one."}},
+    {"@type": "Question", "name": "What does the API return?", "acceptedAnswer": {"@type": "Answer", "text": "Regime type (bounded/active/unstable), action (proceed/reduce/avoid), exposure scalar (0.0-1.0), DHS score, constellation pattern, and stability half-life estimate."}},
+    {"@type": "Question", "name": "Is this financial advice?", "acceptedAnswer": {"@type": "Answer", "text": "No. ReNoUn is a structural risk measurement tool, not a trading signal. It measures disorder, not direction."}},
+    {"@type": "Question", "name": "Can I cancel anytime?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Remove your payment method anytime to revert to the free tier. No contracts."}}
   ]
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --bg: #F7F6F3;
-  --bg-elevated: #EFEEE9;
-  --bg-card: #FDFCFA;
-  --border: #E8E5DC;
-  --text: #0B1D3A;
-  --text-dim: #4A5568;
-  --text-muted: #8B92A0;
-  --accent: #7C9A6E;
-  --accent2: #5B7B9E;
-  --recurrence: #C9956F;
-  --novelty: #7C9A6E;
-  --unity: #5B7B9E;
+  --bg: #0A0E17; --bg-card: #111827; --border: #1F2937;
+  --text: #F9FAFB; --text-dim: #9CA3AF; --text-muted: #6B7280;
+  --accent: #7CDB8A; --accent-dim: rgba(124,219,138,0.15);
   --radius: 12px;
-  --radius-lg: 20px;
 }
-html { scroll-behavior: smooth; font-size: 16px; }
-body {
-  font-family: 'Inter', -apple-system, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; min-height: 100vh; display: flex; flex-direction: column; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
 
-/* Nav */
-nav {
-  padding: 1rem 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(247, 246, 243, 0.9);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-}
-.nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: -0.02em;
-  color: var(--text);
-  text-decoration: none;
-}
-.nav-logo img { width: 36px; height: 36px; border-radius: 8px; }
-.nav-logo span { color: var(--text); }
-.nav-back {
-  color: var(--text-dim);
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-.nav-back:hover { color: var(--text); }
+nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid var(--border); }
+nav .logo { font-weight: 700; font-size: 18px; color: var(--text); text-decoration: none; }
+nav .links a { color: var(--text-dim); margin-left: 24px; font-size: 14px; }
+nav .links a:hover { color: var(--text); text-decoration: none; }
 
-/* Hero */
-.pricing-hero {
-  text-align: center;
-  padding: 5rem 2rem 2rem;
-}
-.pricing-hero h1 {
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  margin-bottom: 0.75rem;
-}
-.pricing-hero p {
-  color: var(--text-dim);
-  font-size: 1.15rem;
-  max-width: 550px;
-  margin: 0 auto;
-}
+.hero { text-align: center; padding: 80px 24px 40px; }
+.hero h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px; }
+.hero p { color: var(--text-dim); font-size: 18px; max-width: 550px; margin: 0 auto; }
 
-/* Cards */
-.pricing-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  max-width: 1100px;
-  margin: 3rem auto;
-  padding: 0 2rem;
-}
-.pricing-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.pricing-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(11, 29, 58, 0.08);
-}
-.pricing-card.featured {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 8px 30px rgba(124, 154, 110, 0.12);
-}
-.pricing-badge {
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.3rem 1rem;
-  border-radius: 20px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-.plan-name {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 0.5rem;
-}
-.plan-desc {
-  color: var(--text-dim);
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
-}
-.plan-price {
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
-  margin-bottom: 0.25rem;
-}
-.plan-price .amount {
-  font-size: 2.8rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--text);
-}
-.plan-price .period {
-  font-size: 1rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-.plan-trial {
-  font-size: 0.85rem;
-  color: var(--accent);
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-}
-.plan-features {
-  list-style: none;
-  flex: 1;
-  margin-bottom: 2rem;
-}
-.plan-features li {
-  padding: 0.5rem 0;
-  font-size: 0.925rem;
-  color: var(--text-dim);
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-}
-.plan-features li::before {
-  content: '';
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
-  margin-top: 2px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.plan-features .included::before {
-  background: rgba(124, 154, 110, 0.15);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237C9A6E' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.plan-features .excluded::before {
-  background: rgba(139, 146, 160, 0.1);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238B92A0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6L6 18M6 6l12 12'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.plan-features .excluded { color: var(--text-muted); }
+.pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1000px; margin: 48px auto; padding: 0 24px; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; display: flex; flex-direction: column; }
+.card.featured { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.card .badge { background: var(--accent); color: #0A0E17; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block; margin-bottom: 16px; width: fit-content; }
+.card .name { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.card .desc { color: var(--text-dim); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+.card .price { font-size: 40px; font-weight: 800; letter-spacing: -0.03em; }
+.card .price .period { font-size: 16px; color: var(--text-muted); font-weight: 500; }
+.card .price-note { color: var(--text-dim); font-size: 13px; margin-top: 4px; margin-bottom: 24px; }
+.card ul { list-style: none; flex: 1; margin-bottom: 24px; }
+.card li { font-size: 14px; color: var(--text-dim); padding: 6px 0; }
+.card li::before { content: "\2713 "; color: var(--accent); font-weight: 700; margin-right: 8px; }
+.card .btn { display: block; text-align: center; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 15px; text-decoration: none; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: #0A0E17; }
+.btn-primary:hover { background: #6BC77A; text-decoration: none; }
+.btn-outline { border: 2px solid var(--border); color: var(--text); background: transparent; }
+.btn-outline:hover { border-color: var(--text-muted); text-decoration: none; }
 
-.plan-btn {
-  display: block;
-  text-align: center;
-  padding: 0.9rem 1.5rem;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 1rem;
-  text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-  border: none;
-}
-.plan-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-}
-.plan-btn-primary {
-  background: var(--accent);
-  color: #fff;
-}
-.plan-btn-outline {
-  background: transparent;
-  color: var(--text);
-  border: 2px solid var(--border);
-}
-.plan-btn-outline:hover { border-color: var(--text-muted); }
-
-/* Comparison */
-.comparison {
-  max-width: 900px;
-  margin: 1rem auto 4rem;
-  padding: 0 2rem;
-}
-.comparison h3 {
-  text-align: center;
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-}
-.comparison-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.comparison-table th,
-.comparison-table td {
-  padding: 0.85rem 1.25rem;
-  text-align: left;
-  font-size: 0.9rem;
-  border-bottom: 1px solid var(--border);
-}
-.comparison-table th {
-  background: var(--bg-elevated);
-  font-weight: 600;
-  color: var(--text);
-}
-.comparison-table td:nth-child(2),
-.comparison-table td:nth-child(3),
-.comparison-table td:nth-child(4),
-.comparison-table th:nth-child(2),
-.comparison-table th:nth-child(3),
-.comparison-table th:nth-child(4) {
-  text-align: center;
-  width: 120px;
-}
-.comparison-table tr:last-child td { border-bottom: none; }
-.check { color: var(--accent); font-weight: 700; }
-.dash { color: var(--text-muted); }
-
-/* FAQ */
-.faq {
-  max-width: 700px;
-  margin: 0 auto 5rem;
-  padding: 0 2rem;
-}
-.faq h3 {
-  text-align: center;
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-}
-.faq-item {
-  border-bottom: 1px solid var(--border);
-  padding: 1.25rem 0;
-}
+.faq { max-width: 700px; margin: 48px auto 80px; padding: 0 24px; }
+.faq h2 { font-size: 24px; font-weight: 700; margin-bottom: 24px; text-align: center; }
+.faq-item { border-bottom: 1px solid var(--border); padding: 20px 0; }
 .faq-item:last-child { border-bottom: none; }
-.faq-q {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--text);
-  margin-bottom: 0.4rem;
-}
-.faq-a {
-  font-size: 0.9rem;
-  color: var(--text-dim);
-  line-height: 1.6;
-}
+.faq-q { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+.faq-a { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
 
-/* Footer */
-footer {
-  margin-top: auto;
-  padding: 2rem;
-  text-align: center;
-  border-top: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-footer a { color: var(--text-dim); margin: 0 0.75rem; }
-footer a:hover { color: var(--text); }
+footer { margin-top: auto; padding: 24px; text-align: center; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 13px; }
+footer a { color: var(--text-dim); margin: 0 12px; }
 
-@media (max-width: 720px) {
-  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
-  .pricing-hero { padding: 3.5rem 1.5rem 1rem; }
-  .comparison-table { font-size: 0.8rem; }
-  .comparison-table th, .comparison-table td { padding: 0.65rem 0.75rem; }
-}
+@media (max-width: 720px) { .pricing-grid { grid-template-columns: 1fr; max-width: 400px; } }
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="index.html" class="nav-logo">
-    <img src="logo.png" alt="Harrison Collab">
-    Harrison <span>Collab</span>
-  </a>
-  <a href="index.html" class="nav-back">&larr; Back to Home</a>
+  <a href="/" class="logo">ReNoUn</a>
+  <div class="links">
+    <a href="/agents.html">Docs</a>
+    <a href="/dashboard.html">Dashboard</a>
+    <a href="/billing.html">Billing</a>
+  </div>
 </nav>
 
-<div class="pricing-hero">
-  <h1>Simple, transparent pricing</h1>
-  <p>Try the open-source engine free, or subscribe for full access. Both plans include a 7-day free trial.</p>
+<div class="hero">
+  <h1>Simple pricing</h1>
+  <p>50 free calls/day. No credit card. Add a payment method when you need more.</p>
 </div>
 
 <div class="pricing-grid">
-  <!-- Free Plan -->
-  <div class="pricing-card">
-    <div class="plan-name">Open Source</div>
-    <div class="plan-desc">Self-hosted 17-channel structural analysis. Run it yourself, no account needed.</div>
-    <div class="plan-price">
-      <span class="amount">$0</span>
-      <span class="period">/ forever</span>
-    </div>
-    <div class="plan-trial">&nbsp;</div>
-    <ul class="plan-features">
-      <li class="included">17-channel structural analysis</li>
-      <li class="included">Health checks and quick triage</li>
-      <li class="included">Session comparison (A/B diffs)</li>
-      <li class="included">8 constellation pattern detection</li>
-      <li class="excluded">Hosted API access</li>
-      <li class="excluded">Real-time steering monitor</li>
-      <li class="excluded">Finance risk overlay</li>
-      <li class="excluded">Priority support</li>
+
+  <div class="card featured">
+    <div class="badge">Default</div>
+    <div class="name">Agent Tier</div>
+    <div class="desc">Pre-trade risk gate for trading bots. Self-provisioning. No credit card required to start.</div>
+    <div class="price">$0 <span class="period">to start</span></div>
+    <div class="price-note">50 free calls/day. $0.02/call beyond that.</div>
+    <ul>
+      <li>50 free API calls/day</li>
+      <li>$0.02/call metered beyond free tier</li>
+      <li>Self-provisioning (POST /v1/keys/provision)</li>
+      <li>regime/live + regime/batch endpoints</li>
+      <li>Stability half-life estimation</li>
+      <li>Exposure scalar for position sizing</li>
+      <li>100% bounded regime accuracy</li>
     </ul>
-    <a href="https://github.com/98lukehall/renoun-mcp" target="_blank" rel="noopener" class="plan-btn plan-btn-outline">View on GitHub</a>
+    <a href="/agents.html#provisionWidget" class="btn btn-primary">Get Free API Key</a>
   </div>
 
-  <!-- Convo Plan -->
-  <div class="pricing-card">
-    <div class="plan-name">Conversation Pro</div>
-    <div class="plan-desc">Full hosted API access with real-time steering, pattern tracking, and longitudinal analysis.</div>
-    <div class="plan-price">
-      <span class="amount">$4.99</span>
-      <span class="period">/ month</span>
-    </div>
-    <div class="plan-trial">7-day free trial &mdash; cancel anytime</div>
-    <ul class="plan-features">
-      <li class="included">Everything in Open Source</li>
-      <li class="included">Hosted API (no setup)</li>
-      <li class="included">Real-time steering monitor</li>
-      <li class="included">Longitudinal pattern tracking</li>
-      <li class="included">Weighted &amp; segmented analysis</li>
-      <li class="included">Email support</li>
-      <li class="excluded">Finance risk overlay</li>
-      <li class="excluded">Exposure scalar output</li>
+  <div class="card">
+    <div class="name">Pro Tier</div>
+    <div class="desc">Full access including conversation analysis, real-time steering, and pattern tracking.</div>
+    <div class="price">$4.99 <span class="period">/ month</span></div>
+    <div class="price-note">1,000 calls/day included.</div>
+    <ul>
+      <li>Everything in Agent Tier</li>
+      <li>1,000 calls/day included</li>
+      <li>17-channel conversation analysis</li>
+      <li>Real-time steering monitor</li>
+      <li>Longitudinal pattern tracking</li>
+      <li>Session comparison (A/B diffs)</li>
+      <li>Agent monitor + alignment classify</li>
     </ul>
-    <a href="https://buy.stripe.com/bJeaEZb4t1D3azwe273sI00" class="plan-btn plan-btn-outline" style="border-color:var(--accent);color:var(--accent);">Start Free Trial</a>
+    <a href="/billing.html" class="btn btn-outline">Subscribe</a>
   </div>
 
-  <!-- Finance Plan -->
-  <div class="pricing-card featured">
-    <div class="pricing-badge">7-Day Free Trial</div>
-    <div class="plan-name">Finance Risk Overlay</div>
-    <div class="plan-desc">Everything in Conversation Pro, plus the validated financial risk engine with exposure scalar.</div>
-    <div class="plan-price">
-      <span class="amount">$7.99</span>
-      <span class="period">/ month</span>
-    </div>
-    <div class="plan-trial">7-day free trial &mdash; cancel anytime</div>
-    <ul class="plan-features">
-      <li class="included">Everything in Conversation Pro</li>
-      <li class="included">OHLCV structural risk analysis</li>
-      <li class="included">Exposure scalar (0.0&ndash;1.0) output</li>
-      <li class="included">Constellation persistence scoring</li>
-      <li class="included">Asymmetric EMA smoothing</li>
-      <li class="included">Crash regime detection</li>
-      <li class="included">100% bounded regime accuracy (126+ graded)</li>
-      <li class="included">Priority support</li>
+  <div class="card">
+    <div class="name">Enterprise</div>
+    <div class="desc">Custom limits, SLAs, dedicated support, and on-premise deployment options.</div>
+    <div class="price">Custom</div>
+    <div class="price-note">Contact us for pricing.</div>
+    <ul>
+      <li>Unlimited API calls</li>
+      <li>Custom rate limits</li>
+      <li>SLA guarantees</li>
+      <li>Dedicated support</li>
+      <li>On-premise deployment</li>
+      <li>Custom integrations</li>
+      <li>Volume discounts</li>
     </ul>
-    <a href="https://buy.stripe.com/7sY9AVgoNa9zgXUf6b3sI01" class="plan-btn plan-btn-primary">Start Free Trial</a>
+    <a href="mailto:luke@harrisoncollab.com" class="btn btn-outline">Contact Us</a>
   </div>
-</div>
 
-<div class="comparison">
-  <h2>Feature comparison</h2>
-  <table class="comparison-table">
-    <thead>
-      <tr>
-        <th>Feature</th>
-        <th>Free</th>
-        <th>Convo $4.99</th>
-        <th>Finance $7.99</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td>17-channel structural analysis</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-      <tr><td>Health check &amp; triage</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-      <tr><td>Session comparison</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-      <tr><td>8 constellation detection</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-      <tr><td>Hosted API access</td><td class="dash">&mdash;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-      <tr><td>Real-time steering</td><td class="dash">&mdash;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-      <tr><td>Longitudinal pattern tracking</td><td class="dash">&mdash;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-      <tr><td>Finance OHLCV analysis</td><td class="dash">&mdash;</td><td class="dash">&mdash;</td><td class="check">&#10003;</td></tr>
-      <tr><td>Exposure scalar output</td><td class="dash">&mdash;</td><td class="dash">&mdash;</td><td class="check">&#10003;</td></tr>
-      <tr><td>Constellation persistence</td><td class="dash">&mdash;</td><td class="dash">&mdash;</td><td class="check">&#10003;</td></tr>
-      <tr><td>Crash regime detection</td><td class="dash">&mdash;</td><td class="dash">&mdash;</td><td class="check">&#10003;</td></tr>
-      <tr><td>Priority support</td><td class="dash">&mdash;</td><td class="dash">&mdash;</td><td class="check">&#10003;</td></tr>
-    </tbody>
-  </table>
 </div>
 
 <div class="faq">
   <h2>Frequently asked questions</h2>
+
   <div class="faq-item">
-    <div class="faq-q">What happens after the 7-day trial?</div>
-    <div class="faq-a">Your subscription continues at $4.99/month (Conversation Pro) or $7.99/month (Finance). You can cancel anytime before the trial ends and won't be charged. The open-source engine is always free.</div>
+    <div class="faq-q">How does metered billing work?</div>
+    <div class="faq-a">50 calls/day are always free — no credit card required. If you need more, add a payment method at <a href="/billing.html">harrisoncollab.com/billing</a>. Calls beyond 50 are billed at $0.02 each, invoiced monthly via Stripe. Without a payment method, calls stop at 50.</div>
   </div>
+
   <div class="faq-item">
-    <div class="faq-q">What's the difference between free and paid?</div>
-    <div class="faq-a">The open-source engine runs locally and includes the core 17-channel analysis. Paid plans add hosted API access (no setup), real-time steering, longitudinal tracking, and the Finance plan adds the full risk overlay with exposure scalar.</div>
+    <div class="faq-q">What do I get for $0.02/call?</div>
+    <div class="faq-a">Regime type (bounded/active/unstable), action (proceed/reduce/avoid), exposure scalar (0.0-1.0), DHS score, constellation pattern, and stability half-life estimate — how long the current regime is expected to last.</div>
   </div>
+
   <div class="faq-item">
-    <div class="faq-q">What does the finance overlay actually do?</div>
-    <div class="faq-a">It takes OHLCV candle data and measures structural disorder in price action using the same 17-channel engine. It outputs an exposure scalar (0.0&ndash;1.0) that reduces position sizing during structural instability. 100% bounded regime accuracy (126+ graded).</div>
+    <div class="faq-q">What does the finance overlay do?</div>
+    <div class="faq-a">It takes OHLCV candle data and measures structural disorder in price action using the 17-channel engine. It outputs a regime classification and exposure scalar (0.0-1.0) that tells you how much to scale your position. 100% bounded regime accuracy across 265+ graded predictions.</div>
   </div>
+
   <div class="faq-item">
     <div class="faq-q">Is this financial advice?</div>
-    <div class="faq-a">No. ReNoUn is a structural observability tool, not a trading signal. It measures disorder, not direction. It's designed as a risk overlay to pair with your existing strategy. Always do your own research.</div>
+    <div class="faq-a">No. ReNoUn is a structural risk measurement tool, not a trading signal. It measures disorder, not direction. Use it as a pre-trade risk gate, not a signal.</div>
   </div>
+
   <div class="faq-item">
     <div class="faq-q">Can I cancel anytime?</div>
-    <div class="faq-a">Yes. Cancel anytime from your account. No contracts, no commitments.</div>
+    <div class="faq-a">Yes. Remove your payment method to revert to the free tier. No contracts, no commitments.</div>
   </div>
 </div>
 
 <footer>
   <div>
-    <a href="index.html">Home</a>
-    <a href="https://github.com/98lukehall/renoun-mcp" target="_blank" rel="noopener">GitHub</a>
-    <a href="https://pypi.org/project/renoun-mcp/" target="_blank" rel="noopener">PyPI</a>
-    <a href="mailto:98lukehall@gmail.com">Contact</a>
+    <a href="/">Home</a>
+    <a href="https://github.com/98lukehall/renoun-mcp" target="_blank">GitHub</a>
+    <a href="/agents.html">Docs</a>
+    <a href="mailto:luke@harrisoncollab.com">Contact</a>
   </div>
-  <p style="margin-top:0.75rem;">&copy; 2026 Harrison Collab. All rights reserved. Patent Pending #63/923,592.</p>
+  <p style="margin-top:12px;">&copy; 2026 Harrison Collab. Patent Pending #63/923,592.</p>
 </footer>
 
 </body>
