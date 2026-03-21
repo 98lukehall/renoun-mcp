@@ -454,16 +454,7 @@ async def analytics_summary(request: Request):
             "error": {"type": "auth_error", "message": "Invalid admin key."}
         })
 
-    summary = get_analytics_summary()
-    # Include stripe config status for admin debugging
-    from stripe_billing import STRIPE_CONFIG
-    summary["_stripe"] = {
-        "secret_key_set": bool(STRIPE_CONFIG.get("secret_key")),
-        "metered_price_id_set": bool(STRIPE_CONFIG.get("metered_price_id")),
-        "metered_price_id_value": (STRIPE_CONFIG.get("metered_price_id", "")[:10] + "...") if STRIPE_CONFIG.get("metered_price_id") else "EMPTY",
-        "env_raw": (os.environ.get("STRIPE_METERED_PRICE_ID", "")[:10] + "...") if os.environ.get("STRIPE_METERED_PRICE_ID") else "NOT_IN_ENV",
-    }
-    return summary
+    return get_analytics_summary()
 
 
 @app.get("/v1/debug/binance", tags=["Debug"])
