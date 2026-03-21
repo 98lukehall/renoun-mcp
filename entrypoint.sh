@@ -18,7 +18,7 @@ headers = {
     'Accept': 'application/vnd.github.v3.raw',
 }
 base = 'https://api.github.com/repos/98lukehall/renoun-engine/contents'
-for fname in ['core.py', 'novelty_dual_pass.py', 'regime_service.py', 'regime_halflife.py', 'regime_drift.py']:
+for fname in ['core.py', 'novelty_dual_pass.py', 'regime_halflife.py', 'regime_drift.py']:
     url = f'{base}/{fname}'
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req) as resp:
