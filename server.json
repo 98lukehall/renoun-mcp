@@ -11,7 +11,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://web-production-817e2.up.railway.app/mcp",
+      "url": "https://api.harrisoncollab.com/mcp",
       "headers": [
         {
           "name": "Authorization",

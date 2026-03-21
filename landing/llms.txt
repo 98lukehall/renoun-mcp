@@ -5,7 +5,7 @@
 ## Quick Start
 
 ```
-GET https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT
+GET https://api.harrisoncollab.com/v1/regime/live/BTCUSDT
 Authorization: Bearer rn_agent_YOUR_KEY
 ```
 
@@ -126,7 +126,7 @@ Any Binance USDT pair. Common: BTCUSDT, ETHUSDT, SOLUSDT, XRPUSDT, DOGEUSDT.
 ### Python
 ```python
 import requests
-r = requests.get("https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT",
+r = requests.get("https://api.harrisoncollab.com/v1/regime/live/BTCUSDT",
                   headers={"Authorization": "Bearer rn_agent_YOUR_KEY"})
 if r.json()["action"] == "avoid":
     skip_trade()

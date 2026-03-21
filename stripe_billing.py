@@ -67,7 +67,7 @@ def _load_stripe_config() -> dict:
         "webhook_secret": os.environ.get("STRIPE_WEBHOOK_SECRET", file_config.get("stripe_webhook_secret", "")),
         "price_id": os.environ.get("STRIPE_PRICE_ID", file_config.get("stripe_price_id", "")),
         "metered_price_id": os.environ.get("STRIPE_METERED_PRICE_ID", file_config.get("stripe_metered_price_id", "")),
-        "success_url": os.environ.get("STRIPE_SUCCESS_URL", file_config.get("stripe_success_url", "https://web-production-817e2.up.railway.app/welcome?session_id={CHECKOUT_SESSION_ID}")),
+        "success_url": os.environ.get("STRIPE_SUCCESS_URL", file_config.get("stripe_success_url", "https://api.harrisoncollab.com/welcome?session_id={CHECKOUT_SESSION_ID}")),
         "cancel_url": os.environ.get("STRIPE_CANCEL_URL", file_config.get("stripe_cancel_url", "https://renoun.dev/pricing")),
     }
 
@@ -186,8 +186,8 @@ def create_metered_checkout_session(customer_email: str, key_id: str) -> dict:
             }],
             success_url=STRIPE_CONFIG.get("success_url", "").replace(
                 "{CHECKOUT_SESSION_ID}", "{CHECKOUT_SESSION_ID}"
-            ) or f"https://harrisoncollab.com/billing?status=success",
-            cancel_url="https://harrisoncollab.com/billing?status=cancelled",
+            ) or f"https://harrisoncollab.com/billing.html?status=success",
+            cancel_url="https://harrisoncollab.com/billing.html?status=cancelled",
             metadata={
                 "type": "metered_agent",
                 "key_id": key_id,
@@ -287,6 +287,42 @@ def _handle_checkout_completed(session: dict) -> dict:
             "customer_email": customer_email,
             "note": "Metered billing active. Calls beyond 50/day billed at $0.02 each.",
         }
+
+    # --- Free-to-Pro upgrade: upgrade existing key in place ---
+    existing_key_id = metadata.get("existing_key_id")
+    if existing_key_id:
+        data = _load_keys()
+        for entry in data["keys"]:
+            if entry["key_id"] == existing_key_id and entry.get("active"):
+                entry["tier"] = "pro"
+                entry["stripe_customer_id"] = customer_id
+                entry["stripe_subscription_id"] = subscription_id
+                _save_keys(data)
+
+                if checkout_session_id:
+                    _provisioned_keys[checkout_session_id] = {
+                        "raw_key": "(existing key upgraded — check your email)",
+                        "key_id": existing_key_id,
+                        "email": customer_email,
+                        "tier": "pro",
+                    }
+
+                try:
+                    from email_sender import send_welcome_email
+                    email_result = send_welcome_email(to=customer_email, raw_key="(your existing key)", tier="pro")
+                except Exception as e:
+                    email_result = {"success": False, "error": str(e)}
+
+                return {
+                    "action": "key_upgraded",
+                    "key_id": existing_key_id,
+                    "tier": "pro",
+                    "previous_tier": metadata.get("upgrade_from", "free"),
+                    "customer_id": customer_id,
+                    "customer_email": customer_email,
+                    "email_sent": email_result.get("success", False),
+                    "note": "Existing key upgraded to pro tier. Same key, new limits.",
+                }
 
     # --- Pro subscription: create new key ---
     existing = _find_key_by_customer(customer_id)

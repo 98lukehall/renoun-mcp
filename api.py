@@ -24,6 +24,7 @@ Patent Pending #63/923,592 — core engine is proprietary.
 """
 
 import logging
+import os
 import time
 import traceback
 from datetime import datetime, timezone
@@ -43,7 +44,9 @@ from api_config import (
 from auth import validate_key, is_tool_allowed, get_tier_config, create_agent_key, find_agent_key_by_email, count_agent_keys_by_email
 from rate_limiter import limiter
 from usage import log_request, metered_tracker
+from analytics import record_pageview, record_provision, get_summary as get_analytics_summary
 from email_sender import send_agent_welcome_email, send_limit_reached_email
+from drip_scheduler import register_provision, start_drip_scheduler
 from server import (
     tool_analyze, tool_health_check, tool_compare, tool_pattern_query, tool_steer,
     tool_finance_analyze,
@@ -59,6 +62,12 @@ try:
     start_news_monitor(interval_seconds=60)
 except ImportError:
     pass  # news_monitor not available, regime works without it
+
+# Start drip email scheduler background thread (checks every 15 minutes)
+try:
+    start_drip_scheduler(interval_seconds=900)
+except Exception:
+    pass  # Don't let drip scheduler failures block API startup
 
 
 # ---------------------------------------------------------------------------
@@ -138,9 +147,27 @@ def check_tool_access(key_info: dict, tool_name: str):
 
 
 def check_rate_limit(key_info: dict):
-    """Check if the key has exceeded its rate limit."""
+    """Check if the key has exceeded its rate limit.
+
+    For free-tier keys, returns 402 with upgrade URL instead of a plain 429.
+    """
     result = limiter.check(key_info["key_id"], key_info["tier"])
     if result:
+        tier = key_info["tier"]
+        if tier == "free":
+            daily_limit = result.get("daily_limit", 20)
+            raise HTTPException(
+                status_code=402,
+                detail={"error": {
+                    "type": "free_limit_exhausted",
+                    "message": f"Free tier daily limit reached ({daily_limit}/{daily_limit}). Upgrade to Pro for 1,000 calls/day at $4.99/mo.",
+                    "upgrade_url": "https://harrisoncollab.com/billing.html",
+                    "billing_url": "https://harrisoncollab.com/billing.html",
+                    "action": "Upgrade to Pro at the billing URL, or wait for daily reset.",
+                    "resets_at": "midnight UTC",
+                }},
+                headers={"Retry-After": str(result["retry_after"])},
+            )
         raise HTTPException(
             status_code=429,
             detail={"error": {"type": "rate_limited", "message": result["message"], "action": "Wait and retry, or upgrade your tier."}},
@@ -159,7 +186,7 @@ def check_turn_limit(key_info: dict, turn_count: int):
         )
 
 
-BILLING_URL = "https://harrisoncollab.com/billing"
+BILLING_URL = "https://harrisoncollab.com/billing.html"
 
 
 def _record_agent_call(key_info: dict, endpoint: str) -> Optional[dict]:
@@ -339,7 +366,7 @@ def _run_tool(tool_name: str, handler, arguments: dict, key_info: dict, endpoint
     has_error = "error" in result
     status_code = 400 if has_error else 200
 
-    # Log usage
+    # Log usage (also records analytics via log_request)
     log_request(
         key_id=key_info["key_id"],
         tier=key_info["tier"],
@@ -385,9 +412,45 @@ async def status():
             "free_tier": "50 calls/day",
             "regime_endpoint": "/v1/regime/live/{symbol}",
             "docs": "/docs",
-            "accuracy": "100% bounded regime accuracy, 245+ predictions graded",
+            "accuracy": "100% bounded regime accuracy, 4700+ predictions graded",
         },
     }
+
+
+# ---------------------------------------------------------------------------
+# Analytics Endpoints
+# ---------------------------------------------------------------------------
+
+class PageviewRequest(BaseModel):
+    page: str = Field(..., description="Page name, e.g. 'index', 'agents', 'pricing'")
+
+@app.post("/v1/analytics/pageview")
+async def analytics_pageview(body: PageviewRequest):
+    """Record a landing page visit. No auth required."""
+    record_pageview(body.page)
+    return {"ok": True}
+
+
+@app.get("/v1/analytics/summary")
+async def analytics_summary(request: Request):
+    """Analytics summary. Requires RENOUN_ADMIN_KEY."""
+    admin_key = os.environ.get("RENOUN_ADMIN_KEY", "")
+    if not admin_key:
+        raise HTTPException(status_code=503, detail={
+            "error": {"type": "not_configured", "message": "RENOUN_ADMIN_KEY not set on server."}
+        })
+
+    auth_header = request.headers.get("Authorization", "")
+    provided_key = ""
+    if auth_header.startswith("Bearer "):
+        provided_key = auth_header[7:].strip()
+
+    if provided_key != admin_key:
+        raise HTTPException(status_code=403, detail={
+            "error": {"type": "auth_error", "message": "Invalid admin key."}
+        })
+
+    return get_analytics_summary()
 
 
 @app.get("/v1/debug/binance", tags=["Debug"])
@@ -1010,6 +1073,79 @@ async def billing_metered(body: MeteredCheckoutRequest):
     return result
 
 
+class UpgradeRequest(BaseModel):
+    api_key: str = Field(default="", description="Your existing rn_live_... free-tier API key (optional if email provided)")
+    email: str = Field(default="", description="Email for checkout (optional if api_key provided)")
+
+
+@app.post("/v1/billing/upgrade")
+async def billing_upgrade(body: UpgradeRequest):
+    """Upgrade a free-tier key to Pro ($4.99/mo) or start a new Pro subscription.
+
+    Accepts either an existing free-tier API key or an email address.
+    Returns a Stripe Checkout URL for the Pro subscription.
+    On successful payment, a pro API key is auto-provisioned.
+    """
+    customer_email = body.email
+
+    # If an API key is provided, validate it and extract the email
+    if body.api_key:
+        from auth import validate_key as _validate
+        key_info = _validate(body.api_key)
+        if not key_info:
+            raise HTTPException(status_code=401, detail={
+                "error": {"type": "auth_error", "message": "Invalid API key.",
+                          "action": "Provide a valid API key or use an email address instead."}
+            })
+
+        # Agent keys should use /v1/billing/metered instead
+        if key_info["tier"] == "agent":
+            raise HTTPException(status_code=400, detail={
+                "error": {"type": "tier_error",
+                          "message": "Agent keys use metered billing, not Pro subscriptions. Use /v1/billing/metered instead.",
+                          "action": "POST to /v1/billing/metered with your agent key."}
+            })
+
+        # Pro/enterprise keys are already upgraded
+        if key_info["tier"] in ("pro", "enterprise"):
+            raise HTTPException(status_code=409, detail={
+                "error": {"type": "already_upgraded",
+                          "message": f"This key is already on the {key_info['tier']} tier.",
+                          "action": "Use /v1/billing/portal to manage your subscription."}
+            })
+
+        customer_email = key_info.get("owner", "")
+        if not customer_email:
+            raise HTTPException(status_code=400, detail={
+                "error": {"type": "validation_error",
+                          "message": "No email associated with this key. Please provide an email address.",
+                          "action": "Include an email in your request."}
+            })
+
+    if not customer_email:
+        raise HTTPException(status_code=400, detail={
+            "error": {"type": "validation_error",
+                      "message": "Either api_key or email is required.",
+                      "action": "Provide your API key or email address."}
+        })
+
+    metadata = {}
+    if body.api_key:
+        from auth import validate_key as _validate
+        ki = _validate(body.api_key)
+        if ki:
+            metadata["existing_key_id"] = ki["key_id"]
+            metadata["upgrade_from"] = ki["tier"]
+
+    result = create_checkout_session(customer_email=customer_email, metadata=metadata)
+    if "error" in result:
+        raise HTTPException(status_code=500, detail={
+            "error": {"type": "billing_error", "message": result["error"],
+                      "action": "Check Stripe configuration."}
+        })
+    return result
+
+
 @app.post("/v1/billing/webhook")
 async def billing_webhook(request: Request):
     """Stripe webhook receiver. Handles payment events and auto-provisions/downgrades keys.
@@ -1138,7 +1274,7 @@ async def provision_agent_key(body: ProvisionRequest, request: Request):
                 "rate_limit_hourly": 1000,
                 "daily_limit": 10000,
                 "price_per_call": "$0.02 (beyond free tier)",
-                "billing_url": "https://harrisoncollab.com/billing",
+                "billing_url": "https://harrisoncollab.com/billing.html",
                 "docs_url": "https://harrisoncollab.com/agents",
             }
 
@@ -1148,12 +1284,18 @@ async def provision_agent_key(body: ProvisionRequest, request: Request):
 
     log_request(key_id=key_data["key_id"], tier="agent",
                 endpoint="/v1/keys/provision", status_code=200)
+    record_provision()
 
     # Send welcome email with the API key
+    # Register for drip sequence (sends email 1 immediately, schedules 2 & 3)
     try:
-        send_agent_welcome_email(to=body.email, raw_key=key_data["raw_key"])
+        register_provision(
+            email=body.email,
+            api_key=key_data["raw_key"],
+            key_id=key_data["key_id"],
+        )
     except Exception:
-        pass  # Don't let email failures block provisioning
+        pass  # Don't let drip/email failures block provisioning
 
     return {
         "api_key": key_data["raw_key"],
@@ -1165,7 +1307,7 @@ async def provision_agent_key(body: ProvisionRequest, request: Request):
         "billing_url": BILLING_URL,
         "docs_url": "https://harrisoncollab.com/agents",
         "note": "You'll receive warnings at 40/50 calls. At 50, add a payment method to continue.",
-        "quick_start": f"curl -H 'Authorization: Bearer {key_data['raw_key']}' https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT",
+        "quick_start": f"curl -H 'Authorization: Bearer {key_data['raw_key']}' https://api.harrisoncollab.com/v1/regime/live/BTCUSDT",
     }
 
 
@@ -1383,7 +1525,7 @@ def _welcome_content(raw_key: str, tier: str) -> str:
     <strong>&#10003; {tier.title()} Tier</strong> &mdash; Full access to analyze, health_check, compare, and pattern_query. 1,000 req/day.
   </div>
   <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">Quick Start</h3>
-  <div class="code-block"><pre>curl -X POST https://web-production-817e2.up.railway.app/v1/health-check \\
+  <div class="code-block"><pre>curl -X POST https://api.harrisoncollab.com/v1/health-check \\
   -H "Authorization: Bearer {raw_key}" \\
   -H "Content-Type: application/json" \\
   -d '{{"utterances": [
@@ -1392,7 +1534,7 @@ def _welcome_content(raw_key: str, tier: str) -> str:
     {{"speaker": "user", "text": "How are you?"}}
   ]}}'</pre></div>
   <div class="links">
-    <a href="https://web-production-817e2.up.railway.app/docs">API Docs</a>
+    <a href="https://api.harrisoncollab.com/docs">API Docs</a>
     <a href="https://pypi.org/project/renoun-mcp/">pip install renoun-mcp</a>
     <a href="https://github.com/98lukehall/renoun-mcp">GitHub</a>
   </div>
@@ -1434,7 +1576,7 @@ async def mcp_server_card():
     """MCP server card for Smithery discovery. No auth required."""
     return {
         "name": "renoun",
-        "description": "Structural risk telemetry for crypto markets. Classifies regimes (bounded/active/unstable) with 100% bounded regime accuracy across 265+ graded predictions. Estimates regime stability half-life. Pre-trade risk gate for trading agents.",
+        "description": "Structural risk telemetry for crypto markets. Classifies regimes (bounded/active/unstable) with 100% bounded regime accuracy across 4700+ graded predictions. Estimates regime stability half-life. Pre-trade risk gate for trading agents.",
         "version": TOOL_VERSION,
         "homepage": "https://harrisoncollab.com",
         "repository": "https://github.com/98lukehall/renoun-mcp",
@@ -1469,7 +1611,7 @@ async def mcp_server_card():
             },
             {
                 "name": "renoun_finance_analyze",
-                "description": "Full 17-channel structural analysis of OHLCV data. Returns DHS, constellations, stress metrics, and exposure scalar. 100% bounded regime accuracy across 265+ graded predictions.",
+                "description": "Full 17-channel structural analysis of OHLCV data. Returns DHS, constellations, stress metrics, and exposure scalar. 100% bounded regime accuracy across 4700+ graded predictions.",
             },
             {
                 "name": "renoun_agent_monitor",
@@ -1534,7 +1676,7 @@ try:
                     "example": "curl -X POST /v1/keys/provision -H 'Content-Type: application/json' -d '{\"email\":\"you@example.com\",\"tier\":\"agent\",\"agent_name\":\"my-agent\"}'"
                 },
                 "docs": "https://harrisoncollab.com/agents",
-                "status": "https://web-production-817e2.up.railway.app/v1/status"
+                "status": "https://api.harrisoncollab.com/v1/status"
             }, indent=2).encode()
             await send({"type": "http.response.start", "status": 200, "headers": [[b"content-type", b"application/json"]]})
             await send({"type": "http.response.body", "body": body})

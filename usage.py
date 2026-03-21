@@ -55,6 +55,13 @@ def log_request(
     with open(USAGE_LOG, "a") as f:
         f.write(json.dumps(entry, default=str) + "\n")
 
+    # Also record in analytics tracker
+    try:
+        from analytics import record_api_call
+        record_api_call(endpoint, key_id)
+    except Exception:
+        pass  # Don't let analytics failures block API calls
+
 
 # ---------------------------------------------------------------------------
 # Metered Usage Tracking (Agent Tier)

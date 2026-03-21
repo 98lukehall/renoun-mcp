@@ -213,6 +213,19 @@ def main():
         verbose=not args.quiet,
     )
 
+    # Also export track record data
+    try:
+        from export_track_record import export_track_record
+        tr_output = Path(args.output).parent / "track_record.json"
+        export_track_record(
+            scores_path=Path(args.scores),
+            output_path=tr_output,
+            verbose=not args.quiet,
+        )
+    except Exception as e:
+        if not args.quiet:
+            print(f"  WARNING: Track record export failed: {e}")
+
     sys.exit(0 if success else 1)
 
 

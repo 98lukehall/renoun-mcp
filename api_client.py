@@ -19,7 +19,7 @@ import urllib.error
 from pathlib import Path
 from typing import Optional
 
-DEFAULT_API_URL = "https://web-production-817e2.up.railway.app"
+DEFAULT_API_URL = "https://api.harrisoncollab.com"
 
 
 def _load_config() -> dict:

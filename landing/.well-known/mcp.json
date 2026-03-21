@@ -42,7 +42,7 @@
     }
   ],
   "api": {
-    "base_url": "https://web-production-817e2.up.railway.app",
+    "base_url": "https://api.harrisoncollab.com",
     "auth_type": "bearer",
     "key_prefix": "rn_agent_",
     "free_tier": "50 calls/day, no credit card",

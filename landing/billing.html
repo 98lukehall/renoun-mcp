@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ReNoUn — Add Payment Method</title>
-<meta name="description" content="Add a payment method to your ReNoUn API key. Continue calling beyond 50 free calls/day at $0.02/call.">
+<title>ReNoUn — Upgrade Your Plan</title>
+<meta name="description" content="Upgrade your ReNoUn API key. Pro plan: $4.99/mo for 1,000 calls/day. Agent metered: $0.02/call beyond 50 free/day.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -51,6 +51,14 @@ h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 
 .btn:hover { background: var(--accent-hover); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* Tabs */
+.tabs { display: flex; gap: 0; margin-bottom: 32px; border-bottom: 1px solid var(--border); }
+.tab { padding: 12px 20px; font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.tab:hover { color: var(--text-dim); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
 /* Info box */
 .info-box {
   background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
@@ -86,34 +94,65 @@ h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 
 <div class="container">
   <!-- Status messages for return from Stripe -->
   <div class="status success" id="statusSuccess">
-    Payment method added successfully. Your API key now supports unlimited metered calls at $0.02 each beyond 50/day. You can close this page.
+    Payment successful! Your API key has been upgraded. Check your email for details, or visit the <a href="/welcome">welcome page</a>. You can close this page.
   </div>
   <div class="status cancelled" id="statusCancelled">
-    Checkout was cancelled. Your free tier (50 calls/day) is still active.
+    Checkout was cancelled. Your current plan is still active.
   </div>
   <div class="status error" id="statusError"></div>
 
-  <h1>Add Payment Method</h1>
+  <h1>Upgrade Your Plan</h1>
   <p class="subtitle">
-    Paste your API key below to add metered billing. You won't be charged until you exceed 50 free calls in a day.
+    Paste your API key below to upgrade, or enter your email to start a new Pro subscription.
   </p>
 
-  <form id="billingForm" onsubmit="return handleSubmit(event)">
-    <div class="form-group">
-      <label for="apiKey">API Key</label>
-      <input type="text" id="apiKey" name="api_key" placeholder="rn_agent_..." required autocomplete="off" spellcheck="false">
-    </div>
-    <button type="submit" class="btn" id="submitBtn">Continue to Stripe</button>
-  </form>
+  <!-- Tabs for key type -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('key')">I have an API key</div>
+    <div class="tab" onclick="switchTab('email')">New Pro subscription</div>
+  </div>
 
-  <div class="info-box">
-    <h3>How metered billing works</h3>
+  <!-- Tab 1: Existing key upgrade -->
+  <div class="tab-content active" id="tabKey">
+    <form id="keyForm" onsubmit="return handleKeySubmit(event)">
+      <div class="form-group">
+        <label for="apiKey">API Key</label>
+        <input type="text" id="apiKey" name="api_key" placeholder="rn_live_... or rn_agent_..." required autocomplete="off" spellcheck="false">
+      </div>
+      <p id="keyHint" style="font-size:13px;color:var(--text-muted);margin-top:8px;display:none;"></p>
+      <button type="submit" class="btn" id="keySubmitBtn">Continue to Stripe</button>
+    </form>
+  </div>
+
+  <!-- Tab 2: New pro subscription by email -->
+  <div class="tab-content" id="tabEmail">
+    <form id="emailForm" onsubmit="return handleEmailSubmit(event)">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+      </div>
+      <button type="submit" class="btn" id="emailSubmitBtn">Subscribe to Pro &mdash; $4.99/mo</button>
+    </form>
+  </div>
+
+  <div class="info-box" id="infoAgent" style="display:none;">
+    <h3>Agent metered billing</h3>
     <ul>
       <li>50 calls/day are always free</li>
       <li>Beyond 50, each call is $0.02</li>
       <li>Billed monthly via Stripe</li>
-      <li>Cancel anytime — reverts to free tier</li>
+      <li>Cancel anytime &mdash; reverts to free tier</li>
       <li>No minimum commitment</li>
+    </ul>
+  </div>
+
+  <div class="info-box" id="infoPro">
+    <h3>Pro plan includes</h3>
+    <ul>
+      <li>1,000 API calls per day</li>
+      <li>Full access: analyze, health_check, compare, pattern_query, steer</li>
+      <li>$4.99/month, cancel anytime</li>
+      <li>Priority support</li>
     </ul>
   </div>
 
@@ -124,46 +163,105 @@ h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 
 </div>
 
 <script>
-const API_BASE = 'https://web-production-817e2.up.railway.app';
+const API_BASE = 'https://api.harrisoncollab.com';
 
 // Check URL params for return status
 const params = new URLSearchParams(window.location.search);
 if (params.get('status') === 'success') {
   document.getElementById('statusSuccess').classList.add('show');
-  document.getElementById('billingForm').style.display = 'none';
+  document.getElementById('tabKey').style.display = 'none';
+  document.getElementById('tabEmail').style.display = 'none';
+  document.querySelector('.tabs').style.display = 'none';
 } else if (params.get('status') === 'cancelled') {
   document.getElementById('statusCancelled').classList.add('show');
 }
 
-async function handleSubmit(e) {
-  e.preventDefault();
-  const btn = document.getElementById('submitBtn');
-  const errEl = document.getElementById('statusError');
-  const apiKey = document.getElementById('apiKey').value.trim();
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
 
-  if (!apiKey.startsWith('rn_agent_')) {
-    errEl.textContent = 'Please enter a valid agent API key (starts with rn_agent_).';
-    errEl.classList.add('show');
+  if (tab === 'key') {
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('tabKey').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('tabEmail').classList.add('active');
+  }
+}
+
+// Detect key type and show relevant info
+const apiKeyInput = document.getElementById('apiKey');
+apiKeyInput.addEventListener('input', function() {
+  const val = this.value.trim();
+  const hint = document.getElementById('keyHint');
+  const infoAgent = document.getElementById('infoAgent');
+  const infoPro = document.getElementById('infoPro');
+
+  if (val.startsWith('rn_agent_')) {
+    hint.textContent = 'Agent key detected. This will add metered billing ($0.02/call beyond 50 free/day).';
+    hint.style.display = 'block';
+    infoAgent.style.display = 'block';
+    infoPro.style.display = 'none';
+  } else if (val.startsWith('rn_live_')) {
+    hint.textContent = 'Free-tier key detected. This will upgrade you to Pro ($4.99/mo, 1,000 calls/day).';
+    hint.style.display = 'block';
+    infoAgent.style.display = 'none';
+    infoPro.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
+    infoAgent.style.display = 'none';
+    infoPro.style.display = 'block';
+  }
+});
+
+function showError(msg) {
+  const errEl = document.getElementById('statusError');
+  errEl.textContent = msg;
+  errEl.classList.add('show');
+}
+
+function clearError() {
+  document.getElementById('statusError').classList.remove('show');
+}
+
+async function handleKeySubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('keySubmitBtn');
+  const apiKey = document.getElementById('apiKey').value.trim();
+  clearError();
+
+  if (!apiKey.startsWith('rn_agent_') && !apiKey.startsWith('rn_live_')) {
+    showError('Please enter a valid API key (starts with rn_agent_... or rn_live_...). ');
     return false;
   }
 
   btn.disabled = true;
   btn.textContent = 'Redirecting to Stripe...';
-  errEl.classList.remove('show');
 
   try {
-    const resp = await fetch(`${API_BASE}/v1/billing/metered`, {
+    let endpoint, body;
+
+    if (apiKey.startsWith('rn_agent_')) {
+      // Agent key: metered billing
+      endpoint = '/v1/billing/metered';
+      body = JSON.stringify({ api_key: apiKey });
+    } else {
+      // Free-tier key: upgrade to pro
+      endpoint = '/v1/billing/upgrade';
+      body = JSON.stringify({ api_key: apiKey });
+    }
+
+    const resp = await fetch(`${API_BASE}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: apiKey }),
+      body: body,
     });
 
     const data = await resp.json();
 
     if (!resp.ok) {
       const msg = data?.error?.message || data?.detail?.error?.message || 'Something went wrong.';
-      errEl.textContent = msg;
-      errEl.classList.add('show');
+      showError(msg);
       btn.disabled = false;
       btn.textContent = 'Continue to Stripe';
       return false;
@@ -172,21 +270,66 @@ async function handleSubmit(e) {
     if (data.checkout_url) {
       window.location.href = data.checkout_url;
     } else {
-      errEl.textContent = 'No checkout URL returned. Is Stripe configured?';
-      errEl.classList.add('show');
+      showError('No checkout URL returned. Is Stripe configured?');
       btn.disabled = false;
       btn.textContent = 'Continue to Stripe';
     }
   } catch (err) {
-    errEl.textContent = `Network error: ${err.message}`;
-    errEl.classList.add('show');
+    showError(`Network error: ${err.message}`);
     btn.disabled = false;
     btn.textContent = 'Continue to Stripe';
   }
 
   return false;
 }
-</script>
 
+async function handleEmailSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('emailSubmitBtn');
+  const email = document.getElementById('email').value.trim();
+  clearError();
+
+  if (!email || !email.includes('@')) {
+    showError('Please enter a valid email address.');
+    return false;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Redirecting to Stripe...';
+
+  try {
+    const resp = await fetch(`${API_BASE}/v1/billing/upgrade`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email }),
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      const msg = data?.error?.message || data?.detail?.error?.message || 'Something went wrong.';
+      showError(msg);
+      btn.disabled = false;
+      btn.textContent = 'Subscribe to Pro \u2014 $4.99/mo';
+      return false;
+    }
+
+    if (data.checkout_url) {
+      window.location.href = data.checkout_url;
+    } else {
+      showError('No checkout URL returned. Is Stripe configured?');
+      btn.disabled = false;
+      btn.textContent = 'Subscribe to Pro \u2014 $4.99/mo';
+    }
+  } catch (err) {
+    showError(`Network error: ${err.message}`);
+    btn.disabled = false;
+    btn.textContent = 'Subscribe to Pro \u2014 $4.99/mo';
+  }
+
+  return false;
+}
+</script>
+<script>fetch('https://api.harrisoncollab.com/v1/analytics/pageview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page:'billing'})}).catch(()=>{});</script>
 </body>
 </html>

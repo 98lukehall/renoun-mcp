@@ -406,6 +406,7 @@ footer a:hover { color: var(--text); }
     <a href="#regimes">Regimes</a>
     <a href="#mcp">MCP</a>
     <a href="dashboard.html">Dashboard</a>
+    <a href="track-record.html">Track Record</a>
     <a href="#pricing">Pricing</a>
     <a href="https://github.com/98lukehall/renoun-mcp" target="_blank">GitHub</a>
     <a href="agents.html" class="nav-cta">Get API Key</a>
@@ -490,7 +491,7 @@ footer a:hover { color: var(--text); }
   <div class="code-section">
     <div class="code-block"><pre><span class="keyword">import</span> requests
 
-r = requests.get(<span class="string">"https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT"</span>,
+r = requests.get(<span class="string">"https://api.harrisoncollab.com/v1/regime/live/BTCUSDT"</span>,
                   headers={<span class="string">"Authorization"</span>: <span class="string">"Bearer rn_agent_YOUR_KEY"</span>})
 regime = r.json()
 
@@ -521,7 +522,7 @@ regime = r.json()
   "mcpServers": {
     "renoun": {
       "type": "streamable-http",
-      "url": "https://web-production-817e2.up.railway.app/mcp",
+      "url": "https://api.harrisoncollab.com/mcp",
       "headers": {
         "Authorization": "Bearer rn_agent_YOUR_KEY"
       }
@@ -623,7 +624,7 @@ regime = r.json()
   <h2>Get started in 10 seconds.</h2>
   <p>Provision a free API key. No signup form, no credit card. Just a POST request.</p>
   <a href="agents.html" class="btn btn-primary">Provision Free Key</a>
-  <div class="cta-code"><pre>curl -X POST https://web-production-817e2.up.railway.app/v1/keys/provision \
+  <div class="cta-code"><pre>curl -X POST https://api.harrisoncollab.com/v1/keys/provision \
   -H "Content-Type: application/json" \
   -d '{"email": "you@example.com", "agent_name": "my-bot"}'</pre></div>
 </div>
@@ -720,5 +721,6 @@ async function loadLiveData() {
 loadLiveData();
 setInterval(loadLiveData, 300000);
 </script>
+<script>fetch('https://api.harrisoncollab.com/v1/analytics/pageview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page:'index'})}).catch(()=>{});</script>
 </body>
 </html>

@@ -125,6 +125,7 @@ footer a { color: var(--text-dim); margin: 0 12px; }
   <div class="links">
     <a href="index.html">Home</a>
     <a href="dashboard.html">Dashboard</a>
+    <a href="track-record.html">Track Record</a>
     <a href="pricing.html">Pricing</a>
   </div>
 </nav>
@@ -140,7 +141,7 @@ footer a { color: var(--text-dim); margin: 0 12px; }
   <h2>3-Line Integration</h2>
   <div class="code-block"><pre><span class="keyword">import</span> requests
 
-r = requests.get(<span class="string">"https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT"</span>,
+r = requests.get(<span class="string">"https://api.harrisoncollab.com/v1/regime/live/BTCUSDT"</span>,
                   headers={<span class="string">"Authorization"</span>: <span class="string">"Bearer rn_agent_YOUR_KEY"</span>})
 
 <span class="keyword">if</span> r.json()[<span class="string">"action"</span>] == <span class="string">"avoid"</span>:
@@ -203,7 +204,7 @@ r = requests.get(<span class="string">"https://web-production-817e2.up.railway.a
 <section>
   <h2>Verify the Track Record</h2>
   <p>No other crypto signal service publishes every call with a timestamp and a pass/fail grade. Most won't even tell you their hit rate. Every ReNoUn prediction is public, timestamped, and graded against the 1-hour actual price outcome. No cherry-picking, no hidden losses.</p>
-  <p><a href="https://x.com/98lukehall">Live signal feed on X</a> &middot; <a href="dashboard.html">Dashboard (6h delayed)</a></p>
+  <p><a href="track-record.html">Full track record</a> &middot; <a href="https://x.com/98lukehall">Live signal feed on X</a> &middot; <a href="dashboard.html">Dashboard (6h delayed)</a></p>
 </section>
 
 <section>
@@ -247,7 +248,7 @@ r = requests.get(<span class="string">"https://web-production-817e2.up.railway.a
 </footer>
 
 <script>
-const API = 'https://web-production-817e2.up.railway.app';
+const API = 'https://api.harrisoncollab.com';
 
 async function provisionKey(e) {
   e.preventDefault();
@@ -328,6 +329,6 @@ function copyText(elementId, btn) {
   });
 }
 </script>
-
+<script>fetch('https://api.harrisoncollab.com/v1/analytics/pageview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page:'agents'})}).catch(()=>{});</script>
 </body>
 </html>
