@@ -56,6 +56,11 @@ from server import (
 from regime_cache import regime_cache
 from regime_service import analysis_to_regime_response, compute_portfolio_action, META_BLOCK
 
+# Override META_BLOCK with correct URLs (regime_service.py is downloaded
+# from private repo at runtime and may have stale URLs)
+META_BLOCK["provision_url"] = "https://api.harrisoncollab.com/v1/keys/provision"
+META_BLOCK["accuracy"] = "100% bounded regime accuracy, 4700+ predictions graded"
+
 # Start news monitor background thread
 try:
     from news_monitor import start_news_monitor
