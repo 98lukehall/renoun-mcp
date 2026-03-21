@@ -10,7 +10,7 @@ startCommand:
     properties:
       apiKey:
         type: string
-        description: "Your ReNoUn API key (starts with rn_live_). Get one at https://harrisoncollab.com"
+        description: "Your ReNoUn API key (starts with rn_agent_). Get one at https://harrisoncollab.com"
     description: "Structural observability for AI conversations. Detects loops, stuck states, breakthroughs, and convergence patterns across 17 channels."
   commandFunction: |-
     (config) => ({
@@ -19,4 +19,4 @@ startCommand:
       env: { RENOUN_API_KEY: config.apiKey }
     })
   exampleConfig:
-    apiKey: "rn_live_your_key_here"
+    apiKey: "rn_agent_your_key_here"

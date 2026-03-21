@@ -3,18 +3,17 @@
 ReNoUn Stripe Billing Integration.
 
 Handles:
-  - Agent tier: 50 free calls/day, $0.02/call metered beyond that
-  - Pro tier: $4.99/mo subscription with 1,000 calls/day included
-  - Creating Stripe Checkout sessions (metered agent + pro subscription)
+  - Metered billing: 50 free calls/day, $0.02/call beyond that
+  - Creating Stripe Checkout sessions for metered agent billing
   - Processing webhook events (payment succeeded, subscription changes)
-  - Auto-provisioning/linking API keys on successful payment
+  - Linking API keys to Stripe subscriptions on successful payment
   - Handling cancellations and downgrades
 
 Setup:
   1. Create a Stripe account at https://stripe.com
-  2. Create products: "ReNoUn API" (metered, $0.02/unit) + "ReNoUn Pro" ($4.99/mo)
+  2. Create a product: "ReNoUn API" (metered, $0.02/unit)
   3. Set up a webhook endpoint pointing to https://your-domain.com/v1/billing/webhook
-  4. Add env vars: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID, STRIPE_METERED_PRICE_ID
+  4. Add env vars: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_METERED_PRICE_ID
 
 Usage:
     python3 stripe_billing.py setup   # Print setup checklist
@@ -29,7 +28,7 @@ from typing import Optional
 
 import stripe
 
-from auth import create_key, revoke_key, list_keys, _load_keys, _save_keys, validate_key
+from auth import _load_keys, _save_keys, validate_key
 
 
 # ---------------------------------------------------------------------------
@@ -65,10 +64,9 @@ def _load_stripe_config() -> dict:
     return {
         "secret_key": os.environ.get("STRIPE_SECRET_KEY", file_config.get("stripe_secret_key", "")),
         "webhook_secret": os.environ.get("STRIPE_WEBHOOK_SECRET", file_config.get("stripe_webhook_secret", "")),
-        "price_id": os.environ.get("STRIPE_PRICE_ID", file_config.get("stripe_price_id", "")),
         "metered_price_id": os.environ.get("STRIPE_METERED_PRICE_ID", file_config.get("stripe_metered_price_id", "")),
-        "success_url": os.environ.get("STRIPE_SUCCESS_URL", file_config.get("stripe_success_url", "https://api.harrisoncollab.com/welcome?session_id={CHECKOUT_SESSION_ID}")),
-        "cancel_url": os.environ.get("STRIPE_CANCEL_URL", file_config.get("stripe_cancel_url", "https://renoun.dev/pricing")),
+        "success_url": os.environ.get("STRIPE_SUCCESS_URL", file_config.get("stripe_success_url", "https://harrisoncollab.com/billing.html?status=success")),
+        "cancel_url": os.environ.get("STRIPE_CANCEL_URL", file_config.get("stripe_cancel_url", "https://harrisoncollab.com/billing.html?status=cancelled")),
     }
 
 
@@ -113,14 +111,14 @@ def _find_key_by_subscription(subscription_id: str) -> Optional[dict]:
     return None
 
 
-def _downgrade_key(key_id: str):
-    """Downgrade a key from pro to free tier."""
+def _remove_billing_from_key(key_id: str):
+    """Remove Stripe billing from a key (revert to free tier)."""
     data = _load_keys()
     for entry in data["keys"]:
         if entry["key_id"] == key_id:
-            entry["tier"] = "free"
             entry.pop("stripe_customer_id", None)
             entry.pop("stripe_subscription_id", None)
+            entry.pop("stripe_subscription_item_id", None)
             break
     _save_keys(data)
 
@@ -128,37 +126,6 @@ def _downgrade_key(key_id: str):
 # ---------------------------------------------------------------------------
 # Checkout Session
 # ---------------------------------------------------------------------------
-
-def create_checkout_session(customer_email: str, metadata: Optional[dict] = None) -> dict:
-    """Create a Stripe Checkout session for a pro subscription.
-
-    Returns dict with checkout_url and session_id.
-    """
-    if not STRIPE_CONFIG["secret_key"]:
-        return {"error": "Stripe not configured. Set STRIPE_SECRET_KEY."}
-    if not STRIPE_CONFIG["price_id"]:
-        return {"error": "Stripe Price ID not configured. Set STRIPE_PRICE_ID."}
-
-    try:
-        session = stripe.checkout.Session.create(
-            mode="subscription",
-            payment_method_types=["card"],
-            customer_email=customer_email,
-            line_items=[{
-                "price": STRIPE_CONFIG["price_id"],
-                "quantity": 1,
-            }],
-            success_url=STRIPE_CONFIG["success_url"],
-            cancel_url=STRIPE_CONFIG["cancel_url"],
-            metadata=metadata or {},
-        )
-        return {
-            "checkout_url": session.url,
-            "session_id": session.id,
-        }
-    except stripe.StripeError as e:
-        return {"error": f"Stripe error: {str(e)}"}
-
 
 def create_metered_checkout_session(customer_email: str, key_id: str) -> dict:
     """Create a Stripe Checkout session for metered agent billing.
@@ -269,14 +236,14 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
 
 
 def _handle_checkout_completed(session: dict) -> dict:
-    """Handle checkout completion — either new pro key or metered agent upgrade."""
+    """Handle checkout completion — link metered billing to an existing agent key."""
     checkout_session_id = session.get("id", "")
     customer_id = session.get("customer", "")
     customer_email = session.get("customer_email", session.get("customer_details", {}).get("email", ""))
     subscription_id = session.get("subscription", "")
     metadata = session.get("metadata", {})
 
-    # --- Metered agent upgrade: link billing to existing key ---
+    # --- Metered agent billing: link billing to existing key ---
     if metadata.get("type") == "metered_agent" and metadata.get("key_id"):
         agent_key_id = metadata["key_id"]
         _link_agent_key_to_stripe(agent_key_id, customer_id, subscription_id)
@@ -288,79 +255,12 @@ def _handle_checkout_completed(session: dict) -> dict:
             "note": "Metered billing active. Calls beyond 50/day billed at $0.02 each.",
         }
 
-    # --- Free-to-Pro upgrade: upgrade existing key in place ---
-    existing_key_id = metadata.get("existing_key_id")
-    if existing_key_id:
-        data = _load_keys()
-        for entry in data["keys"]:
-            if entry["key_id"] == existing_key_id and entry.get("active"):
-                entry["tier"] = "pro"
-                entry["stripe_customer_id"] = customer_id
-                entry["stripe_subscription_id"] = subscription_id
-                _save_keys(data)
-
-                if checkout_session_id:
-                    _provisioned_keys[checkout_session_id] = {
-                        "raw_key": "(existing key upgraded — check your email)",
-                        "key_id": existing_key_id,
-                        "email": customer_email,
-                        "tier": "pro",
-                    }
-
-                try:
-                    from email_sender import send_welcome_email
-                    email_result = send_welcome_email(to=customer_email, raw_key="(your existing key)", tier="pro")
-                except Exception as e:
-                    email_result = {"success": False, "error": str(e)}
-
-                return {
-                    "action": "key_upgraded",
-                    "key_id": existing_key_id,
-                    "tier": "pro",
-                    "previous_tier": metadata.get("upgrade_from", "free"),
-                    "customer_id": customer_id,
-                    "customer_email": customer_email,
-                    "email_sent": email_result.get("success", False),
-                    "note": "Existing key upgraded to pro tier. Same key, new limits.",
-                }
-
-    # --- Pro subscription: create new key ---
-    existing = _find_key_by_customer(customer_id)
-    if existing:
-        return {
-            "action": "already_provisioned",
-            "key_id": existing["key_id"],
-            "customer_id": customer_id,
-        }
-
-    result = create_key(tier="pro", owner=customer_email)
-    key_id = result["key_id"]
-    raw_key = result["raw_key"]
-
-    _link_key_to_stripe(key_id, customer_id, subscription_id)
-
-    if checkout_session_id:
-        _provisioned_keys[checkout_session_id] = {
-            "raw_key": raw_key,
-            "key_id": key_id,
-            "email": customer_email,
-            "tier": "pro",
-        }
-
-    try:
-        from email_sender import send_welcome_email
-        email_result = send_welcome_email(to=customer_email, raw_key=raw_key, tier="pro")
-    except Exception as e:
-        email_result = {"success": False, "error": str(e)}
-
+    # --- Unknown checkout type ---
     return {
-        "action": "key_provisioned",
-        "key_id": key_id,
-        "tier": "pro",
+        "action": "checkout_completed_unknown",
         "customer_id": customer_id,
         "customer_email": customer_email,
-        "email_sent": email_result.get("success", False),
-        "raw_key": raw_key,
+        "note": "Checkout completed but no matching billing type found in metadata.",
     }
 
 
@@ -391,17 +291,17 @@ def _handle_subscription_change(subscription: dict) -> dict:
 
     key_id = existing["key_id"]
 
-    # If cancelled or unpaid, downgrade to free
+    # If cancelled or unpaid, remove billing
     if status in ("canceled", "unpaid", "past_due", "incomplete_expired"):
-        _downgrade_key(key_id)
+        _remove_billing_from_key(key_id)
         return {
-            "action": "key_downgraded",
+            "action": "billing_removed",
             "key_id": key_id,
-            "new_tier": "free",
+            "note": "Reverted to free tier (50 calls/day).",
             "reason": status,
         }
 
-    # Active subscription update (e.g., plan change) — keep pro
+    # Active subscription update — keep billing active
     return {
         "action": "subscription_updated",
         "key_id": key_id,
@@ -468,12 +368,12 @@ ReNoUn Stripe Setup Checklist
 1. Create a Stripe account: https://stripe.com
 
 2. In Stripe Dashboard, create a Product:
-   - Name: "ReNoUn Pro"
-   - Price: $4.99/month (recurring)
+   - Name: "ReNoUn API"
+   - Price: Metered, $0.02/unit (recurring, usage-based)
    - Copy the Price ID (starts with price_...)
 
 3. Set up a Webhook endpoint:
-   - URL: https://your-domain.com/v1/billing/webhook
+   - URL: https://api.harrisoncollab.com/v1/billing/webhook
    - Events to listen for:
      * checkout.session.completed
      * invoice.payment_succeeded
@@ -485,13 +385,13 @@ ReNoUn Stripe Setup Checklist
 4. Set environment variables:
    export STRIPE_SECRET_KEY="sk_live_..."
    export STRIPE_WEBHOOK_SECRET="whsec_..."
-   export STRIPE_PRICE_ID="price_..."
+   export STRIPE_METERED_PRICE_ID="price_..."
 
    Or add to ~/.renoun/config.json:
    {
        "stripe_secret_key": "sk_live_...",
        "stripe_webhook_secret": "whsec_...",
-       "stripe_price_id": "price_..."
+       "stripe_metered_price_id": "price_..."
    }
 
 5. Start the API server:
@@ -505,11 +405,11 @@ ReNoUn Stripe Setup Checklist
     elif args.command == "status":
         config = _load_stripe_config()
         print(f"\nStripe Configuration Status")
-        print(f"  Secret Key:     {'configured' if config['secret_key'] else 'MISSING'}")
-        print(f"  Webhook Secret: {'configured' if config['webhook_secret'] else 'MISSING'}")
-        print(f"  Price ID:       {config['price_id'] or 'MISSING'}")
-        print(f"  Success URL:    {config['success_url']}")
-        print(f"  Cancel URL:     {config['cancel_url']}")
+        print(f"  Secret Key:        {'configured' if config['secret_key'] else 'MISSING'}")
+        print(f"  Webhook Secret:    {'configured' if config['webhook_secret'] else 'MISSING'}")
+        print(f"  Metered Price ID:  {config.get('metered_price_id') or 'MISSING'}")
+        print(f"  Success URL:       {config['success_url']}")
+        print(f"  Cancel URL:        {config['cancel_url']}")
 
         if config["secret_key"]:
             try:

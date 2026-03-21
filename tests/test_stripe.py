@@ -48,7 +48,7 @@ from stripe_billing import (
     _link_key_to_stripe,
     _find_key_by_customer,
     _find_key_by_subscription,
-    _downgrade_key,
+    _remove_billing_from_key,
     _handle_checkout_completed,
     _handle_payment_succeeded,
     _handle_subscription_change,
@@ -297,17 +297,16 @@ class TestWebhookSignature:
             os.environ["STRIPE_WEBHOOK_SECRET"] = original
 
 
-class TestDowngradeKey:
+class TestRemoveBilling:
 
-    def test_downgrade_removes_stripe_link(self):
-        key = create_key(tier="pro", owner="downgrade@test.com")
-        _link_key_to_stripe(key["key_id"], "cus_dg", "sub_dg")
+    def test_remove_billing_removes_stripe_link(self):
+        key = create_key(tier="agent", owner="remove-billing@test.com")
+        _link_key_to_stripe(key["key_id"], "cus_rb", "sub_rb")
 
-        _downgrade_key(key["key_id"])
+        _remove_billing_from_key(key["key_id"])
 
         data = _load_keys()
         entry = next(e for e in data["keys"] if e["key_id"] == key["key_id"])
-        assert entry["tier"] == "free"
         assert "stripe_customer_id" not in entry
         assert "stripe_subscription_id" not in entry
 

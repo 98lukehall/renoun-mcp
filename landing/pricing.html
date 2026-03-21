@@ -54,7 +54,7 @@ nav .links a:hover { color: var(--text); text-decoration: none; }
 .hero h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px; }
 .hero p { color: var(--text-dim); font-size: 18px; max-width: 550px; margin: 0 auto; }
 
-.pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1000px; margin: 48px auto; padding: 0 24px; }
+.pricing-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; max-width: 720px; margin: 48px auto; padding: 0 24px; }
 .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; display: flex; flex-direction: column; }
 .card.featured { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .card .badge { background: var(--accent); color: #0A0E17; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block; margin-bottom: 16px; width: fit-content; }
@@ -82,7 +82,7 @@ nav .links a:hover { color: var(--text); text-decoration: none; }
 footer { margin-top: auto; padding: 24px; text-align: center; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 13px; }
 footer a { color: var(--text-dim); margin: 0 12px; }
 
-@media (max-width: 720px) { .pricing-grid { grid-template-columns: 1fr; max-width: 400px; } }
+@media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; max-width: 400px; } }
 </style>
 </head>
 <body>
@@ -105,7 +105,7 @@ footer a { color: var(--text-dim); margin: 0 12px; }
 
   <div class="card featured">
     <div class="badge">Default</div>
-    <div class="name">Agent Tier</div>
+    <div class="name">Metered</div>
     <div class="desc">Pre-trade risk gate for trading bots. Self-provisioning. No credit card required to start.</div>
     <div class="price">$0 <span class="period">to start</span></div>
     <div class="price-note">50 free calls/day. $0.02/call beyond that.</div>
@@ -114,28 +114,12 @@ footer a { color: var(--text-dim); margin: 0 12px; }
       <li>$0.02/call metered beyond free tier</li>
       <li>Self-provisioning (POST /v1/keys/provision)</li>
       <li>regime/live + regime/batch endpoints</li>
+      <li>17-channel structural analysis</li>
       <li>Stability half-life estimation</li>
       <li>Exposure scalar for position sizing</li>
       <li>100% bounded regime accuracy</li>
     </ul>
     <a href="/agents.html#provisionWidget" class="btn btn-primary">Get Free API Key</a>
-  </div>
-
-  <div class="card">
-    <div class="name">Pro Tier</div>
-    <div class="desc">Full access including conversation analysis, real-time steering, and pattern tracking.</div>
-    <div class="price">$4.99 <span class="period">/ month</span></div>
-    <div class="price-note">1,000 calls/day included.</div>
-    <ul>
-      <li>Everything in Agent Tier</li>
-      <li>1,000 calls/day included</li>
-      <li>17-channel conversation analysis</li>
-      <li>Real-time steering monitor</li>
-      <li>Longitudinal pattern tracking</li>
-      <li>Session comparison (A/B diffs)</li>
-      <li>Agent monitor + alignment classify</li>
-    </ul>
-    <a href="/billing.html" class="btn btn-outline">Subscribe</a>
   </div>
 
   <div class="card">

@@ -43,9 +43,9 @@ When abnormal activity is detected (volume spikes, news velocity, trending), the
 An "extreme" alert overrides action to "avoid" even if structure is bounded.
 An "elevated" alert halves the stability halflife.
 
-## Transition Warning (Premium)
+## Transition Warning (Enterprise)
 
-Pro/Enterprise tier responses include a transition_warning block that detects when the current regime is drifting toward a different regime type — before the constellation flips.
+Enterprise tier responses include a transition_warning block that detects when the current regime is drifting toward a different regime type — before the constellation flips.
 
 | Field | Meaning |
 |-------|---------|
@@ -54,7 +54,7 @@ Pro/Enterprise tier responses include a transition_warning block that detects wh
 | estimated_transition_minutes | Time to regime flip at current rate |
 | drivers | List of what's causing the drift |
 
-Free/agent tier: transition_warning is always null. Upgrade to Pro for early warnings.
+Standard tier: transition_warning is always null. Contact us for enterprise access.
 
 ## When to Call This Tool
 

@@ -154,8 +154,8 @@ def create_engine():
                 "ReNoUn core engine (core.py) not found locally, and no API key configured.\n\n"
                 "Option 1 — Local engine:\n"
                 "  Set RENOUN_CORE_PATH=/path/to/core.py\n\n"
-                "Option 2 — Remote API (subscription required):\n"
-                "  Set RENOUN_API_KEY=rn_live_your_key_here\n"
+                "Option 2 — Remote API (free tier: 50 calls/day):\n"
+                "  Set RENOUN_API_KEY=rn_agent_your_key_here\n"
                 "  Get your key at https://harrisoncollab.com\n"
             )
 
