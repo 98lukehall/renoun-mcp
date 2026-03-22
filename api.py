@@ -23,6 +23,7 @@ Endpoints:
 Patent Pending #63/923,592 — core engine is proprietary.
 """
 
+import hmac
 import logging
 import os
 import time
@@ -269,8 +270,8 @@ def _record_agent_call(key_info: dict, endpoint: str) -> Optional[dict]:
 # ---------------------------------------------------------------------------
 
 class Utterance(BaseModel):
-    speaker: str
-    text: str
+    speaker: str = Field(..., max_length=200)
+    text: str = Field(..., max_length=50000)  # ~50KB per utterance
     index: Optional[int] = None
 
 class AnalyzeRequest(BaseModel):
@@ -438,28 +439,26 @@ async def analytics_pageview(body: PageviewRequest):
 @app.get("/v1/analytics/summary")
 async def analytics_summary(request: Request):
     """Analytics summary. Requires RENOUN_ADMIN_KEY."""
-    admin_key = os.environ.get("RENOUN_ADMIN_KEY", "")
-    if not admin_key:
-        raise HTTPException(status_code=503, detail={
-            "error": {"type": "not_configured", "message": "RENOUN_ADMIN_KEY not set on server."}
-        })
-
-    auth_header = request.headers.get("Authorization", "")
-    provided_key = ""
-    if auth_header.startswith("Bearer "):
-        provided_key = auth_header[7:].strip()
-
-    if provided_key != admin_key:
-        raise HTTPException(status_code=403, detail={
-            "error": {"type": "auth_error", "message": "Invalid admin key."}
-        })
+    _require_admin(request)
 
     return get_analytics_summary()
 
 
+def _require_admin(request: Request):
+    """Verify admin key from Authorization header (timing-safe)."""
+    admin_key = os.environ.get("RENOUN_ADMIN_KEY", "")
+    if not admin_key:
+        raise HTTPException(status_code=503, detail="RENOUN_ADMIN_KEY not set.")
+    auth = request.headers.get("Authorization", "")
+    token = auth[7:].strip() if auth.startswith("Bearer ") else ""
+    if not hmac.compare_digest(token, admin_key):
+        raise HTTPException(status_code=403, detail="Invalid admin key.")
+
+
 @app.get("/v1/debug/binance", tags=["Debug"])
-async def debug_binance():
-    """Test Binance API connectivity from this server. No auth required."""
+async def debug_binance(request: Request):
+    """Test Binance API connectivity. Requires admin key."""
+    _require_admin(request)
     import requests as _requests
     from binance_client import BINANCE_ENDPOINTS
 
@@ -494,8 +493,9 @@ async def debug_binance():
 
 
 @app.get("/v1/debug/news", tags=["Debug"])
-async def debug_news():
-    """Current news alert state for all tracked assets. No auth required."""
+async def debug_news(request: Request):
+    """Current news alert state for all tracked assets. Requires admin key."""
+    _require_admin(request)
     try:
         from news_monitor import news_cache as _nc
         alerts = _nc.get_all()
@@ -770,7 +770,7 @@ async def regime_live(
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=502, detail={
             "error": {"type": "upstream_error",
-                      "message": f"Binance fetch failed for {symbol}: {str(e)}",
+                      "message": f"Binance fetch failed for {symbol}.",
                       "action": "Try POST /v1/regime with your own klines instead."}
         })
 
@@ -839,8 +839,8 @@ async def regime_live(
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail={
             "error": {"type": "internal_error",
-                      "message": f"Analysis failed: {str(e)}",
-                      "action": "This error has been logged. Try POST /v1/regime with your own klines."}
+                      "message": "Analysis failed. This error has been logged.",
+                      "action": "Try POST /v1/regime with your own klines."}
         })
 
 
@@ -913,7 +913,7 @@ async def regime_batch(body: RegimeBatchRequest, key_info: dict = Depends(requir
             logger.error(traceback.format_exc())
             regimes[symbol] = {
                 "regime": "unstable", "action": "avoid", "dhs": 0.0, "exposure": 0.0,
-                "constellation": "NONE", "error": f"Analysis failed for {symbol}: {str(e)}",
+                "constellation": "NONE", "error": f"Analysis failed for {symbol}.",
             }
             limiter.record(key_info["key_id"], key_info["tier"])
             billing_warn = _record_agent_call(key_info, "/v1/regime/batch")

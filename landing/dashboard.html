@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ReNoUn Dashboard — Live Structural Regime Classification</title>
-<meta name="description" content="Live structural regime classifications for BTC, ETH, SOL, DOGE, XRP. 6-hour delayed feed. 100% bounded regime accuracy. 245+ predictions graded.">
-<meta property="og:title" content="ReNoUn Dashboard — Live Regime Classification">
-<meta property="og:description" content="Watch structural regime detection in real-time. 100% bounded regime accuracy. Free 6h-delayed feed.">
+<title>Health Dashboard — ReNoUn</title>
+<meta name="description" content="ReNoUn service health dashboard. API status, signal bot, distribution channels, and admin analytics.">
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
@@ -27,6 +26,9 @@
   --active: #C9956F;
   --unstable: #C75050;
   --radius: 10px;
+  --green: #7C9A6E;
+  --yellow: #C9956F;
+  --red: #C75050;
 }
 html { font-size: 16px; }
 body {
@@ -35,703 +37,953 @@ body {
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: #9ABF8E; }
 code, .mono { font-family: 'JetBrains Mono', monospace; }
 
-/* Header */
-.dash-header {
-  padding: 1.5rem 2rem;
+/* Nav */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 1rem 2rem;
   border-bottom: 1px solid var(--border);
-  flex-wrap: wrap;
-  gap: 1rem;
+  backdrop-filter: blur(20px);
+  background: rgba(11, 29, 58, 0.9);
 }
-.dash-logo {
+.nav-logo {
   display: flex;
   align-items: center;
   gap: 0.7rem;
   text-decoration: none;
   color: var(--text);
 }
-.dash-logo img { width: 32px; height: 32px; border-radius: 8px; }
-.dash-logo span { font-weight: 700; font-size: 1rem; letter-spacing: -0.02em; }
-.dash-meta {
+.nav-logo img { width: 32px; height: 32px; border-radius: 8px; }
+.nav-logo span { font-weight: 700; font-size: 1rem; letter-spacing: -0.02em; }
+.nav-links { display: flex; gap: 1.5rem; align-items: center; }
+.nav-links a { color: var(--text-dim); font-size: 0.875rem; font-weight: 500; }
+.nav-links a:hover { color: var(--text); text-decoration: none; }
+.nav-links a.active { color: var(--text); }
+
+/* Auth gate */
+.auth-gate {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-.dash-meta .stat {
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
   text-align: center;
 }
-.dash-meta .stat-val {
-  font-family: 'JetBrains Mono', monospace;
+.auth-gate h2 {
+  font-size: 1.4rem;
   font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--accent);
+  margin-bottom: 0.5rem;
 }
-.dash-meta .stat-label {
-  font-size: 0.7rem;
+.auth-gate p {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+.auth-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.auth-form input {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-family: 'JetBrains Mono', monospace;
+  width: 280px;
+}
+.auth-form input:focus { outline: none; border-color: var(--accent); }
+.auth-form button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.auth-form button:hover { opacity: 0.9; }
+.auth-error {
+  color: var(--red);
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+  display: none;
+}
+
+/* Main content (hidden until authed) */
+.dashboard-content { display: none; padding-top: 4.5rem; flex: 1; }
+.dashboard-content.visible { display: flex; flex-direction: column; flex: 1; }
+
+/* Page header */
+.page-header {
+  padding: 1.5rem 2rem 0.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+.page-header h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.3rem;
+}
+.page-header p { color: var(--text-dim); font-size: 0.9rem; }
+.refresh-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+.refresh-badge {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.refresh-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.refresh-btn:hover { border-color: var(--text-muted); color: var(--text); }
+.logout-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* Section titles */
+.section-title {
+  padding: 1rem 2rem 0.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
 }
-.delay-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.8rem;
-  background: rgba(199, 80, 80, 0.15);
-  border: 1px solid rgba(199, 80, 80, 0.3);
-  border-radius: 100px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #E8A0A0;
-}
-.live-badge {
-  background: rgba(124, 154, 110, 0.15);
-  border-color: rgba(124, 154, 110, 0.3);
-  color: #A8CFA0;
-}
-.upgrade-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.45rem 1rem;
-  background: linear-gradient(135deg, var(--accent), #5B7B9E);
-  color: #fff;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-.upgrade-link:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(124, 154, 110, 0.3); }
 
-/* Grid */
-.dash-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 1.2rem;
-  padding: 1.5rem 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
+/* API Health bar */
+.api-health-bar {
+  padding: 0 2rem;
+  max-width: 1200px;
+  margin: 0.5rem auto;
+  width: 100%;
 }
-
-/* Asset card */
-.asset-card {
+.api-health-inner {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1.5rem;
-  transition: border-color 0.2s;
-}
-.asset-card:hover { border-color: var(--text-muted); }
-.asset-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-}
-.asset-name {
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-.asset-price {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 1rem;
-  color: var(--text-dim);
-}
-.regime-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.7rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.regime-bounded {
-  background: rgba(124, 154, 110, 0.15);
-  border: 1px solid rgba(124, 154, 110, 0.3);
-  color: var(--bounded);
-}
-.regime-active {
-  background: rgba(201, 149, 111, 0.15);
-  border: 1px solid rgba(201, 149, 111, 0.3);
-  color: var(--active);
-}
-.regime-unstable {
-  background: rgba(199, 80, 80, 0.15);
-  border: 1px solid rgba(199, 80, 80, 0.3);
-  color: var(--unstable);
-}
-
-/* DHS bar */
-.dhs-row {
+  padding: 1.2rem 1.5rem;
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 0.8rem;
+  gap: 2rem;
+  flex-wrap: wrap;
 }
-.dhs-label {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  width: 30px;
+.api-health-inner:hover { border-color: var(--text-muted); }
+.api-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.api-indicator .dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
-.dhs-bar-bg {
-  flex: 1;
-  height: 8px;
-  background: var(--bg);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.dhs-bar-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.6s ease;
-}
-.dhs-val {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
-  font-weight: 600;
-  width: 38px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-/* Details */
-.asset-details {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem 1.5rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-.detail-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.detail-label {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-.detail-val {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  color: var(--text-dim);
-}
-
-/* Timeline */
-.timeline-section {
-  padding: 1.5rem 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-.timeline-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-.timeline-title {
-  font-size: 1.1rem;
+.api-indicator .dot.green { background: var(--green); box-shadow: 0 0 10px rgba(124, 154, 110, 0.5); }
+.api-indicator .dot.red { background: var(--red); box-shadow: 0 0 10px rgba(199, 80, 80, 0.5); }
+.api-indicator .dot.yellow { background: var(--yellow); box-shadow: 0 0 10px rgba(201, 149, 111, 0.5); }
+.api-indicator .dot.gray { background: var(--text-muted); }
+.api-indicator .label {
+  font-size: 0.95rem;
   font-weight: 700;
 }
-.timeline-filter {
+.api-meta {
   display: flex;
-  gap: 0.5rem;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
-.timeline-filter button {
-  padding: 0.3rem 0.8rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-dim);
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+.api-meta-item {
+  display: flex;
+  flex-direction: column;
 }
-.timeline-filter button.active,
-.timeline-filter button:hover {
-  background: var(--bg-elevated);
-  border-color: var(--text-muted);
-  color: var(--text);
-}
-.timeline-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.timeline-table th {
-  text-align: left;
-  padding: 0.6rem 0.8rem;
-  font-size: 0.7rem;
+.api-meta-item .key {
+  font-size: 0.65rem;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
 }
-.timeline-table td {
-  padding: 0.5rem 0.8rem;
-  font-size: 0.8rem;
+.api-meta-item .val {
   font-family: 'JetBrains Mono', monospace;
-  border-bottom: 1px solid rgba(30, 58, 95, 0.5);
+  font-size: 0.8rem;
   color: var(--text-dim);
 }
-.timeline-table tr:hover td { background: rgba(26, 50, 88, 0.4); }
-.transition-arrow { color: var(--text-muted); margin: 0 0.2rem; }
+.api-meta-item .val.ok { color: var(--green); }
+.api-meta-item .val.warn { color: var(--yellow); }
+.api-meta-item .val.err { color: var(--red); }
 
-/* Accuracy section */
-.accuracy-section {
-  padding: 1.5rem 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-.accuracy-grid {
+/* Big stat cards */
+.stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.2rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  padding: 0.5rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
-.accuracy-card {
+.stat-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.2rem;
+  text-align: center;
 }
-.accuracy-card h3 {
-  font-size: 0.8rem;
+.stat-card:hover { border-color: var(--text-muted); }
+.stat-card .val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.2;
+}
+.stat-card .label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+/* Chart section */
+.chart-section {
+  padding: 0.5rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+.chart-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  height: 260px;
+}
+
+/* Cards grid */
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  padding: 0.5rem 2rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Card */
+.health-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.3rem;
+}
+.health-card:hover { border-color: var(--text-muted); }
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 0.8rem;
 }
-.accuracy-row {
+.card-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-green { background: var(--green); box-shadow: 0 0 8px rgba(124, 154, 110, 0.5); }
+.status-yellow { background: var(--yellow); box-shadow: 0 0 8px rgba(201, 149, 111, 0.5); }
+.status-red { background: var(--red); box-shadow: 0 0 8px rgba(199, 80, 80, 0.5); }
+.status-gray { background: var(--text-muted); }
+
+.card-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0.3rem 0;
 }
-.accuracy-row .label { font-size: 0.8rem; color: var(--text-dim); }
-.accuracy-row .value {
+.card-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.card-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.card-val.ok { color: var(--green); }
+.card-val.warn { color: var(--yellow); }
+.card-val.err { color: var(--red); }
+
+.card-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.5rem 0;
 }
 
-/* CTA banner */
-.cta-banner {
-  margin: 2rem;
-  padding: 2rem;
-  background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  text-align: center;
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
-}
-.cta-banner h3 {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-.cta-banner p {
-  color: var(--text-dim);
-  margin-bottom: 1.2rem;
-  font-size: 0.95rem;
-}
-.cta-features {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-.cta-feature {
-  display: flex;
+.card-link {
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--text-dim);
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--accent);
+  margin-top: 0.3rem;
 }
-.cta-feature .check { color: var(--accent); }
+.card-link:hover { color: #9ABF8E; text-decoration: none; }
+
+.link-list { list-style: none; }
+.link-list li { padding: 0.25rem 0; }
+.link-list li a { font-size: 0.8rem; color: var(--accent); }
+.link-list li a:hover { color: #9ABF8E; }
+.link-list li .link-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-left: 0.3rem;
+}
 
 /* Footer */
-.dash-footer {
+footer {
+  margin-top: auto;
   padding: 1.5rem 2rem;
   border-top: 1px solid var(--border);
   text-align: center;
   color: var(--text-muted);
   font-size: 0.75rem;
 }
-.dash-footer a { color: var(--text-dim); text-decoration: none; }
-.dash-footer a:hover { color: var(--text); }
+footer a { color: var(--text-dim); text-decoration: none; margin: 0 0.5rem; }
+footer a:hover { color: var(--text); }
 
-/* Loading */
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-.loading .spinner {
-  width: 20px; height: 20px;
+/* Loading spinner */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 14px; height: 14px;
   border: 2px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-right: 0.8rem;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.4rem;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 /* Responsive */
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 768px) {
-  .dash-grid { grid-template-columns: 1fr; padding: 1rem; }
-  .accuracy-grid { grid-template-columns: 1fr; }
-  .dash-header { padding: 1rem; }
-  .timeline-section, .accuracy-section { padding: 1rem; }
-  .cta-banner { margin: 1rem; }
+  .health-grid { grid-template-columns: 1fr; padding: 0.5rem 1rem 1.5rem; }
+  .page-header { padding: 1.5rem 1rem 0.5rem; }
+  .section-title { padding-left: 1rem; padding-right: 1rem; }
+  .api-health-bar { padding: 0 1rem; }
+  .stats-grid { padding: 0.5rem 1rem; }
+  .chart-section { padding: 0.5rem 1rem; }
+  nav { padding: 0.75rem 1rem; }
+  .nav-links { gap: 1rem; }
+  .api-health-inner { gap: 1rem; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat-card .val { font-size: 1.5rem; }
+  .auth-form { flex-direction: column; }
+  .auth-form input { width: 100%; }
+  .api-meta { gap: 1rem; }
 }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<header class="dash-header">
-  <a href="/" class="dash-logo">
+<nav>
+  <a href="/" class="nav-logo">
     <img src="logo.png" alt="ReNoUn">
-    <span>ReNoUn Dashboard</span>
+    <span>ReNoUn</span>
   </a>
-  <div class="dash-meta">
-    <div class="stat">
-      <div class="stat-val" id="metaAccuracy">--</div>
-      <div class="stat-label">Bounded Accuracy</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val" id="metaTotal">--</div>
-      <div class="stat-label">Predictions Graded</div>
-    </div>
-    <div class="delay-badge" id="delayBadge">
-      <span>&#9679;</span> 6h delayed
-    </div>
-    <a href="#upgrade" class="upgrade-link">Get Real-Time &#8594;</a>
+  <div class="nav-links">
+    <a href="/agents.html">Docs</a>
+    <a href="/dashboard.html" class="active">Dashboard</a>
+    <a href="/pricing.html">Pricing</a>
   </div>
-</header>
+</nav>
 
-<!-- Asset Cards -->
-<div class="dash-grid" id="assetGrid">
-  <div class="loading"><div class="spinner"></div>Loading signals...</div>
+<!-- Auth gate -->
+<div class="auth-gate" id="authGate">
+  <h2>Admin Dashboard</h2>
+  <p>Enter your admin key to unlock the health dashboard.</p>
+  <div class="auth-form">
+    <input type="password" id="authKeyInput" placeholder="RENOUN_ADMIN_KEY" autocomplete="off">
+    <button onclick="submitAuth()">Unlock</button>
+  </div>
+  <div class="auth-error" id="authError">Invalid key. Access denied.</div>
 </div>
 
-<!-- Regime Transition Timeline -->
-<div class="timeline-section">
-  <div class="timeline-header">
-    <div class="timeline-title">Regime Transitions (Last 48h)</div>
-    <div class="timeline-filter">
-      <button class="active" onclick="filterTimeline('all', this)">All</button>
-      <button onclick="filterTimeline('BTC', this)">BTC</button>
-      <button onclick="filterTimeline('ETH', this)">ETH</button>
-      <button onclick="filterTimeline('SOL', this)">SOL</button>
+<!-- Dashboard content (hidden until authed) -->
+<div class="dashboard-content" id="dashboardContent">
+
+  <div class="page-header">
+    <h1>Service Health</h1>
+    <p>All ReNoUn services at a glance. Auto-refreshes every 60s.</p>
+    <div class="refresh-row">
+      <span class="refresh-badge" id="lastRefresh">--</span>
+      <button class="refresh-btn" onclick="refreshAll()">Refresh now</button>
+      <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
   </div>
-  <table class="timeline-table">
-    <thead>
-      <tr>
-        <th>Time</th>
-        <th>Asset</th>
-        <th>Transition</th>
-        <th>DHS</th>
-        <th>Regime</th>
-      </tr>
-    </thead>
-    <tbody id="timelineBody">
-      <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Loading...</td></tr>
-    </tbody>
-  </table>
-</div>
 
-<!-- Accuracy Breakdown -->
-<div class="accuracy-section">
-  <div class="accuracy-grid" id="accuracyGrid">
-    <!-- Filled by JS -->
+  <!-- 1. API Health -->
+  <div class="section-title">API Health</div>
+  <div class="api-health-bar">
+    <div class="api-health-inner">
+      <div class="api-indicator">
+        <div class="dot gray" id="apiDot"></div>
+        <span class="label" id="apiStatusLabel"><span class="spinner"></span> Checking...</span>
+      </div>
+      <div class="api-meta">
+        <div class="api-meta-item">
+          <span class="key">Version</span>
+          <span class="val" id="apiVersion">--</span>
+        </div>
+        <div class="api-meta-item">
+          <span class="key">Uptime</span>
+          <span class="val" id="apiUptime">--</span>
+        </div>
+        <div class="api-meta-item">
+          <span class="key">Response</span>
+          <span class="val" id="apiLatency">--</span>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 
-<!-- CTA Banner -->
-<div class="cta-banner" id="upgrade">
-  <h3>Get Real-Time Regime Classification</h3>
-  <p>You're seeing data delayed by 6 hours. Upgrade for real-time API access, webhook alerts on regime shifts, and all timeframes.</p>
-  <div class="cta-features">
-    <div class="cta-feature"><span class="check">&#10003;</span> Real-time regime feed</div>
-    <div class="cta-feature"><span class="check">&#10003;</span> Webhook alerts on shifts</div>
-    <div class="cta-feature"><span class="check">&#10003;</span> All timeframes (1m&ndash;1d)</div>
-    <div class="cta-feature"><span class="check">&#10003;</span> Custom asset pairs</div>
+  <!-- 2. Today's Numbers -->
+  <div class="section-title">Today's Numbers</div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="val" id="statApiCalls">--</div>
+      <div class="label">API Calls</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="statUniqueKeys">--</div>
+      <div class="label">Unique Keys</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="statProvisions">--</div>
+      <div class="label">New Provisions</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="statPageviews">--</div>
+      <div class="label">Pageviews</div>
+    </div>
   </div>
-  <a href="mailto:98lukehall@gmail.com?subject=ReNoUn%20Real-Time%20Access" class="upgrade-link" style="font-size:1rem; padding:0.7rem 2rem;">Request Early Access &#8594;</a>
+
+  <!-- 3. 7-Day Trend -->
+  <div class="section-title">7-Day Trend</div>
+  <div class="chart-section">
+    <div class="chart-container">
+      <canvas id="trendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- 4 + 5 + 6: Cards grid -->
+  <div class="section-title">Services &amp; Distribution</div>
+  <div class="health-grid">
+
+    <!-- Signal Bot -->
+    <div class="health-card" id="cardSignal">
+      <div class="card-header">
+        <span class="card-title">Signal Bot</span>
+        <span class="status-dot status-gray" id="dotSignal"></span>
+      </div>
+      <div class="card-row">
+        <span class="card-label">Last analysis</span>
+        <span class="card-val" id="signalLast"><span class="spinner"></span> Checking...</span>
+      </div>
+      <hr class="card-divider">
+      <div class="card-row">
+        <span class="card-label">BTC regime</span>
+        <span class="card-val" id="signalBTC">--</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label">ETH regime</span>
+        <span class="card-val" id="signalETH">--</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label">SOL regime</span>
+        <span class="card-val" id="signalSOL">--</span>
+      </div>
+    </div>
+
+    <!-- Distribution Channels -->
+    <div class="health-card" id="cardDistro">
+      <div class="card-header">
+        <span class="card-title">Distribution Channels</span>
+        <span class="status-dot status-green"></span>
+      </div>
+      <ul class="link-list">
+        <li><a href="https://t.me/ReNoUnSignals" target="_blank">@ReNoUnSignals</a><span class="link-desc">Telegram</span></li>
+        <li><a href="https://moltbook.com/u/renounsignalbot" target="_blank">renounsignalbot</a><span class="link-desc">Moltbook</span></li>
+        <li><a href="https://x.com/harrisoncollab" target="_blank">@harrisoncollab</a><span class="link-desc">X / Twitter</span></li>
+        <li><a href="https://pypi.org/project/renoun-mcp/" target="_blank">renoun-mcp</a><span class="link-desc">PyPI</span></li>
+        <li><a href="https://github.com/98lukehall/renoun-mcp" target="_blank">renoun-mcp</a><span class="link-desc">GitHub</span></li>
+        <li><a href="https://registry.modelcontextprotocol.io" target="_blank">MCP Registry</a><span class="link-desc">Official</span></li>
+      </ul>
+    </div>
+
+    <!-- Revenue -->
+    <div class="health-card" id="cardRevenue">
+      <div class="card-header">
+        <span class="card-title">Revenue</span>
+        <span class="status-dot status-gray" id="dotRevenue"></span>
+      </div>
+      <div class="card-row">
+        <span class="card-label">Metered billing</span>
+        <span class="card-val" id="revenueBilling">--</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label">Paying keys</span>
+        <span class="card-val" id="revenuePayingKeys">--</span>
+      </div>
+      <hr class="card-divider">
+      <a href="https://dashboard.stripe.com" target="_blank" class="card-link">Open Stripe Dashboard &#8594;</a>
+    </div>
+
+  </div>
+
 </div>
 
-<!-- Footer -->
-<footer class="dash-footer">
-  <p>ReNoUn measures structural regimes, not price direction. Not financial advice. Patent Pending #63/923,592.</p>
-  <p style="margin-top:0.5rem;"><a href="/">harrisoncollab.com</a> &middot; <a href="https://x.com/98lukehall" target="_blank">@98lukehall on X</a> &middot; <a href="https://github.com/98lukehall/renoun-mcp" target="_blank">GitHub</a></p>
+<footer>
+  <div>
+    <a href="/">Home</a>
+    <a href="/agents.html">Docs</a>
+    <a href="https://github.com/98lukehall/renoun-mcp" target="_blank">GitHub</a>
+    <a href="mailto:luke@harrisoncollab.com">Contact</a>
+  </div>
+  <p style="margin-top:0.75rem;">ReNoUn measures structural regimes, not price direction. Not financial advice. Patent Pending #63/923,592.</p>
+  <p style="margin-top:0.3rem;">&copy; 2026 Harrison Collab.</p>
 </footer>
 
 <script>
 // ============================================================
-// ReNoUn Dashboard — Client-side renderer
+// ReNoUn Health Dashboard
 // ============================================================
-// Reads from signals_public.json (6h-delayed export from bot)
-// This file is generated by the bot's export_public_json() function.
 
-const DATA_URL = 'signals_public.json';
+const API_BASE = 'https://api.harrisoncollab.com';
+let trendChart = null;
+let refreshInterval = null;
 
-const REGIME_MAP = {
-  'CLOSED_LOOP':          { regime: 'bounded',  desc: 'Range-bound' },
-  'HIGH_SYMMETRY':        { regime: 'bounded',  desc: 'Tight equilibrium' },
-  'CONVERGENCE':          { regime: 'active',   desc: 'Trend-active' },
-  'SURFACE_VARIATION':    { regime: 'bounded',  desc: 'Choppy but bounded' },
-  'DIP_AND_RECOVERY':     { regime: 'active',   desc: 'Recovery regime' },
-  'SCATTERING':           { regime: 'unstable', desc: 'Structure fragmenting' },
-  'REPEATED_DISRUPTION':  { regime: 'unstable', desc: 'Unstable' },
-  'PATTERN_BREAK':        { regime: 'active',   desc: 'Regime shift' },
-  'NOMINAL':              { regime: 'bounded',  desc: 'No strong signal' },
-};
+// --- Auth ---
+function getAdminKey() {
+  return localStorage.getItem('renoun_admin_key');
+}
 
-const SHORT_PATTERNS = {
-  'CONVERGENCE': 'CONVG', 'HIGH_SYMMETRY': 'SYMM', 'CLOSED_LOOP': 'LOOP',
-  'SCATTERING': 'SCAT', 'REPEATED_DISRUPTION': 'DISRUPT',
+function setAdminKey(key) {
+  localStorage.setItem('renoun_admin_key', key);
+}
+
+function clearAdminKey() {
+  localStorage.removeItem('renoun_admin_key');
+}
+
+async function submitAuth() {
+  const input = document.getElementById('authKeyInput');
+  const key = input.value.trim();
+  if (!key) return;
+
+  // Validate the key by making a test call
+  try {
+    const resp = await fetch(API_BASE + '/v1/analytics/summary', {
+      headers: { 'Authorization': 'Bearer ' + key },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (resp.status === 401 || resp.status === 403) {
+      document.getElementById('authError').style.display = 'block';
+      input.value = '';
+      return;
+    }
+
+    // Key works
+    setAdminKey(key);
+    input.value = '';
+    document.getElementById('authError').style.display = 'none';
+    showDashboard();
+  } catch (e) {
+    // Network error — store the key anyway, we'll retry on the dashboard
+    setAdminKey(key);
+    input.value = '';
+    showDashboard();
+  }
+}
+
+function logout() {
+  clearAdminKey();
+  if (refreshInterval) clearInterval(refreshInterval);
+  document.getElementById('dashboardContent').classList.remove('visible');
+  document.getElementById('authGate').style.display = 'flex';
+}
+
+function showDashboard() {
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('dashboardContent').classList.add('visible');
+  refreshAll();
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshInterval = setInterval(refreshAll, 60000);
+}
+
+// --- Helpers ---
+function setDot(id, color) {
+  const dot = document.getElementById(id);
+  if (!dot) return;
+  dot.className = 'status-dot status-' + color;
+}
+
+function setVal(id, text, cls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  if (el.classList.contains('val')) {
+    el.className = 'val' + (cls ? ' ' + cls : '');
+  } else {
+    el.className = 'card-val' + (cls ? ' ' + cls : '');
+  }
+}
+
+function timeAgo(ts) {
+  const now = Date.now();
+  const diff = now - new Date(ts).getTime();
+  if (isNaN(diff)) return '--';
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ' + (mins % 60) + 'm ago';
+  const days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
+function hoursOld(ts) {
+  return (Date.now() - new Date(ts).getTime()) / 3600000;
+}
+
+function formatUptime(seconds) {
+  if (!seconds && seconds !== 0) return '--';
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (d > 0) return d + 'd ' + h + 'h';
+  if (h > 0) return h + 'h ' + m + 'm';
+  return m + 'm';
+}
+
+// --- 1. API Health ---
+async function checkApi() {
+  const start = performance.now();
+  try {
+    const resp = await fetch(API_BASE + '/v1/status', { signal: AbortSignal.timeout(10000) });
+    const latency = Math.round(performance.now() - start);
+
+    if (resp.ok) {
+      const data = await resp.json();
+      const dot = document.getElementById('apiDot');
+      dot.className = 'dot green';
+      document.getElementById('apiStatusLabel').textContent = 'Operational';
+      document.getElementById('apiStatusLabel').style.color = 'var(--green)';
+
+      document.getElementById('apiVersion').textContent = data.version || '--';
+      document.getElementById('apiVersion').className = 'val';
+
+      const upSecs = data.uptime_seconds || data.uptime;
+      document.getElementById('apiUptime').textContent = formatUptime(upSecs);
+      document.getElementById('apiUptime').className = 'val';
+
+      const latEl = document.getElementById('apiLatency');
+      latEl.textContent = latency + 'ms';
+      latEl.className = 'val ' + (latency < 500 ? 'ok' : latency < 2000 ? 'warn' : 'err');
+    } else {
+      const dot = document.getElementById('apiDot');
+      dot.className = 'dot yellow';
+      document.getElementById('apiStatusLabel').textContent = 'HTTP ' + resp.status;
+      document.getElementById('apiStatusLabel').style.color = 'var(--yellow)';
+    }
+  } catch (e) {
+    const dot = document.getElementById('apiDot');
+    dot.className = 'dot red';
+    document.getElementById('apiStatusLabel').textContent = 'Unreachable';
+    document.getElementById('apiStatusLabel').style.color = 'var(--red)';
+    document.getElementById('apiVersion').textContent = '--';
+    document.getElementById('apiUptime').textContent = '--';
+    document.getElementById('apiLatency').textContent = '--';
+  }
+}
+
+// --- 2. Analytics Summary + Today's Numbers ---
+async function fetchAnalytics() {
+  const key = getAdminKey();
+  if (!key) return;
+
+  try {
+    const resp = await fetch(API_BASE + '/v1/analytics/summary', {
+      headers: { 'Authorization': 'Bearer ' + key },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (resp.status === 401 || resp.status === 403) {
+      clearAdminKey();
+      logout();
+      return;
+    }
+
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+
+    // Today's stats
+    const today = data.today || data.summary || {};
+    document.getElementById('statApiCalls').textContent = (today.api_calls ?? '--').toLocaleString();
+    document.getElementById('statUniqueKeys').textContent = (today.unique_keys ?? '--').toLocaleString();
+    document.getElementById('statProvisions').textContent = (today.provisions ?? '--').toLocaleString();
+    document.getElementById('statPageviews').textContent = (today.pageviews ?? today.page_views ?? '--').toLocaleString();
+
+    // Stripe / revenue
+    const stripe = data._stripe || data.stripe || {};
+    if (stripe.billing_status || stripe.metered) {
+      document.getElementById('revenueBilling').textContent = stripe.billing_status || stripe.metered || 'Active';
+      document.getElementById('revenueBilling').className = 'card-val ok';
+      setDot('dotRevenue', 'green');
+    } else {
+      document.getElementById('revenueBilling').textContent = 'Connected';
+      document.getElementById('revenueBilling').className = 'card-val ok';
+      setDot('dotRevenue', 'green');
+    }
+    document.getElementById('revenuePayingKeys').textContent = stripe.paying_keys ?? stripe.customers ?? '--';
+
+    // 7-day trend
+    const trend = data.trend || data.daily || [];
+    if (trend.length > 0) {
+      renderTrendChart(trend);
+    }
+  } catch (e) {
+    console.warn('Analytics fetch failed:', e.message);
+  }
+}
+
+// --- 3. Trend Chart ---
+function renderTrendChart(trend) {
+  const ctx = document.getElementById('trendChart').getContext('2d');
+
+  const labels = trend.map(function(d) {
+    const dt = new Date(d.date || d.day);
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
+
+  const apiCalls = trend.map(function(d) { return d.api_calls ?? 0; });
+  const provisions = trend.map(function(d) { return d.provisions ?? 0; });
+
+  if (trendChart) trendChart.destroy();
+
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'API Calls',
+          data: apiCalls,
+          borderColor: 'rgba(124, 154, 110, 1)',
+          backgroundColor: 'rgba(124, 154, 110, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: 'rgba(124, 154, 110, 1)',
+        },
+        {
+          label: 'Provisions',
+          data: provisions,
+          borderColor: 'rgba(201, 149, 111, 1)',
+          backgroundColor: 'rgba(201, 149, 111, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: 'rgba(201, 149, 111, 1)',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      plugins: {
+        legend: {
+          labels: { color: '#8BA3C4', font: { size: 11 } }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#5A7A9E', font: { size: 11 } },
+          grid: { color: 'rgba(30, 58, 95, 0.5)' }
+        },
+        y: {
+          ticks: { color: '#5A7A9E', font: { size: 11 } },
+          grid: { color: 'rgba(30, 58, 95, 0.5)' },
+          beginAtZero: true,
+        }
+      }
+    }
+  });
+}
+
+// --- 4. Signal Bot ---
+const REGIME_SHORT = {
+  'CLOSED_LOOP': 'LOOP', 'HIGH_SYMMETRY': 'SYMM', 'CONVERGENCE': 'CONVG',
   'SURFACE_VARIATION': 'SURFACE', 'DIP_AND_RECOVERY': 'RECOV',
+  'SCATTERING': 'SCAT', 'REPEATED_DISRUPTION': 'DISRUPT',
   'PATTERN_BREAK': 'BREAK', 'NOMINAL': 'NOM',
 };
 
-function formatPrice(p) {
-  if (!p) return '--';
-  if (p >= 10000) return '$' + p.toLocaleString('en-US', {maximumFractionDigits: 0});
-  if (p >= 100) return '$' + p.toFixed(0);
-  if (p >= 1) return '$' + p.toFixed(2);
-  return '$' + p.toFixed(4);
+const REGIME_TO_TYPE = {
+  'CLOSED_LOOP': 'bounded', 'HIGH_SYMMETRY': 'bounded', 'SURFACE_VARIATION': 'bounded',
+  'CONVERGENCE': 'active', 'PATTERN_BREAK': 'active', 'DIP_AND_RECOVERY': 'active',
+  'SCATTERING': 'unstable', 'REPEATED_DISRUPTION': 'unstable', 'NOMINAL': 'bounded',
+};
+
+function regimeClass(constellation) {
+  var type = REGIME_TO_TYPE[constellation] || 'bounded';
+  if (type === 'bounded') return 'ok';
+  if (type === 'active') return 'warn';
+  return 'err';
 }
 
-function dhsColor(dhs) {
-  if (dhs >= 0.75) return 'var(--bounded)';
-  if (dhs >= 0.55) return 'var(--active)';
-  if (dhs >= 0.35) return 'var(--unstable)';
-  return '#C75050';
-}
+async function checkSignalBot() {
+  var key = getAdminKey();
+  var headers = key ? { 'Authorization': 'Bearer ' + key } : {};
 
-function renderAssetCard(name, data) {
-  const constellation = data.constellation || 'NOMINAL';
-  const info = REGIME_MAP[constellation] || { regime: 'bounded', desc: 'Unknown' };
-  const dhs = data.dhs || 0.5;
-  const exposure = data.exposure_scalar || 1.0;
-  const price = data.price;
-
-  return `
-    <div class="asset-card">
-      <div class="asset-top">
-        <div>
-          <div class="asset-name">${name}</div>
-          <div class="asset-price">${formatPrice(price)}</div>
-        </div>
-        <span class="regime-badge regime-${info.regime}">${info.regime}</span>
-      </div>
-      <div class="dhs-row">
-        <span class="dhs-label">DHS</span>
-        <div class="dhs-bar-bg">
-          <div class="dhs-bar-fill" style="width:${dhs*100}%; background:${dhsColor(dhs)};"></div>
-        </div>
-        <span class="dhs-val" style="color:${dhsColor(dhs)}">${dhs.toFixed(2)}</span>
-      </div>
-      <div class="asset-details">
-        <div class="detail-item">
-          <span class="detail-label">Pattern</span>
-          <span class="detail-val">${SHORT_PATTERNS[constellation] || constellation}</span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Exposure</span>
-          <span class="detail-val">${(exposure*100).toFixed(0)}%</span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Regime</span>
-          <span class="detail-val">${info.desc}</span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Persistence</span>
-          <span class="detail-val">${data.persistence_count ? 'x'+data.persistence_count : '--'}</span>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function renderTimeline(transitions, filter) {
-  const tbody = document.getElementById('timelineBody');
-  let rows = transitions;
-  if (filter && filter !== 'all') {
-    rows = rows.filter(t => t.asset === filter);
-  }
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No transitions in this period</td></tr>';
-    return;
-  }
-  tbody.innerHTML = rows.slice(0, 30).map(t => {
-    const info = REGIME_MAP[t.to] || { regime: 'bounded', desc: '' };
-    const time = new Date(t.timestamp).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12: false });
-    return `<tr>
-      <td>${time}</td>
-      <td>${t.asset}</td>
-      <td>${SHORT_PATTERNS[t.from]||t.from} <span class="transition-arrow">&rarr;</span> ${SHORT_PATTERNS[t.to]||t.to}</td>
-      <td style="color:${dhsColor(t.dhs)}">${t.dhs.toFixed(2)}</td>
-      <td><span class="regime-badge regime-${info.regime}" style="font-size:0.7rem;padding:0.15rem 0.5rem;">${info.regime}</span></td>
-    </tr>`;
-  }).join('');
-}
-
-function renderAccuracy(scores) {
-  const grid = document.getElementById('accuracyGrid');
-  if (!scores || !scores.summary) {
-    grid.innerHTML = '<div class="accuracy-card"><h3>Accuracy</h3><p style="color:var(--text-muted);">No data yet</p></div>';
-    return;
-  }
-  const s = scores.summary;
-
-  // By regime type
-  let byType = '';
-  const types = {'bounded': 0, 'active': 0, 'unstable': 0};
-  const typeTotals = {'bounded': 0, 'active': 0, 'unstable': 0};
-  if (scores.by_type) {
-    for (const [t, d] of Object.entries(scores.by_type)) {
-      byType += `<div class="accuracy-row"><span class="label">${t}</span><span class="value">${d.accuracy}</span></div>`;
-    }
-  }
-
-  // By asset
-  let byAsset = '';
-  if (s.by_asset) {
-    for (const [a, d] of Object.entries(s.by_asset)) {
-      const acc = d.total > 0 ? ((d.correct / d.total) * 100).toFixed(0) + '%' : '--';
-      byAsset += `<div class="accuracy-row"><span class="label">${a}</span><span class="value" style="color:${parseInt(acc)>=90?'var(--bounded)':parseInt(acc)>=70?'var(--active)':'var(--unstable)'}">${acc}</span></div>`;
-    }
-  }
-
-  // By constellation
-  let byConst = '';
-  if (s.by_constellation) {
-    for (const [c, d] of Object.entries(s.by_constellation)) {
-      const acc = d.total > 0 ? ((d.correct / d.total) * 100).toFixed(0) + '%' : '--';
-      byConst += `<div class="accuracy-row"><span class="label">${SHORT_PATTERNS[c]||c}</span><span class="value">${acc}</span></div>`;
-    }
-  }
-
-  grid.innerHTML = `
-    <div class="accuracy-card">
-      <h3>By Asset</h3>
-      ${byAsset || '<p style="color:var(--text-muted);">No data</p>'}
-    </div>
-    <div class="accuracy-card">
-      <h3>By Constellation</h3>
-      ${byConst || '<p style="color:var(--text-muted);">No data</p>'}
-    </div>
-    <div class="accuracy-card">
-      <h3>By Regime</h3>
-      ${(() => {
-        const bc = s.by_constellation || {};
-        let bC = 0, bT = 0, aC = 0, aT = 0, uC = 0, uT = 0;
-        ['HIGH_SYMMETRY','SURFACE_VARIATION','CLOSED_LOOP'].forEach(c => { if(bc[c]){bC+=bc[c].correct;bT+=bc[c].total;} });
-        ['CONVERGENCE','PATTERN_BREAK','DIP_AND_RECOVERY'].forEach(c => { if(bc[c]){aC+=bc[c].correct;aT+=bc[c].total;} });
-        ['SCATTERING','REPEATED_DISRUPTION'].forEach(c => { if(bc[c]){uC+=bc[c].correct;uT+=bc[c].total;} });
-        const bAcc = bT > 0 ? (bC/bT*100).toFixed(0)+'%' : '--';
-        const aAcc = aT > 0 ? (aC/aT*100).toFixed(0)+'%' : '--';
-        const uAcc = uT > 0 ? (uC/uT*100).toFixed(0)+'%' : '--';
-        return `
-          <div class="accuracy-row"><span class="label" style="color:var(--bounded);">Bounded</span><span class="value" style="color:var(--bounded);font-size:1.1rem;font-weight:700;">${bAcc}</span></div>
-          <div class="accuracy-row"><span class="label" style="color:var(--text-muted);font-size:0.75rem;margin-top:-4px;">${bC}/${bT} correct</span></div>
-          <div class="accuracy-row" style="margin-top:0.5rem;"><span class="label" style="color:var(--active);">Active</span><span class="value" style="color:var(--active);">${aAcc}</span></div>
-          <div class="accuracy-row"><span class="label" style="color:var(--text-muted);font-size:0.75rem;margin-top:-4px;">${aC}/${aT} correct</span></div>
-          <div class="accuracy-row" style="margin-top:0.5rem;"><span class="label" style="color:var(--unstable);">Unstable</span><span class="value" style="color:var(--unstable);">${uAcc}</span></div>
-          <div class="accuracy-row"><span class="label" style="color:var(--text-muted);font-size:0.75rem;margin-top:-4px;">${uC}/${uT} correct</span></div>
-          <div class="accuracy-row" style="margin-top:0.75rem;padding-top:0.5rem;border-top:1px solid var(--border);">
-            <span class="label" style="color:var(--text-muted);">Total graded</span><span class="value">${s.total_graded || 0}</span>
-          </div>`;
-      })()}
-    </div>
-  `;
-}
-
-let allTransitions = [];
-
-function filterTimeline(filter, btn) {
-  document.querySelectorAll('.timeline-filter button').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  renderTimeline(allTransitions, filter);
-}
-
-async function loadDashboard() {
   try {
-    const resp = await fetch(DATA_URL + '?t=' + Date.now());
-    if (!resp.ok) throw new Error('Failed to load data');
-    const data = await resp.json();
+    var resp = await fetch(API_BASE + '/v1/regime/live/BTCUSDT', {
+      headers: headers,
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
 
-    // Render asset cards
-    const grid = document.getElementById('assetGrid');
-    const latest = data.latest || {};
-    const assets = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP'];
-    grid.innerHTML = assets
-      .filter(a => latest[a])
-      .map(a => renderAssetCard(a, latest[a]))
-      .join('');
+    var ts = data.timestamp || data.analyzed_at;
+    var age = ts ? hoursOld(ts) : 999;
 
-    // Update header stats — bounded regime accuracy
-    if (data.scores) {
-      const s = data.scores.summary || {};
-      const bc = s.by_constellation || {};
-      let bCorrect = 0, bTotal = 0;
-      ['HIGH_SYMMETRY', 'SURFACE_VARIATION', 'CLOSED_LOOP'].forEach(c => {
-        if (bc[c]) { bCorrect += bc[c].correct; bTotal += bc[c].total; }
-      });
-      document.getElementById('metaAccuracy').textContent = bTotal > 0 ? (bCorrect / bTotal * 100).toFixed(0) + '%' : '--';
-      document.getElementById('metaTotal').textContent = s.total_graded || '--';
+    if (age < 2) {
+      setDot('dotSignal', 'green');
+    } else if (age < 4) {
+      setDot('dotSignal', 'yellow');
+    } else {
+      setDot('dotSignal', 'red');
     }
 
-    // Timeline
-    allTransitions = data.transitions || [];
-    renderTimeline(allTransitions, 'all');
+    setVal('signalLast', ts ? timeAgo(ts) : '--', age < 2 ? 'ok' : age < 4 ? 'warn' : 'err');
 
-    // Accuracy
-    renderAccuracy(data.scores);
+    var btcConst = data.constellation || data.regime || '--';
+    setVal('signalBTC', REGIME_SHORT[btcConst] || btcConst, regimeClass(btcConst));
 
-    // Update delay badge with data timestamp
-    if (data.delayed_until) {
-      const d = new Date(data.delayed_until);
-      document.getElementById('delayBadge').innerHTML =
-        '<span>&#9679;</span> Data as of ' + d.toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false });
-    }
-
-  } catch (err) {
-    document.getElementById('assetGrid').innerHTML = `
-      <div style="grid-column:1/-1; text-align:center; padding:4rem 2rem;">
-        <p style="color:var(--text-muted); font-size:1.1rem; margin-bottom:1rem;">Dashboard data not available yet.</p>
-        <p style="color:var(--text-muted); font-size:0.85rem;">The signal bot exports <code>signals_public.json</code> every hour. Once it's running, this dashboard populates automatically.</p>
-      </div>
-    `;
+    fetchAssetRegime('ETHUSDT', 'signalETH', headers);
+    fetchAssetRegime('SOLUSDT', 'signalSOL', headers);
+  } catch (e) {
+    setDot('dotSignal', 'red');
+    setVal('signalLast', 'Unreachable', 'err');
+    setVal('signalBTC', '--');
+    setVal('signalETH', '--');
+    setVal('signalSOL', '--');
   }
 }
 
-// Load on page ready
-loadDashboard();
-// Auto-refresh every 5 minutes
-setInterval(loadDashboard, 300000);
+async function fetchAssetRegime(pair, elId, headers) {
+  try {
+    var resp = await fetch(API_BASE + '/v1/regime/live/' + pair, {
+      headers: headers || {},
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+    var c = data.constellation || data.regime || '--';
+    setVal(elId, REGIME_SHORT[c] || c, regimeClass(c));
+  } catch (e) {
+    setVal(elId, '--');
+  }
+}
+
+// --- Refresh all ---
+async function refreshAll() {
+  document.getElementById('lastRefresh').textContent = 'Refreshing...';
+
+  await Promise.allSettled([
+    checkApi(),
+    checkSignalBot(),
+    fetchAnalytics(),
+  ]);
+
+  var now = new Date();
+  document.getElementById('lastRefresh').textContent =
+    'Updated ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+}
+
+// --- Init ---
+// Enter key support on auth input
+document.getElementById('authKeyInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') submitAuth();
+});
+
+// Check if key already in localStorage
+if (getAdminKey()) {
+  showDashboard();
+}
+
+// --- Pageview analytics ---
+fetch(API_BASE + '/v1/analytics/pageview', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ page: 'dashboard' })
+}).catch(function() {});
 </script>
 </body>
 </html>

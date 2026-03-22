@@ -29,7 +29,14 @@ API_HOST = os.environ.get("RENOUN_API_HOST", _file_config.get("api_host", "0.0.0
 API_PORT = int(os.environ.get("PORT", os.environ.get("RENOUN_API_PORT", _file_config.get("api_port", 8080))))
 
 # CORS
-CORS_ORIGINS = os.environ.get("RENOUN_CORS_ORIGINS", ",".join(_file_config.get("cors_origins", ["*"]))).split(",")
+# Default to known domains, not wildcard. Override with RENOUN_CORS_ORIGINS env var.
+_DEFAULT_CORS = [
+    "https://harrisoncollab.com",
+    "https://www.harrisoncollab.com",
+    "https://api.harrisoncollab.com",
+    "https://bucolic-crisp-2325ac.netlify.app",
+]
+CORS_ORIGINS = os.environ.get("RENOUN_CORS_ORIGINS", ",".join(_file_config.get("cors_origins", _DEFAULT_CORS))).split(",")
 
 # API metadata
 API_VERSION = "1.2.4"

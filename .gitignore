@@ -117,8 +117,8 @@ tests/test_adapters.py
 # Claude Code local config
 .claude/
 
-# GitHub Actions (not ready)
-.github/
+# GitHub Actions workflows are now tracked
+# .github/
 
 # Python
 __pycache__/

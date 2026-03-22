@@ -1,0 +1,47 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  syntax-check:
+    name: Syntax Check (API Files)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile-check core API files
+        run: |
+          python -m py_compile api.py
+          python -m py_compile webhooks.py
+          python -m py_compile rate_limiter.py
+          python -m py_compile auth.py
+          python -m py_compile api_config.py
+          python -m py_compile usage.py
+          python -m py_compile analytics.py
+          python -m py_compile stripe_billing.py
+          python -m py_compile email_sender.py
+          python -m py_compile renoun_store.py
+          python -m py_compile weighted_analysis.py
+          python -m py_compile pre_tag.py
+          echo "All API files compile clean."
+
+  deploy:
+    name: Deploy
+    needs: syntax-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Railway deploy
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RAILWAY_DEPLOY_WEBHOOK }}")
+          if [ "$response" -ge 200 ] && [ "$response" -lt 300 ]; then
+            echo "Railway deploy triggered (HTTP $response)"
+          else
+            echo "Railway deploy failed (HTTP $response)"
+            exit 1
+          fi

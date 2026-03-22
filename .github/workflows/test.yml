@@ -1,0 +1,71 @@
+name: Test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  syntax-check:
+    name: Syntax & Import Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install minimal dependencies
+        run: pip install numpy fastapi uvicorn stripe mcp
+
+      - name: Compile-check all tracked Python files
+        run: |
+          failed=0
+          # Check all .py files in repo root (skip files that import proprietary engine)
+          # These files are in the repo and should at least parse correctly
+          for f in $(find . -maxdepth 1 -name '*.py' -type f | sort); do
+            if python -m py_compile "$f" 2>/dev/null; then
+              echo "OK: $f"
+            else
+              echo "FAIL: $f"
+              failed=1
+            fi
+          done
+          if [ "$failed" -eq 1 ]; then
+            echo ""
+            echo "Some files failed syntax check. See above."
+            exit 1
+          fi
+          echo ""
+          echo "All files compile clean."
+
+      - name: Import-check core API modules
+        run: |
+          # These modules should import without proprietary engine dependencies
+          python -c "import api_config; print('api_config OK')"
+          python -c "import rate_limiter; print('rate_limiter OK')"
+          python -c "import auth; print('auth OK')"
+          python -c "import usage; print('usage OK')"
+          python -c "import analytics; print('analytics OK')"
+          python -c "import webhooks; print('webhooks OK')"
+          python -c "import weighted_analysis; print('weighted_analysis OK')"
+          python -c "import pre_tag; print('pre_tag OK')"
+          echo "Core module imports passed."
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff (errors and warnings, skip line length)
+        run: ruff check . --select E,F,W --ignore E501

@@ -9,15 +9,67 @@ Architecture: Signal bot reads webhooks.json directly (shared filesystem).
 import json
 import hmac
 import hashlib
+import ipaddress
 import os
 import secrets
+import socket
 import threading
 import time
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Optional
+from urllib.parse import urlparse
 
 import requests as http_requests  # avoid conflict with fastapi Request
+
+
+# ── URL validation (SSRF prevention) ─────────────────────────────────
+
+_BLOCKED_NETWORKS = [
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("169.254.0.0/16"),  # AWS/cloud metadata
+    ipaddress.ip_network("0.0.0.0/8"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+]
+
+
+def _validate_webhook_url(url: str) -> str | None:
+    """Validate webhook URL. Returns error string or None if safe."""
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return "Invalid URL format."
+
+    # HTTPS only
+    if parsed.scheme != "https":
+        return "Webhook URLs must use HTTPS."
+
+    hostname = parsed.hostname
+    if not hostname:
+        return "URL missing hostname."
+
+    # Block obvious internal hostnames
+    blocked_hosts = {"localhost", "metadata.google.internal", "metadata.goog"}
+    if hostname in blocked_hosts:
+        return f"Blocked hostname: {hostname}"
+
+    # Resolve hostname and check against blocked IP ranges
+    try:
+        addrs = socket.getaddrinfo(hostname, parsed.port or 443, proto=socket.IPPROTO_TCP)
+        for _, _, _, _, sockaddr in addrs:
+            ip = ipaddress.ip_address(sockaddr[0])
+            for network in _BLOCKED_NETWORKS:
+                if ip in network:
+                    return f"URL resolves to blocked private/internal IP range."
+    except socket.gaierror:
+        return "Could not resolve hostname."
+
+    return None  # safe
 
 
 # Use persistent volume if available (Railway), fall back to home directory
@@ -58,6 +110,11 @@ def _save(data: dict):
 def register_webhook(api_key_id: str, url: str, symbols: list[str],
                      events: list[str], secret: str) -> dict:
     """Register a new webhook. Returns webhook record."""
+    # SSRF prevention: validate URL before storing
+    url_error = _validate_webhook_url(url)
+    if url_error:
+        return {"error": url_error}
+
     # Validate events
     for e in events:
         if e not in VALID_EVENTS:
@@ -74,13 +131,15 @@ def register_webhook(api_key_id: str, url: str, symbols: list[str],
         return {"error": "Maximum 5 webhooks per API key."}
 
     webhook_id = "wh_" + secrets.token_hex(8)
+    # Hash the webhook secret (same pattern as API keys)
+    secret_hash = hashlib.sha256(secret.encode()).hexdigest()
     record = {
         "webhook_id": webhook_id,
         "api_key_id": api_key_id,
         "url": url,
         "symbols": symbols,
         "events": events,
-        "secret": secret,
+        "secret_hash": secret_hash,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "active": True,
         "consecutive_failures": 0,
@@ -143,9 +202,18 @@ def sign_payload(payload_bytes: bytes, secret: str) -> str:
 def dispatch_webhook(webhook: dict, payload: dict):
     """Send webhook payload with signing and retry. Runs in background thread."""
     def _send():
+        # Re-validate URL at dispatch time (DNS rebinding defense)
+        url_error = _validate_webhook_url(webhook["url"])
+        if url_error:
+            print(f"[webhook] Blocked dispatch to {webhook['url']}: {url_error}")
+            _increment_failures(webhook["webhook_id"])
+            return
+
         body = json.dumps(payload)
         body_bytes = body.encode()
-        signature = sign_payload(body_bytes, webhook["secret"])
+        # Use secret_hash if available (new format), fall back to plaintext secret (legacy)
+        secret = webhook.get("secret", "")
+        signature = sign_payload(body_bytes, secret) if secret else "no-secret"
 
         headers = {
             "Content-Type": "application/json",
