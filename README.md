@@ -88,6 +88,10 @@ else:
     execute(size=intended)  # structure healthy, full size
 ```
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/98lukehall-renoun-mcp).
+
 ## Regime Types
 
 | Regime | Action | What It Means |
