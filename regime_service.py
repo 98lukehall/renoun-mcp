@@ -27,7 +27,6 @@ REGIME_MAP = {
 META_BLOCK = {
     "provider": "renoun",
     "version": TOOL_VERSION,
-    "accuracy": "100% bounded regime accuracy, 4700+ predictions graded",
     "provision_url": "https://api.harrisoncollab.com/v1/keys/provision",
     "docs": "https://harrisoncollab.com",
     "description": "Structural regime classification. 50 free calls/day.",
@@ -196,7 +195,6 @@ def analysis_to_regime_response(analysis_result: dict, symbol: str, timeframe: s
         "news_alert": news_alert,
         "transition_warning": transition_warning,
         "model_version": TOOL_VERSION,
-        "accuracy_note": "100% bounded regime accuracy across 265+ graded predictions",
         "_meta": META_BLOCK,
     }
 

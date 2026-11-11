@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.98lukehall/renoun",
   "title": "ReNoUn — Crypto Regime Classification",
-  "description": "Crypto regime classifier for trading agents. 100% bounded regime accuracy. 50 free calls/day.",
+  "description": "Crypto regime classifier for trading agents. 50 free calls/day.",
   "repository": {
     "url": "https://github.com/98lukehall/renoun-mcp",
     "source": "github"
