@@ -26,7 +26,7 @@
     },
     {
       "name": "renoun_finance_analyze",
-      "description": "Structural analysis of financial OHLCV data using the 17-channel engine. Returns DHS, constellation patterns, stress levels, and exposure recommendations. Validated drawdown reduction on 31/31 datasets across 9 crypto assets and 5 timeframes."
+      "description": "Structural analysis of financial OHLCV data using the 17-channel engine. Returns DHS, constellation patterns, stress levels, and exposure recommendations."
     }
   ]
 }

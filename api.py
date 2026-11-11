@@ -60,7 +60,7 @@ from regime_service import analysis_to_regime_response, compute_portfolio_action
 # Override META_BLOCK with correct URLs (regime_service.py is downloaded
 # from private repo at runtime and may have stale URLs)
 META_BLOCK["provision_url"] = "https://api.harrisoncollab.com/v1/keys/provision"
-META_BLOCK["accuracy"] = "100% bounded regime accuracy, 4700+ predictions graded"
+META_BLOCK.pop("accuracy", None)  # accuracy claim withdrawn; private copy may still carry it
 
 # Start news monitor background thread
 try:
@@ -84,7 +84,6 @@ app = FastAPI(
     title="ReNoUn Regime Classification API",
     description=(
         "Structural regime classification for crypto markets. "
-        "100% bounded regime accuracy (126+ graded). "
         "Pre-trade risk check: returns regime (bounded/active/unstable) "
         "and action (proceed/reduce/avoid)."
     ),
@@ -417,7 +416,6 @@ async def status():
             "free_tier": "50 calls/day",
             "regime_endpoint": "/v1/regime/live/{symbol}",
             "docs": "/docs",
-            "accuracy": "100% bounded regime accuracy, 4700+ predictions graded",
         },
     }
 
@@ -1348,7 +1346,6 @@ async def agent_leaderboard():
         "leaderboard": agents[:20],
         "stats": {
             "total_agents": total_agents,
-            "regime_accuracy": "100% bounded",
         },
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -1483,7 +1480,7 @@ async def mcp_server_card():
     """MCP server card for Smithery discovery. No auth required."""
     return {
         "name": "renoun",
-        "description": "Structural risk telemetry for crypto markets. Classifies regimes (bounded/active/unstable) with 100% bounded regime accuracy across 4700+ graded predictions. Estimates regime stability half-life. Pre-trade risk gate for trading agents.",
+        "description": "Structural risk telemetry for crypto markets. Classifies regimes (bounded/active/unstable). Estimates regime stability half-life. Pre-trade risk gate for trading agents.",
         "version": TOOL_VERSION,
         "homepage": "https://harrisoncollab.com",
         "repository": "https://github.com/98lukehall/renoun-mcp",
@@ -1518,7 +1515,7 @@ async def mcp_server_card():
             },
             {
                 "name": "renoun_finance_analyze",
-                "description": "Full 17-channel structural analysis of OHLCV data. Returns DHS, constellations, stress metrics, and exposure scalar. 100% bounded regime accuracy across 4700+ graded predictions.",
+                "description": "Full 17-channel structural analysis of OHLCV data. Returns DHS, constellations, stress metrics, and exposure scalar.",
             },
             {
                 "name": "renoun_agent_monitor",
@@ -1570,7 +1567,7 @@ try:
         if not auth_value.startswith("Bearer ") and method == "GET":
             body = _json.dumps({
                 "name": "ReNoUn MCP Server",
-                "description": "Crypto regime classifier for trading agents. 100% bounded regime accuracy.",
+                "description": "Crypto regime classifier for trading agents.",
                 "protocol": "MCP (Model Context Protocol)",
                 "transport": "streamable-http",
                 "registry": "https://registry.modelcontextprotocol.io",

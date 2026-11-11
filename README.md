@@ -3,14 +3,13 @@
   <p align="center"><strong>Structural Risk Telemetry for Crypto Markets</strong></p>
   <p align="center">
     <a href="https://web-production-817e2.up.railway.app/v1/status"><img src="https://img.shields.io/badge/API-live-brightgreen" alt="API Live"></a>
-    <a href="#accuracy"><img src="https://img.shields.io/badge/bounded_accuracy-100%25-7C9A6E" alt="100% bounded accuracy"></a>
     <a href="https://web-production-817e2.up.railway.app/docs"><img src="https://img.shields.io/badge/docs-OpenAPI-orange" alt="API Docs"></a>
     <a href="https://github.com/98lukehall/renoun-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
     <img src="https://img.shields.io/badge/patent_pending-%2363%2F923%2C592-lightgrey" alt="Patent Pending #63/923,592">
   </p>
 </p>
 
-Classifies crypto market structural regimes — **bounded**, **active**, or **unstable** — with **100% bounded regime accuracy** (128+ graded predictions, zero false positives). Estimates **regime stability half-life**: how many minutes until the current structure is likely to transition. Every prediction is public, timestamped, and graded — no other crypto signal service does this.
+Classifies crypto market structural regimes — **bounded**, **active**, or **unstable**. Estimates **regime stability half-life**: how many minutes until the current structure is likely to transition.
 
 One GET request. One action field. Pre-trade risk gate for trading bots, autonomous agents, and quant systems.
 
@@ -55,7 +54,6 @@ curl https://web-production-817e2.up.railway.app/v1/regime/live/BTCUSDT \
   "_meta": {
     "provider": "renoun",
     "version": "1.4.0",
-    "accuracy": "100% bounded regime accuracy, 128+ graded",
     "provision_url": "https://web-production-817e2.up.railway.app/v1/keys/provision",
     "docs": "https://harrisoncollab.com"
   }
@@ -154,11 +152,11 @@ X-RateLimit-Remaining: 47
 
 No credit card required for the agent tier. Agents provision their own keys.
 
-## Accuracy
+## Accuracy claims withdrawn
 
-**100% bounded regime accuracy** across 128+ graded predictions. When ReNoUn classifies a regime as bounded (proceed), price stays within the predicted envelope every time. Zero false positives. Every prediction is public, timestamped, and graded: [@98lukehall on X](https://x.com/98lukehall). No other crypto signal service publishes every call with a pass/fail grade.
+Earlier versions of this README claimed "100% bounded regime accuracy". I have withdrawn that claim.
 
-Active regimes (CONVERGENCE, PATTERN_BREAK) are graded against tighter thresholds and have lower accuracy — they recommend position scaling via the exposure scalar, not full-size trades.
+A "bounded" call was graded correct if the next hour's price move stayed inside a 1.5–4% envelope. I never published the base rate (how often any hour stays inside that envelope) or a comparison against a naive baseline, so the number did not show that the classifier adds anything. Treat this project as an experiment, not a validated signal.
 
 **What this means:** when ReNoUn says "bounded," you can trade at full size with confidence. When it says "active," scale your position by the exposure scalar. When it says "unstable," stay out.
 
@@ -226,7 +224,7 @@ If action is "reduce" — multiply position by the exposure scalar.
 If urgency is "exit_now" — close position immediately.
 If urgency is "prepare_exit" — set tight stop loss.
 If action is "proceed" — execute at intended size.
-ReNoUn classifies structural regimes with 100% bounded accuracy.
+ReNoUn classifies structural regimes.
 It does not predict price direction.
 ```
 
